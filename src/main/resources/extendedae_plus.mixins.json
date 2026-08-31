@@ -1,7 +1,6 @@
 {
   "required": false,
   "package": "com.extendedae_plus.mixin",
-  "plugin": "com.extendedae_plus.mixin.ExtendedAEMixinPlugin",
   "compatibilityLevel": "JAVA_17",
   "minVersion": "0.8",
   "client": [
@@ -69,6 +68,7 @@
     "ae2.CraftingCalculationMixin",
     "ae2.CraftingCPUClusterMixin",
     "ae2.ChannelCardNetworkBlockEntityLifecycleMixin",
+    "ae2.SuperMatrixGlassLifecycleMixin",
     "ae2.EncodedPatternItemMixin",
     "ae2.accessor.MEStorageMenuAccessor",
     "ae2.accessor.AENetworkBlockEntityInvoker",
@@ -128,7 +128,8 @@
     "extendedae.container.ContainerWirelessExPatternTerminalMixin",
     "minecraft.accessor.BlockEntityAccessor",
     "guideme.ItemLinkCompilerMixin",
-    "guideme.MdxAttrsMixin"
+    "guideme.MdxAttrsMixin",
+    "gtlcore.GtlCraftingCpuLogicPatternPowerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

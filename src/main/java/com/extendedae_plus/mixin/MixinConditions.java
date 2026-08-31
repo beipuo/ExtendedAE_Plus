@@ -31,6 +31,26 @@ public class MixinConditions implements IMixinConfigPlugin {
                 return !ModCheckUtils.isLoaded(ModCheckUtils.MODID_MAE2);
             }
 
+            // === GTLCore 兼容 ===
+            // mixin.gtlcore 包只在 GTLCore 存在时应用（专为其 forked/重写过的 AE2 行为适配）。
+            if (mixinClassName.startsWith("com.extendedae_plus.mixin.gtlcore.")) {
+                return ModCheckUtils.isLoaded(ModCheckUtils.MODID_GTLCORE);
+            }
+
+            // GTLCore 以 priority 1100 @Overwrite 了 CraftingCpuLogic.executeCrafting（其"ME样板总成自动翻倍"实现）。
+            // 向被合并（merged）的方法注入会在 prepare 阶段失败，而 MixinExtras 已把 @Local 参数从处理器描述符中裁掉，
+            // 于是类里留下一个读取不存在局部变量槽的方法，加载 CraftingCpuLogic 时抛 VerifyError: Bad local variable type。
+            // GTLCore 存在时改由 mixin.gtlcore.GtlCraftingCpuLogicPatternPowerMixin（priority 1200）接手。
+            if (mixinClassName.endsWith("ae2.autopattern.CraftingCpuLogicPatternPowerMixin")) {
+                return !ModCheckUtils.isLoaded(ModCheckUtils.MODID_GTLCORE);
+            }
+
+            // === EMI 兼容 ===
+            // 未安装 EMI 时禁用 mixin.emi 包，避免解析不存在的 dev.emi.* 目标类。
+            if (mixinClassName.startsWith("com.extendedae_plus.mixin.emi.")) {
+                return ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI);
+            }
+
             // === AAE 兼容 ===
             if (mixinClassName.startsWith("com.extendedae_plus.mixin.advancedae")) {
                 return ModCheckUtils.isLoaded(ModCheckUtils.MODID_AAE);
