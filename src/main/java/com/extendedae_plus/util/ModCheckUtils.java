@@ -22,6 +22,7 @@ public class ModCheckUtils {
             MODID_APPFLUX = "appflux",
             MODID_GUIDEME = "guideme",
             MODID_MAE2 = "mae2",
+            MODID_GTLCORE = "gtlcore",
             MODID_MEGA = "megacells",
             MODID_EPA = "expandedae";
 

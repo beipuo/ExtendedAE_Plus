@@ -17,9 +17,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -58,16 +55,9 @@ public abstract class TileAssemblerMatrixGlassMixin implements SuperAssemblerMat
         }
     }
 
-    @Inject(method = "onChunkUnloaded", at = @At("HEAD"), remap = false)
-    private void eap$detachSuperMatrixBeforeChunkUnload(CallbackInfo ci) {
-        // AE2 销毁网络节点前先解除集群，避免集群保留失效玻璃。
-        this.eap$destroySuperMatrixClusterQuietly();
-    }
-
-    @Inject(method = "setRemoved", at = @At("HEAD"), remap = false)
-    private void eap$detachSuperMatrixBeforeRemoval(CallbackInfo ci) {
-        this.eap$destroySuperMatrixClusterQuietly();
-    }
+    // 注：onChunkUnloaded / setRemoved 由 AENetworkBlockEntity 声明，TileAssemblerMatrixGlass 本身没有覆写，
+    // 无法在此注入（生产环境会报 could not find any targets）。这两个生命周期钩子见
+    // com.extendedae_plus.mixin.ae2.SuperMatrixGlassLifecycleMixin。
 
     public Set<Direction> getGridConnectableSides(BlockOrientation orientation) {
         var glass = (TileAssemblerMatrixGlass) (Object) this;

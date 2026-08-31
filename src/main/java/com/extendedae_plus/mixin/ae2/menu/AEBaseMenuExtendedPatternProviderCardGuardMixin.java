@@ -24,7 +24,8 @@ public abstract class AEBaseMenuExtendedPatternProviderCardGuardMixin {
     @Unique
     private static final int EAP$SLOTS_PER_PAGE = 36;
 
-    @Inject(method = "clicked", at = @At("HEAD"), cancellable = true)
+    // clicked 是原版 MC 方法，类上的 remap = false 不适用于它，必须单独开启重映射，否则生产环境找不到 m_150399_。
+    @Inject(method = "clicked", at = @At("HEAD"), cancellable = true, remap = true)
     private void eap$preventRemovingRequiredExpansionCard(int slotId, int button, ClickType clickType, Player player,
             CallbackInfo ci) {
         AEBaseMenu menu = (AEBaseMenu) (Object) this;
