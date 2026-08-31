@@ -83,6 +83,16 @@ public final class ModConfig {
 
     @Configurable
     @Configurable.Comment(value = {
+            "是否启用样板供应器的智能倍增（自动翻倍）",
+            "关闭后 EAEP 不再对处理样板做任何倍增，供应器界面的智能倍增按钮与上限输入框也会隐藏",
+            "当整合包内已有其它模组提供自动翻倍（例如 GTLCore 的 ME 样板总成自动翻倍）时，关闭此项可避免冲突",
+            "不影响超级装配矩阵的分批发配"
+    })
+    @Configurable.Synchronized
+    public boolean smartDoublingEnable = true;
+
+    @Configurable
+    @Configurable.Comment(value = {
             "智能倍增时是否对样板供应器轮询分配",
             "仅多个供应器有相同样板时生效，开启后请求会均分到所有可用供应器，关闭则全部分配给单一供应器",
             "注意：所有相关供应器需开启智能倍增，否则可能失效"
@@ -169,6 +179,14 @@ public final class ModConfig {
     @Configurable.Synchronized
     @Configurable.ValueUpdateCallback(method = "onEntityTickerMultipliersUpdate")
     public String[] entityTickerMultipliers = {};
+
+    /**
+     * 智能倍增（自动翻倍）总开关，配置未加载时按启用处理。
+     */
+    public static boolean smartDoublingEnabled() {
+        ModConfig instance = INSTANCE;
+        return instance == null || instance.smartDoublingEnable;
+    }
 
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private static ScheduledFuture<?> pendingPowerTask;

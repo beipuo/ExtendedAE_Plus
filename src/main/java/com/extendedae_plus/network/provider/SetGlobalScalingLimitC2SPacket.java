@@ -6,6 +6,7 @@ import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.parts.crafting.PatternProviderPart;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingHolder;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -45,6 +46,8 @@ public class SetGlobalScalingLimitC2SPacket {
         ctx.enqueueWork(() -> {
             ServerPlayer player = ctx.getSender();
             if (player == null) return;
+            // 总开关关闭时忽略全网上限设置请求
+            if (!ModConfig.smartDoublingEnabled()) return;
 
             var level = player.serverLevel();
             var be = level.getBlockEntity(msg.controllerPos);

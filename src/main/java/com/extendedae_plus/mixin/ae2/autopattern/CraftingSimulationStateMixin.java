@@ -51,8 +51,15 @@ public abstract class CraftingSimulationStateMixin {
                 continue;
             }
 
+            boolean isSuperMatrix = details instanceof StrictMolecularAssemblerPattern;
+            // 总开关关闭时不再对供应器样板做倍增（超级装配矩阵的分批发配不受影响）
+            if (!isSuperMatrix && !ModConfig.smartDoublingEnabled()) {
+                finalCrafts.put(details, totalAmount);
+                continue;
+            }
+
             boolean allowScaling = aware.eap$allowScaling();
-            long perCraftLimit = details instanceof StrictMolecularAssemblerPattern
+            long perCraftLimit = isSuperMatrix
                     ? getSuperMatrixDispatchSize(totalAmount)
                     : aware.eap$getMultiplierLimit();
 

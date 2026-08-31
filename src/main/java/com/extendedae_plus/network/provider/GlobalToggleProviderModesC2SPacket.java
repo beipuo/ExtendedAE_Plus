@@ -9,6 +9,7 @@ import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.parts.crafting.PatternProviderPart;
 import com.extendedae_plus.api.advancedBlocking.IAdvancedBlocking;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingHolder;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -178,8 +179,8 @@ public class GlobalToggleProviderModesC2SPacket {
             adv.eap$setAdvancedBlocking(target);
             changed = changed || (current != target);
         }
-        // 3) 智能翻倍（mixin 接口）
-        if (msg.opSmartDoubling != Op.NOOP && logic instanceof ISmartDoublingHolder sd) {
+        // 3) 智能翻倍（mixin 接口），总开关关闭时跳过
+        if (msg.opSmartDoubling != Op.NOOP && ModConfig.smartDoublingEnabled() && logic instanceof ISmartDoublingHolder sd) {
             boolean current = sd.eap$getSmartDoubling();
             boolean target = computeTarget(current, msg.opSmartDoubling);
             sd.eap$setSmartDoubling(target);

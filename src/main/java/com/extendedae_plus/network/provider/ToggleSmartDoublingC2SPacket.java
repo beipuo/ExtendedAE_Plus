@@ -2,6 +2,7 @@ package com.extendedae_plus.network.provider;
 
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingHolder;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.mixin.advancedae.accessor.AdvPatternProviderMenuAdvancedAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAccessor;
 import net.minecraft.network.FriendlyByteBuf;
@@ -29,6 +30,8 @@ public class ToggleSmartDoublingC2SPacket {
         ctx.enqueueWork(() -> {
             ServerPlayer player = ctx.getSender();
             if (player == null) return;
+            // 总开关关闭时忽略切换请求
+            if (!ModConfig.smartDoublingEnabled()) return;
             var containerMenu = player.containerMenu;
             if (containerMenu instanceof PatternProviderMenu menu) {
                 var accessor = (PatternProviderMenuAccessor) menu;

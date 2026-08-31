@@ -1,6 +1,7 @@
 package com.extendedae_plus.client.screen;
 
 import appeng.client.gui.Icon;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.menu.NetworkPatternControllerMenu;
 import com.extendedae_plus.network.provider.GlobalToggleProviderModesC2SPacket;
@@ -53,6 +54,8 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
         int totalWidth2 = BTN_W * 2 + BTN_SPACING;
         int row2X = centerX - totalWidth2 / 2;
 
+        boolean smartDoublingEnabled = ModConfig.smartDoublingEnabled();
+
         addRenderableWidget(new AEStyleButton(row1X, row1Y, BTN_W, BTN_H,
                 Component.translatable("gui.extendedae_plus.global.toggle_blocking"), b ->
                 ModNetwork.CHANNEL.sendToServer(new GlobalToggleProviderModesC2SPacket(
@@ -71,14 +74,17 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
                         this.menu.getBlockEntityPos()
                 ))));
 
-        addRenderableWidget(new AEStyleButton(row1X + (BTN_W + BTN_SPACING) * 2, row1Y, BTN_W, BTN_H,
+        AEStyleButton smartDoublingButton = new AEStyleButton(row1X + (BTN_W + BTN_SPACING) * 2, row1Y, BTN_W, BTN_H,
                 Component.translatable("gui.extendedae_plus.global.toggle_smart_doubling"), b ->
                 ModNetwork.CHANNEL.sendToServer(new GlobalToggleProviderModesC2SPacket(
                         GlobalToggleProviderModesC2SPacket.Op.NOOP,
                         GlobalToggleProviderModesC2SPacket.Op.NOOP,
                         GlobalToggleProviderModesC2SPacket.Op.TOGGLE,
                         this.menu.getBlockEntityPos()
-                ))));
+                )));
+        // 智能倍增总开关关闭时禁用相关控件
+        smartDoublingButton.active = smartDoublingEnabled;
+        addRenderableWidget(smartDoublingButton);
 
         addRenderableWidget(new AEStyleButton(row2X, row2Y, BTN_W, BTN_H,
                 Component.translatable("gui.extendedae_plus.global.all_on"), b ->
@@ -108,9 +114,10 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
         int confirmX = inputX + INPUT_WIDTH + 6;
 
         inputField = createInputField(inputX, inputRowY + 1);
+        inputField.setEditable(smartDoublingEnabled);
         this.addRenderableWidget(inputField);
 
-        addRenderableWidget(new AEConfirmButton(confirmX, inputRowY,
+        AEConfirmButton confirmButton = new AEConfirmButton(confirmX, inputRowY,
                 Component.translatable("gui.extendedae_plus.global.confirm_tooltip"), b -> {
             String value = inputField.getValue();
             // 数据校验：解析并发送有效数值
@@ -122,7 +129,9 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
                 // 输入值无效，重置为0
                 inputField.setValue("0");
             }
-        }));
+        });
+        confirmButton.active = smartDoublingEnabled;
+        addRenderableWidget(confirmButton);
     }
 
     private EditBox createInputField(int x, int y) {

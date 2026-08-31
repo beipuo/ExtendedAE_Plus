@@ -9,6 +9,7 @@ import appeng.client.gui.widgets.SettingToggleButton;
 import com.extendedae_plus.api.IInputBackgroundRenderer;
 import com.extendedae_plus.api.advancedBlocking.IPatternProviderMenuAdvancedSync;
 import com.extendedae_plus.api.smartDoubling.IPatternProviderMenuDoublingSync;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket;
 import com.extendedae_plus.network.provider.ToggleAdvancedBlockingC2SPacket;
@@ -96,7 +97,10 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
         this.eap$AdvancedBlockingToggle.set(eap$AdvancedBlockingEnabled ? YesNo.YES : YesNo.NO);
         this.addToLeftToolbar(this.eap$AdvancedBlockingToggle);
 
-        // 智能翻倍
+        // 智能翻倍（总开关关闭时不创建按钮与上限输入框）
+        if (!ModConfig.smartDoublingEnabled()) {
+            return;
+        }
         this.eap$SmartDoublingToggle = createToggle(
                 eap$SmartDoublingEnabled,
                 () -> ModNetwork.CHANNEL.sendToServer(new ToggleSmartDoublingC2SPacket()),

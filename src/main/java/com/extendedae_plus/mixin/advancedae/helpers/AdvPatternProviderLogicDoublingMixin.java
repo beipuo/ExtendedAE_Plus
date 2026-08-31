@@ -4,6 +4,7 @@ import appeng.api.crafting.IPatternDetails;
 import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingHolder;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.mixin.advancedae.accessor.AdvPatternProviderLogicPatternsAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
@@ -73,7 +74,7 @@ public class AdvPatternProviderLogicDoublingMixin implements ISmartDoublingHolde
     private void eap$applySmartDoublingToPatterns(CallbackInfo ci) {
         try {
             var list = ((AdvPatternProviderLogicPatternsAccessor) this).eap$patterns();
-            boolean allow = this.eap$smartDoubling;
+            boolean allow = this.eap$smartDoubling && ModConfig.smartDoublingEnabled();
             int limit = this.eap$providerScalingLimit;
             for (IPatternDetails details : list) {
                 if (details instanceof AEProcessingPattern proc && proc instanceof ISmartDoublingAwarePattern pattern) {
