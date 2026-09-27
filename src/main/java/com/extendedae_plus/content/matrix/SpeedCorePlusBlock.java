@@ -9,7 +9,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.redstone.Orientation;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SpeedCorePlusBlock extends BlockAssemblerMatrixBase<SpeedCorePlusBlockEntity> {
 
@@ -24,10 +26,10 @@ public class SpeedCorePlusBlock extends BlockAssemblerMatrixBase<SpeedCorePlusBl
 
     @Override
     public void neighborChanged(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos,
-            @NotNull Block block, @NotNull BlockPos fromPos, boolean isMoving) {
-        super.neighborChanged(state, level, pos, block, fromPos, isMoving);
-        if (!level.isClientSide && level instanceof ServerLevel serverLevel) {
-            SuperAssemblerMatrixCalculator.scheduleAfterNeighborChange(serverLevel, pos, fromPos);
+            @NotNull Block block, @Nullable Orientation orientation, boolean isMoving) {
+        super.neighborChanged(state, level, pos, block, orientation, isMoving);
+        if (!level.isClientSide() && level instanceof ServerLevel serverLevel) {
+            SuperAssemblerMatrixCalculator.scheduleAfterNeighborChange(serverLevel, pos, pos);
         }
     }
 }

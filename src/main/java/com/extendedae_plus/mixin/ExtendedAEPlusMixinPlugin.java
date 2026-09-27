@@ -22,9 +22,7 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 		return isClassPresent("mezz.jei.api.IModPlugin");
 	}
 
-	private static boolean isEmiPresent() {
-		return isClassPresent("dev.emi.emi.api.EmiApi");
-	}
+	// EMI 26.1.2 发布后恢复 isEmiPresent() 与 shouldApplyMixin 中的 EMI 条件。
 
 	private static boolean isAdvancedAePresent() {
 		return isClassPresent("net.pedroksl.advanced_ae.AdvancedAE");
@@ -46,9 +44,11 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 		return isClassPresent("com.glodblock.github.appflux.AppFlux");
 	}
 
+	/* NeoECOAE 发布适配版本后恢复。
 	private static boolean isNeoECOAEPresent() {
 		return isClassPresent("cn.dancingsnow.neoecoae.NeoECOAE");
 	}
+	*/
 
 	private static boolean isAe2WtLibPresent() {
 		return isClassPresent("de.mari_023.ae2wtlib.api.registration.WTDefinition");
@@ -73,19 +73,18 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 			if (mixinClassName.startsWith("com.extendedae_plus.mixin.jei")) return false;
 			if (mixinClassName.equals("com.extendedae_plus.mixin.ae2.menu.CraftConfirmMenuGoBackMixin")) return false;
 		}
-		if (!isEmiPresent() && mixinClassName.startsWith("com.extendedae_plus.mixin.emi.")) {
-			return false;
-		}
 		if (!isAdvancedAePresent()) {
 			if (mixinClassName.startsWith("com.extendedae_plus.mixin.advancedae.")) {
 				return false;
 			}
 		}
+		/* NeoECOAE 发布适配版本后恢复。
 		if (!isNeoECOAEPresent()) {
 			if (mixinClassName.startsWith("com.extendedae_plus.mixin.neoecoae.")) {
 				return false;
 			}
 		}
+		*/
 		if (mixinClassName.equals("com.extendedae_plus.mixin.ae2.CraftingCPUClusterMixin")) {
 			if (isUfoPresent() || isBiggerAePresent()) {
 				return false;

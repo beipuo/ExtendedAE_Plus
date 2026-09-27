@@ -3,7 +3,7 @@ package com.extendedae_plus.mixin.extendedae.client.gui;
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.implementations.blockentities.PatternContainerGroup;
 import appeng.client.gui.AEBaseScreen;
-import appeng.client.gui.Icon;
+import appeng.util.Icon;
 import appeng.client.gui.me.patternaccess.PatternContainerRecord;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.IconButton;
@@ -16,7 +16,7 @@ import com.extendedae_plus.network.OpenProviderUiC2SPacket;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.Direction;
@@ -24,7 +24,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -93,7 +93,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
      */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, require = 0)
     private void eap$onMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
-        if (button != 0 || !hasShiftDown() || minecraft.player == null) {
+        if (button != 0 || !minecraft.hasShiftDown() || minecraft.player == null) {
             return;
         }
 
@@ -111,8 +111,8 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             eap$quickUploadPattern(hoveredSlot.getSlotIndex());
             cir.setReturnValue(true);
         } else {
-            minecraft.player.displayClientMessage(
-                    Component.translatable("extendedae_plus.message.provider.select_first"), true);
+            minecraft.player.sendSystemMessage(
+                    Component.translatable("extendedae_plus.message.provider.select_first"));
         }
     }
 
@@ -127,17 +127,17 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
         ItemStack itemToUpload = minecraft.player.getInventory().getItem(playerSlotIndex);
         if (itemToUpload.isEmpty() || !PatternDetailsHelper.isEncodedPattern(itemToUpload)) {
-            minecraft.player.displayClientMessage(
-                    Component.translatable("extendedae_plus.message.upload.invalid_item"), true);
+            minecraft.player.sendSystemMessage(
+                    Component.translatable("extendedae_plus.message.upload.invalid_item"));
             return;
         }
 
         try {
-            PacketDistributor.sendToServer(new com.extendedae_plus.network.UploadInventoryPatternToProviderC2SPacket(
+            ClientPacketDistributor.sendToServer(new com.extendedae_plus.network.UploadInventoryPatternToProviderC2SPacket(
                     playerSlotIndex, eap$currentlyChoicePatterProvider));
         } catch (Throwable ignored) {
-            minecraft.player.displayClientMessage(
-                    Component.translatable("extendedae_plus.message.upload.client_fail"), true);
+            minecraft.player.sendSystemMessage(
+                    Component.translatable("extendedae_plus.message.upload.client_fail"));
         }
     }
 
@@ -164,9 +164,9 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             }
 
             Direction face = info.face();
-            PacketDistributor.sendToServer(new OpenProviderUiC2SPacket(
+            ClientPacketDistributor.sendToServer(new OpenProviderUiC2SPacket(
                     info.pos().asLong(),
-                    info.world().location(),
+                    info.world().identifier(),
                     face == null ? -1 : face.ordinal()));
         } catch (Throwable ignored) {
         }
@@ -277,7 +277,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
     }
 
     @Inject(method = "drawFG", at = @At("TAIL"), remap = false, require = 0)
-    private void eap$afterDrawFG(GuiGraphics guiGraphics, int offsetX, int offsetY,
+    private void eap$afterDrawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY,
                                  int mouseX, int mouseY, CallbackInfo ci) {
         try {
             GuiExPatternTerminalAccessor terminal = (GuiExPatternTerminalAccessor) (Object) this;

@@ -8,7 +8,7 @@ import com.extendedae_plus.util.NumberFormatUtil;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.gui.overlay.elements.IElement;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
@@ -17,7 +17,7 @@ public final class IngredientListOverlayHelper {
     private IngredientListOverlayHelper() {
     }
 
-    public static void render(GuiGraphics guiGraphics, List<?> slots) {
+    public static void render(GuiGraphicsExtractor guiGraphics, List<?> slots) {
         // 关闭显示时不再扫描 JEI 槽位，避免产生无意义的逐帧开销。
         if (!ModConfigs.JEI_NETWORK_OVERLAY_ENABLED.get() || !NetworkItemCache.INSTANCE.isConnected()) {
             return;
@@ -59,15 +59,12 @@ public final class IngredientListOverlayHelper {
         }
     }
 
-    private static void renderCraftableMarker(GuiGraphics guiGraphics, int slotX, int slotY) {
+    private static void renderCraftableMarker(GuiGraphicsExtractor guiGraphics, int slotX, int slotY) {
         // 提升绘制层级，避免 JEI 的物品图标覆盖合成标记。
         var poseStack = guiGraphics.pose();
-        poseStack.pushPose();
-        poseStack.translate(0, 0, 200);
-        float scaleFactor = 0.5f;
-        poseStack.scale(scaleFactor, scaleFactor, scaleFactor);
-        guiGraphics.drawString(Minecraft.getInstance().font, "+", (int) ((slotX + 1) / scaleFactor),
-                (int) ((slotY + 1) / scaleFactor), 0xFFFFFF, true);
-        poseStack.popPose();
+        poseStack.pushMatrix();
+        poseStack.translate(0, 0);
+        guiGraphics.text(Minecraft.getInstance().font, "+", slotX + 1, slotY + 1, 0xFFFFFF, true);
+        poseStack.popMatrix();
     }
 }

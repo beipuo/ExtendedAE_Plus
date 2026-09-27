@@ -5,8 +5,10 @@ import appeng.client.gui.style.PaletteColor;
 import appeng.client.gui.style.ScreenStyle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -42,25 +44,21 @@ public class ResizableAETextField extends EditBox {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.isMouseOver(mouseX, mouseY)) {
-            mouseX = Mth.clamp(mouseX, this.getX(), this.getX() + this.width - 1);
-            mouseY = Mth.clamp(mouseY, this.getY(), this.getY() + this.height - 1);
-        }
-        return super.mouseClicked(mouseX, mouseY, button);
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (super.keyPressed(keyCode, scanCode, modifiers)) {
+    public boolean keyPressed(KeyEvent event) {
+        if (super.keyPressed(event)) {
             return true;
         }
         return this.isFocused() && this.canConsumeInput()
-                && keyCode != GLFW.GLFW_KEY_TAB && keyCode != GLFW.GLFW_KEY_ESCAPE;
+                && event.key() != GLFW.GLFW_KEY_TAB && event.key() != GLFW.GLFW_KEY_ESCAPE;
     }
 
     @Override
-    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         if (!this.isVisible()) {
             return;
         }
@@ -68,15 +66,15 @@ public class ResizableAETextField extends EditBox {
         int textureY = this.isFocused() ? 24 : 0;
         Rect2i bounds = this.getVisualBounds();
         this.renderBackground(graphics, bounds, textureY);
-        super.renderWidget(graphics, mouseX, mouseY, partialTick);
+        super.extractWidgetRenderState(graphics, mouseX, mouseY, partialTick);
 
         if (this.placeholder != null && !this.isFocused() && this.getValue().isEmpty()) {
-            graphics.drawString(Minecraft.getInstance().font, this.placeholder, this.getX(), this.getY(),
+            graphics.text(Minecraft.getInstance().font, this.placeholder, this.getX(), this.getY(),
                     this.style.getColor(PaletteColor.TEXTFIELD_PLACEHOLDER).toARGB(), false);
         }
     }
 
-    private void renderBackground(GuiGraphics graphics, Rect2i bounds, int textureY) {
+    private void renderBackground(GuiGraphicsExtractor graphics, Rect2i bounds, int textureY) {
         int centerWidth = Math.max(0, bounds.getWidth() - 2);
         int centerHeight = Math.max(0, bounds.getHeight() - EDGE_HEIGHT * 2);
         int sourceCenterWidth = Math.min(126, centerWidth);
@@ -105,7 +103,7 @@ public class ResizableAETextField extends EditBox {
                 bounds.getX() + bounds.getWidth() - 1, bottomY, 1, EDGE_HEIGHT);
     }
 
-    private void blit(GuiGraphics graphics, int sourceX, int sourceY, int sourceWidth, int sourceHeight,
+    private void blit(GuiGraphicsExtractor graphics, int sourceX, int sourceY, int sourceWidth, int sourceHeight,
                       int x, int y, int width, int height) {
         if (width <= 0 || height <= 0 || sourceWidth <= 0 || sourceHeight <= 0) {
             return;

@@ -5,11 +5,14 @@ import appeng.helpers.patternprovider.PatternContainer;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -31,7 +34,7 @@ import java.util.Set;
  */
 public class BatchCreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 	public static final Type<BatchCreateAndUploadPatternC2SPacket> TYPE = new Type<>(
-		ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "batch_create_and_upload_pattern"));
+		Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "batch_create_and_upload_pattern"));
 
 	/** 单封包条目上限，客户端超出时自行分批发送。 */
 	public static final int MAX_ENTRIES = 64;
@@ -40,7 +43,7 @@ public class BatchCreateAndUploadPatternC2SPacket implements CustomPacketPayload
 	 * @param providerSearchKey 映射出的供应器搜索词；空串表示该配方类型没有自定义映射。
 	 */
 	public record Entry(
-		ResourceLocation recipeId,
+		Identifier recipeId,
 		boolean isCraftingPattern,
 		List<ItemStack> selectedIngredients,
 		List<ItemStack> outputs,
@@ -54,7 +57,7 @@ public class BatchCreateAndUploadPatternC2SPacket implements CustomPacketPayload
 				buf.writeBoolean(pkt.isFluidSubstitutes);
 				buf.writeVarInt(pkt.entries.size());
 				for (Entry entry : pkt.entries) {
-					buf.writeResourceLocation(entry.recipeId());
+					buf.writeIdentifier(entry.recipeId());
 					buf.writeBoolean(entry.isCraftingPattern());
 					ItemStack.OPTIONAL_LIST_STREAM_CODEC.encode(buf, entry.selectedIngredients());
 					ItemStack.OPTIONAL_LIST_STREAM_CODEC.encode(buf, entry.outputs());
@@ -67,7 +70,7 @@ public class BatchCreateAndUploadPatternC2SPacket implements CustomPacketPayload
 				int count = Math.min(buf.readVarInt(), MAX_ENTRIES);
 				List<Entry> entries = new ArrayList<>(count);
 				for (int i = 0; i < count; i++) {
-					ResourceLocation recipeId = buf.readResourceLocation();
+					Identifier recipeId = buf.readIdentifier();
 					boolean isCraftingPattern = buf.readBoolean();
 					List<ItemStack> ingredients = ItemStack.OPTIONAL_LIST_STREAM_CODEC.decode(buf);
 					List<ItemStack> outputs = ItemStack.OPTIONAL_LIST_STREAM_CODEC.decode(buf);
@@ -101,7 +104,7 @@ public class BatchCreateAndUploadPatternC2SPacket implements CustomPacketPayload
 
 			IGrid grid = CtrlQPendingUploadUtil.findPlayerGrid(player);
 			if (grid == null) {
-				player.displayClientMessage(Component.translatable("message.extendedae_plus.no_network"), false);
+				player.sendSystemMessage(Component.translatable("message.extendedae_plus.no_network"), false);
 				return;
 			}
 
@@ -119,7 +122,7 @@ public class BatchCreateAndUploadPatternC2SPacket implements CustomPacketPayload
 			boolean outOfBlankPatterns = false;
 
 			for (Entry entry : msg.entries) {
-				var recipeOpt = player.level().getRecipeManager().byKey(entry.recipeId());
+				var recipeOpt = ((RecipeManager) player.level().recipeAccess()).byKey(ResourceKey.create(Registries.RECIPE, entry.recipeId()));
 				if (recipeOpt.isEmpty()) {
 					noRecipe++;
 					continue;
@@ -174,24 +177,24 @@ public class BatchCreateAndUploadPatternC2SPacket implements CustomPacketPayload
 				toInventory++;
 			}
 
-			player.displayClientMessage(Component.translatable(
+			player.sendSystemMessage(Component.translatable(
 				"message.extendedae_plus.bom_encode.summary",
 				toMatrix, toProvider, toInventory), false);
 
 			if (duplicate > 0) {
-				player.displayClientMessage(Component.translatable(
+				player.sendSystemMessage(Component.translatable(
 					"message.extendedae_plus.bom_encode.skipped_duplicate", duplicate), false);
 			}
 			if (noRecipe > 0) {
-				player.displayClientMessage(Component.translatable(
+				player.sendSystemMessage(Component.translatable(
 					"message.extendedae_plus.bom_encode.skipped_no_recipe", noRecipe), false);
 			}
 			if (failed > 0) {
-				player.displayClientMessage(Component.translatable(
+				player.sendSystemMessage(Component.translatable(
 					"message.extendedae_plus.bom_encode.failed", failed), false);
 			}
 			if (outOfBlankPatterns) {
-				player.displayClientMessage(Component.translatable("message.extendedae_plus.no_blank_pattern"), false);
+				player.sendSystemMessage(Component.translatable("message.extendedae_plus.no_blank_pattern"), false);
 			}
 		});
 	}

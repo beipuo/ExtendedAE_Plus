@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -14,7 +14,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 public record SuperAssemblerMatrixStatsS2CPacket(long concurrentExecutions) implements CustomPacketPayload {
 
     public static final Type<SuperAssemblerMatrixStatsS2CPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "super_assembler_matrix_stats"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "super_assembler_matrix_stats"));
 
     public static final StreamCodec<FriendlyByteBuf, SuperAssemblerMatrixStatsS2CPacket> STREAM_CODEC = StreamCodec.of(
             (buf, packet) -> buf.writeVarLong(packet.concurrentExecutions),

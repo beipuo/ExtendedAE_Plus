@@ -1,23 +1,23 @@
 package com.extendedae_plus.client.screen;
 
-import appeng.client.gui.Icon;
+import de.mari_023.ae2wtlib.api.gui.Icon;
 import com.extendedae_plus.menu.NetworkPatternControllerMenu;
 import com.extendedae_plus.network.GlobalToggleProviderModesC2SPacket;
 import com.extendedae_plus.network.SetGlobalScalingLimitC2SPacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPatternControllerMenu> {
     private static final Component CUSTOM_TITLE = Component.translatable("block.extendedae_plus.network_pattern_controller");
-    private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath("ae2", "textures/guis/background.png");
+    private static final Identifier BACKGROUND = Identifier.fromNamespaceAndPath("ae2", "textures/guis/background.png");
 
     private EditBox inputField;
     private static final int INPUT_WIDTH = 50;
@@ -40,8 +40,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
 
     public GlobalProviderModesScreen(NetworkPatternControllerMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
-        this.imageWidth = IMAGE_WIDTH;
-        this.imageHeight = IMAGE_HEIGHT;
+
     }
 
     @Override
@@ -59,7 +58,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
 
         addRenderableWidget(new AEStyleButton(row1X, row1Y, BTN_W, BTN_H,
                 Component.translatable("gui.extendedae_plus.global.toggle_blocking"), b ->
-                PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
+                ClientPacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
                         GlobalToggleProviderModesC2SPacket.Operation.TOGGLE,
                         GlobalToggleProviderModesC2SPacket.Operation.NOOP,
                         GlobalToggleProviderModesC2SPacket.Operation.NOOP,
@@ -68,7 +67,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
 
         addRenderableWidget(new AEStyleButton(row1X + BTN_W + BTN_SPACING, row1Y, BTN_W, BTN_H,
                 Component.translatable("gui.extendedae_plus.global.toggle_adv_blocking"), b ->
-                PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
+                ClientPacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
                         GlobalToggleProviderModesC2SPacket.Operation.NOOP,
                         GlobalToggleProviderModesC2SPacket.Operation.TOGGLE,
                         GlobalToggleProviderModesC2SPacket.Operation.NOOP,
@@ -77,7 +76,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
 
         addRenderableWidget(new AEStyleButton(row1X + (BTN_W + BTN_SPACING) * 2, row1Y, BTN_W, BTN_H,
                 Component.translatable("gui.extendedae_plus.global.toggle_smart_doubling"), b ->
-                PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
+                ClientPacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
                         GlobalToggleProviderModesC2SPacket.Operation.NOOP,
                         GlobalToggleProviderModesC2SPacket.Operation.NOOP,
                         GlobalToggleProviderModesC2SPacket.Operation.TOGGLE,
@@ -90,7 +89,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
 
         addRenderableWidget(new AEStyleButton(row2X, row2Y, BTN_W, BTN_H,
                 Component.translatable("gui.extendedae_plus.global.all_on"), b ->
-                PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
+                ClientPacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
                         GlobalToggleProviderModesC2SPacket.Operation.SET_TRUE,
                         GlobalToggleProviderModesC2SPacket.Operation.SET_TRUE,
                         GlobalToggleProviderModesC2SPacket.Operation.SET_TRUE,
@@ -99,7 +98,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
 
         addRenderableWidget(new AEStyleButton(row2X + BTN_W + BTN_SPACING, row2Y, BTN_W, BTN_H,
                 Component.translatable("gui.extendedae_plus.global.all_off"), b ->
-                PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
+                ClientPacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
                         GlobalToggleProviderModesC2SPacket.Operation.SET_FALSE,
                         GlobalToggleProviderModesC2SPacket.Operation.SET_FALSE,
                         GlobalToggleProviderModesC2SPacket.Operation.SET_FALSE,
@@ -125,7 +124,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
             try {
                 String sValue = (value == null || value.isBlank()) ? "0" : value.replaceFirst("^0+(?=.)", "");
                 int limit = Integer.parseInt(sValue);
-                PacketDistributor.sendToServer(new SetGlobalScalingLimitC2SPacket(limit, this.menu.getBlockEntityPos()));
+                ClientPacketDistributor.sendToServer(new SetGlobalScalingLimitC2SPacket(limit, this.menu.getBlockEntityPos()));
             } catch (NumberFormatException ignored) {
                 // 输入值无效，重置为0
                 inputField.setValue("0");
@@ -156,17 +155,17 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
     }
 
     @Override
-    protected void renderBg(GuiGraphics gfx, float partialTicks, int mouseX, int mouseY) {
-        // 将256x256背景图压缩/拉伸到界面尺寸
-        gfx.blit(BACKGROUND, this.leftPos, this.topPos, this.imageWidth, this.imageHeight, 0, 0, 256, 256, 256, 256);
+    public void extractBackground(GuiGraphicsExtractor gfx, int mouseX, int mouseY, float partialTicks) {
+        gfx.blit(BACKGROUND, this.leftPos, this.topPos, this.imageWidth, this.imageHeight,
+                0.0f, 0.0f, 1.0f, 1.0f);
     }
 
     @Override
-    public void render(@NotNull GuiGraphics gfx, int mouseX, int mouseY, float partialTicks) {
-        super.render(gfx, mouseX, mouseY, partialTicks);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor gfx, int mouseX, int mouseY, float partialTicks) {
+        super.extractRenderState(gfx, mouseX, mouseY, partialTicks);
 
         // 绘制标题
-        gfx.drawString(this.font, CUSTOM_TITLE, this.leftPos + 8, this.topPos + 6, 0x404040, false);
+        gfx.text(this.font, CUSTOM_TITLE, this.leftPos + 8, this.topPos + 6, 0x404040, false);
 
         int centerX = this.leftPos + this.imageWidth / 2;
         int row1Y = this.topPos + START_Y;
@@ -179,11 +178,11 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
         int totalWidth = labelWidth + 8 + INPUT_WIDTH + 6 + 18;
         int startX = centerX - totalWidth / 2;
         int labelX = startX;
-        gfx.drawString(this.font, Component.translatable("gui.extendedae_plus.global.supplier_doubling_limit"), labelX, inputRowY + 4, 0x000000, false);
+        gfx.text(this.font, Component.translatable("gui.extendedae_plus.global.supplier_doubling_limit"), labelX, inputRowY + 4, 0x000000, false);
     }
 
     @Override
-    protected void renderLabels(GuiGraphics gfx, int mouseX, int mouseY) {
+    protected void extractLabels(GuiGraphicsExtractor gfx, int mouseX, int mouseY) {
         // 不绘制默认的玩家物品栏标题
     }
 
@@ -196,7 +195,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
         }
 
         @Override
-        public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partial) {
+        protected void extractContents(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partial) {
             if (this.visible) {
                 int bgColor = isHovered() && this.active ? BTN_BG_HOVER : BTN_BG;
 
@@ -209,8 +208,8 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
                 guiGraphics.fill(getX() + width - 1, getY(), getX() + width, getY() + height, BTN_BORDER_DARK);
                 guiGraphics.fill(getX(), getY() + height - 1, getX() + width, getY() + height, BTN_BORDER_DARK);
 
-                // 使用原生 Button 的文本渲染方式
-                renderString(guiGraphics, Minecraft.getInstance().font, TEXT_COLOR);
+                guiGraphics.centeredText(Minecraft.getInstance().font, getMessage(),
+                        getX() + width / 2, getY() + (height - 8) / 2, TEXT_COLOR);
             }
         }
     }
@@ -225,17 +224,15 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
         }
 
         @Override
-        public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partial) {
+        protected void extractContents(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partial) {
             if (this.visible) {
-                // 绘制按钮背景
-                Icon background = isHovered() ? Icon.TOOLBAR_BUTTON_BACKGROUND_HOVER : Icon.TOOLBAR_BUTTON_BACKGROUND;
-                background.getBlitter().dest(getX(), getY()).blit(guiGraphics);
-                
-                // 绘制确认图标（居中）
-                Icon.VALID.getBlitter().dest(getX() + 1, getY() + 2).blit(guiGraphics);
+                guiGraphics.fill(getX(), getY(), getX() + width, getY() + height,
+                        isHovered() ? BTN_BG_HOVER : BTN_BG);
+                guiGraphics.centeredText(Minecraft.getInstance().font, Component.literal("✓"),
+                        getX() + width / 2, getY() + 5, 0xFFFFFF);
 
                 if (isHovered()) {
-                    guiGraphics.renderTooltip(Minecraft.getInstance().font, tooltip, mouseX, mouseY);
+                    guiGraphics.setTooltipForNextFrame(Minecraft.getInstance().font, tooltip, mouseX, mouseY);
                 }
             }
         }

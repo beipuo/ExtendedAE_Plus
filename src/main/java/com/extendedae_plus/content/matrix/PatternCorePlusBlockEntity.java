@@ -41,7 +41,7 @@ public class PatternCorePlusBlockEntity extends TileAssemblerMatrixPattern imple
     private @Nullable SuperAssemblerMatrixCluster superMatrixCluster;
 
     public PatternCorePlusBlockEntity(BlockPos pos, BlockState blockState) {
-        super(pos, blockState);
+        super(ModBlockEntities.ASSEMBLER_MATRIX_PATTERN_PLUS_BE.get(), pos, blockState);
 
         ((BlockEntityAccessor) (Object) this)
                 .extendedae_plus$setType(ModBlockEntities.ASSEMBLER_MATRIX_PATTERN_PLUS_BE.get());

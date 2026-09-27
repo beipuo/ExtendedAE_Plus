@@ -1,5 +1,6 @@
 package com.extendedae_plus.mixin.ae2.helpers;
 
+import appeng.api.networking.IGridNode;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.helpers.InterfaceLogic;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
@@ -22,10 +23,10 @@ public abstract class InterfaceLogicTickerMixin {
     private InterfaceLogic this$0;
 
     @Inject(method = "tickingRequest", at = @At("HEAD"), remap = false)
-    private void eap$tickHead(appeng.api.networking.IGridNode node, int ticksSinceLastCall,
-                              CallbackInfoReturnable<appeng.api.networking.ticking.TickRateModulation> cir) {
+    private void eap$tickHead(IGridNode node, int ticksSinceLastCall,
+                              CallbackInfoReturnable<TickRateModulation> cir) {
         // 仅在服务端处理延迟初始化，避免客户端干扰
-        if (node != null && node.getLevel() != null && node.getLevel().isClientSide) {
+        if (node != null && node.getLevel() != null && node.getLevel().isClientSide()) {
             return;
         }
         if (this.this$0 instanceof InterfaceWirelessLinkBridge bridge) {
@@ -34,9 +35,9 @@ public abstract class InterfaceLogicTickerMixin {
     }
 
     @Inject(method = "tickingRequest", at = @At("TAIL"), remap = false, cancellable = true)
-    private void eap$tickTail(appeng.api.networking.IGridNode node, int ticksSinceLastCall,
-                              CallbackInfoReturnable<appeng.api.networking.ticking.TickRateModulation> cir) {
-        if (node != null && node.getLevel() != null && node.getLevel().isClientSide) {
+    private void eap$tickTail(IGridNode node, int ticksSinceLastCall,
+                              CallbackInfoReturnable<TickRateModulation> cir) {
+        if (node != null && node.getLevel() != null && node.getLevel().isClientSide()) {
             return;
         }
         if (this.this$0 instanceof InterfaceWirelessLinkBridge bridge) {

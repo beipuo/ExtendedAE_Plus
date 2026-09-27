@@ -9,6 +9,8 @@ import net.minecraft.world.item.ItemStack;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 
+import java.util.function.BiConsumer;
+
 /**
  * 针对 Curios 槽位的无线终端菜单宿主。
  * 通过传入 CuriosItemLocator 让 AE2 的 ItemMenuHost 在 Curios 槽位上就地修改 ItemStack。
@@ -23,7 +25,7 @@ public class CuriosWirelessTerminalMenuHost extends WirelessTerminalMenuHost<Wir
                                           ItemStack itemStack,
                                           ICurioStacksHandler curiosHandler,
                                           int curiosIndex,
-                                          java.util.function.BiConsumer<Player, ISubMenu> returnToMainMenu) {
+                                          BiConsumer<Player, ISubMenu> returnToMainMenu) {
         super((WirelessTerminalItem) itemStack.getItem(), player,
                 (ItemMenuHostLocator) new CuriosItemLocator(curiosSlotId, curiosIndex),
                 returnToMainMenu);

@@ -3,7 +3,7 @@ package com.extendedae_plus.client.gui.widgets;
 import appeng.api.config.Setting;
 import appeng.api.config.YesNo;
 import appeng.client.gui.AEBaseScreen;
-import appeng.client.gui.Icon;
+import appeng.util.Icon;
 import appeng.client.gui.widgets.IconButton;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.LocalizationEnum;
@@ -48,13 +48,13 @@ public class EAPSettingToggleButton<T extends Enum<T>> extends IconButton {
 
         if (appearances == null) {
             appearances = new HashMap<>();
-            registerApp(Icon.VALID, EAPSettings.ACCELERATE, YesNo.YES,
+            registerApp(Icon.BLOCKING_MODE_YES, EAPSettings.ACCELERATE, YesNo.YES,
                     EAPText.Accelerate,
                     EAPText.AccelerateEnabled);
-            registerApp(Icon.INVALID, EAPSettings.ACCELERATE, YesNo.NO,
+            registerApp(Icon.BLOCKING_MODE_NO, EAPSettings.ACCELERATE, YesNo.NO,
                     EAPText.Accelerate,
                     EAPText.AccelerateDisabled);
-            registerApp(Icon.INVALID, EAPSettings.ACCELERATE, YesNo.UNDECIDED,
+            registerApp(Icon.BLOCKING_MODE_NO, EAPSettings.ACCELERATE, YesNo.UNDECIDED,
                     EAPText.Accelerate,
                     EAPText.AccelerateBlacklisted);
 

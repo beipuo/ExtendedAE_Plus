@@ -12,8 +12,8 @@ import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
 import com.extendedae_plus.network.ScaleEncodingPatternC2SPacket;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraft.resources.Identifier;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,14 +25,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = ProcessingEncodingPanel.class, remap = false)
 public abstract class ProcessingEncodingPanelMixin extends EncodingModePanel {
     @Unique
-    private static final ResourceLocation EAP$SCALE_BUTTON_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "textures/gui/beizeng.png");
+    private static final Identifier EAP$SCALE_BUTTON_TEXTURE =
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "textures/gui/beizeng.png");
     @Unique
-    private static final ResourceLocation EAP$SWAP_OUTPUT_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "textures/gui/zhu_fu_qie_huan.png");
+    private static final Identifier EAP$SWAP_OUTPUT_TEXTURE =
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "textures/gui/zhu_fu_qie_huan.png");
     @Unique
-    private static final ResourceLocation EAP$RESTORE_RATIO_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "textures/gui/huanyuan.png");
+    private static final Identifier EAP$RESTORE_RATIO_TEXTURE =
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "textures/gui/huanyuan.png");
 
     @Unique
     private static final int EAP$SWAP_OUTPUT_LEFT = 125;
@@ -192,11 +192,11 @@ public abstract class ProcessingEncodingPanelMixin extends EncodingModePanel {
                 16,
                 0.375f,
                 Component.literal(tooltipText),
-                btn -> PacketDistributor.sendToServer(new ScaleEncodingPatternC2SPacket(op)));
+                btn -> ClientPacketDistributor.sendToServer(new ScaleEncodingPatternC2SPacket(op)));
     }
 
     @Unique
-    private ScaledTextureButton eap$createStandaloneButton(ResourceLocation texture, Component tooltipText,
+    private ScaledTextureButton eap$createStandaloneButton(Identifier texture, Component tooltipText,
             ScaleEncodingPatternC2SPacket.Operation op) {
         return new ScaledTextureButton(
                 texture,
@@ -208,7 +208,7 @@ public abstract class ProcessingEncodingPanelMixin extends EncodingModePanel {
                 16,
                 0.375f,
                 tooltipText,
-                btn -> PacketDistributor.sendToServer(new ScaleEncodingPatternC2SPacket(op)));
+                btn -> ClientPacketDistributor.sendToServer(new ScaleEncodingPatternC2SPacket(op)));
     }
 
     @Unique

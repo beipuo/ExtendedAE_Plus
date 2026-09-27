@@ -5,14 +5,14 @@ import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public class CancelPendingPatternC2SPacket implements CustomPacketPayload {
 
     public static final Type<CancelPendingPatternC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID,"cancel_pending_pattern"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID,"cancel_pending_pattern"));
 
     public static final CancelPendingPatternC2SPacket INSTANCE = new CancelPendingPatternC2SPacket();
 

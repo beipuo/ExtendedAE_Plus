@@ -12,10 +12,8 @@ import appeng.crafting.inv.ListCraftingInventory;
 import com.extendedae_plus.api.crafting.IForcedCraftingPlan;
 import com.extendedae_plus.api.crafting.IManualCraftingState;
 import com.extendedae_plus.crafting.ForcedCraftingPlan;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.pedroksl.advanced_ae.common.cluster.AdvCraftingCPU;
 import net.pedroksl.advanced_ae.common.logic.AdvCraftingCPULogic;
 import net.pedroksl.advanced_ae.common.logic.ExecutingCraftingJob;
@@ -159,34 +157,31 @@ public abstract class AdvCraftingCPULogicManualWaitingMixin implements IManualCr
     }
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
-    private void eap$writeManualWaitingToNbt(CompoundTag data, HolderLookup.Provider registries, CallbackInfo ci) {
-        data.remove(EAP_MANUAL_WAITING_NBT_KEY);
+    private void eap$writeManualWaitingToNbt(ValueOutput data, CallbackInfo ci) {
+        data.discard(EAP_MANUAL_WAITING_NBT_KEY);
         if (this.job == null || this.eap$manualWaitingFor.isEmpty()) {
             return;
         }
 
-        var entries = new ListTag();
+        var entries = data.childrenList(EAP_MANUAL_WAITING_NBT_KEY);
         for (var entry : this.eap$manualWaitingFor.entrySet()) {
-            var entryTag = entry.getKey().toTagGeneric(registries);
-            entryTag.putLong("#", entry.getValue());
-            entries.add(entryTag);
+            var entryOutput = entries.addChild();
+            entry.getKey().toTagGeneric(entryOutput);
+            entryOutput.putLong("#", entry.getValue());
         }
-        data.put(EAP_MANUAL_WAITING_NBT_KEY, entries);
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void eap$readManualWaitingFromNbt(CompoundTag data, HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$readManualWaitingFromNbt(ValueInput data, CallbackInfo ci) {
         this.eap$manualWaitingFor.clear();
         if (this.job == null) {
             return;
         }
 
         // 仅恢复有效条目，避免旧存档中的损坏数据阻止 CPU 加载。
-        var entries = data.getList(EAP_MANUAL_WAITING_NBT_KEY, Tag.TAG_COMPOUND);
-        for (int index = 0; index < entries.size(); index++) {
-            var entryTag = entries.getCompound(index);
-            var key = AEKey.fromTagGeneric(registries, entryTag);
-            long amount = entryTag.getLong("#");
+        for (var entryTag : data.childrenListOrEmpty(EAP_MANUAL_WAITING_NBT_KEY)) {
+            var key = AEKey.fromTagGeneric(entryTag);
+            long amount = entryTag.getLongOr("#", 0L);
             if (key != null && amount > 0) {
                 this.eap$manualWaitingFor.put(key, amount);
             }

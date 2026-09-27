@@ -1,7 +1,6 @@
 package com.extendedae_plus.content.crystal;
 
 import com.extendedae_plus.init.ModBlocks;
-import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -29,7 +28,7 @@ public class LattraBuddingBlock extends Block {
             return;
         }
 
-        Direction direction = Util.getRandom(DIRECTIONS, random);
+        Direction direction = DIRECTIONS[random.nextInt(DIRECTIONS.length)];
         BlockPos targetPos = pos.relative(direction);
         BlockState targetState = level.getBlockState(targetPos);
         Block nextGrowthStage = getNextGrowthStage(targetState, direction);

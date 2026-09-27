@@ -2,7 +2,7 @@ package com.extendedae_plus.mixin.advancedae.client.gui;
 
 import appeng.api.config.YesNo;
 import appeng.client.gui.AEBaseScreen;
-import appeng.client.gui.Icon;
+import de.mari_023.ae2wtlib.api.gui.Icon;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AETextField;
 import com.extendedae_plus.api.IInputBackgroundRenderer;
@@ -12,11 +12,11 @@ import com.extendedae_plus.api.smartDoubling.IPatternProviderMenuDoublingSync;
 import com.extendedae_plus.client.gui.widgets.EAPServerSettingToggleButton;
 import com.extendedae_plus.network.SetPerProviderScalingLimitC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.pedroksl.advanced_ae.client.gui.SmallAdvPatternProviderScreen;
 import net.pedroksl.advanced_ae.gui.advpatternprovider.SmallAdvPatternProviderMenu;
 import org.spongepowered.asm.mixin.Mixin;
@@ -60,7 +60,7 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
 
         this.eap$PerProviderLimitInput = GuiUtil.createPerProviderLimitInput(this.style, this.font, this.eap$PerProviderScalingLimit, limit -> {
             this.eap$PerProviderScalingLimit = limit;
-            PacketDistributor.sendToServer(new SetPerProviderScalingLimitC2SPacket(limit));
+            ClientPacketDistributor.sendToServer(new SetPerProviderScalingLimitC2SPacket(limit));
         });
         this.addRenderableWidget(this.eap$PerProviderLimitInput);
     }
@@ -133,7 +133,7 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
     }
 
     @Override
-    public void eap$renderInputBackground(GuiGraphics guiGraphics) {
+    public void eap$renderInputBackground(GuiGraphicsExtractor guiGraphics) {
         if (this.eap$SmartDoublingToggle != null && this.eap$SmartDoublingToggle.getCurrentValue() == YesNo.YES
                 && this.eap$PerProviderLimitInput != null && this.eap$PerProviderLimitInput.isVisible()) {
             Icon.TOOLBAR_BUTTON_BACKGROUND.getBlitter()

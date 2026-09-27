@@ -1,11 +1,14 @@
 package com.extendedae_plus.integration.jade;
 
 import appeng.api.networking.IGrid;
+import appeng.api.networking.pathing.ChannelMode;
+import appeng.me.GridNode;
 import appeng.api.networking.IGridNode;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntity;
 import com.extendedae_plus.util.wireless.WirelessTeamUtil;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IServerDataProvider;
 
@@ -15,10 +18,10 @@ import snownee.jade.api.IServerDataProvider;
 public enum LabeledWirelessTransceiverProvider implements IServerDataProvider<BlockAccessor> {
     INSTANCE;
 
-    private static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath("extendedae_plus", "labeled_wireless_info");
+    private static final Identifier UID = Identifier.fromNamespaceAndPath("extendedae_plus", "labeled_wireless_info");
 
     @Override
-    public ResourceLocation getUid() {
+    public Identifier getUid() {
         return UID;
     }
 
@@ -32,7 +35,7 @@ public enum LabeledWirelessTransceiverProvider implements IServerDataProvider<Bl
         // 所有者
         var placerId = be.getPlacerId();
         if (placerId != null && be.getServerLevel() != null) {
-            data.putUUID("placerId", placerId);
+            data.putIntArray("placerId", UUIDUtil.uuidToIntArray(placerId));
             data.putString("ownerName", WirelessTeamUtil.getNetworkOwnerName(be.getServerLevel(), placerId).getString());
         }
 
@@ -45,22 +48,16 @@ public enum LabeledWirelessTransceiverProvider implements IServerDataProvider<Bl
             for (var connection : node.getConnections()) {
                 usedChannels = Math.max(connection.getUsedChannels(), usedChannels);
             }
-            if (node instanceof appeng.me.GridNode gridNode) {
+            if (node instanceof GridNode gridNode) {
                 var channelMode = gridNode.getGrid().getPathingService().getChannelMode();
-                if (channelMode == appeng.api.networking.pathing.ChannelMode.INFINITE) {
+                if (channelMode == ChannelMode.INFINITE) {
                     maxChannels = -1;
                 } else {
                     maxChannels = gridNode.getMaxChannels();
                 }
             }
         }
-        if (grid != null) {
-            try {
-                networkUsable = grid.getEnergyService().isNetworkPowered();
-            } catch (Throwable ignored) {
-                networkUsable = false;
-            }
-        }
+        networkUsable = grid != null && grid.getEnergyService().isNetworkPowered();
         data.putInt("usedChannels", usedChannels);
         data.putInt("maxChannels", maxChannels);
         data.putBoolean("networkUsable", networkUsable);

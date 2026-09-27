@@ -12,6 +12,7 @@ import com.extendedae_plus.util.storage.InfinityConstants;
 import com.google.common.base.Preconditions;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -28,7 +29,6 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
         super(new Properties().stacksTo(1).fireResistant());
     }
 
-    @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
         tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.line1"));
         tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.line2"));
@@ -41,7 +41,7 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
             CompoundTag tag = customData.copyTag();
 
             if (tag.contains(InfinityConstants.INFINITY_CELL_UUID)) {
-                String uuidStr = tag.getUUID(InfinityConstants.INFINITY_CELL_UUID).toString();
+                String uuidStr = tag.read(InfinityConstants.INFINITY_CELL_UUID, UUIDUtil.CODEC).orElseThrow().toString();
                 tooltip.add(
                         Component.literal("UUID: ").withStyle(ChatFormatting.GRAY)
                                 .append(Component.literal(uuidStr).withStyle(ChatFormatting.YELLOW))
@@ -50,7 +50,7 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
 
             if (tag.contains(InfinityConstants.INFINITY_ITEM_TYPES)) {
                 try {
-                    int types = tag.getInt(InfinityConstants.INFINITY_ITEM_TYPES);
+                    int types = tag.getInt(InfinityConstants.INFINITY_ITEM_TYPES).orElse(0);
                     tooltip.add(
                             Component.literal("Types: ").withStyle(ChatFormatting.GRAY)
                                     .append(Component.literal(String.valueOf(types)).withStyle(ChatFormatting.GREEN))
@@ -60,7 +60,7 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
 
             if (tag.contains(InfinityConstants.INFINITY_ITEM_TOTAL)) {
                 try {
-                    byte[] bytes = tag.getByteArray(InfinityConstants.INFINITY_ITEM_TOTAL);
+                    byte[] bytes = tag.getByteArray(InfinityConstants.INFINITY_ITEM_TOTAL).orElse(new byte[0]);
                     BigInteger total = new BigInteger(bytes);
                     String formatted = InfinityBigIntegerCellInventory.formatBigInteger(total);
                     tooltip.add(
@@ -70,7 +70,7 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
                 } catch (Exception ignored) {}
             } else if (tag.contains(InfinityConstants.INFINITY_CELL_ITEM_COUNT)) {
                 try {
-                    byte[] bytes = tag.getByteArray(InfinityConstants.INFINITY_CELL_ITEM_COUNT);
+                    byte[] bytes = tag.getByteArray(InfinityConstants.INFINITY_CELL_ITEM_COUNT).orElse(new byte[0]);
                     BigInteger total = new BigInteger(bytes);
                     String formatted = InfinityBigIntegerCellInventory.formatBigInteger(total);
                     tooltip.add(

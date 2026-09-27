@@ -1,5 +1,6 @@
 package com.extendedae_plus.mixin.ae2.parts.automation;
 
+import appeng.api.networking.IGridNode;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
@@ -13,6 +14,8 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
+
+import java.util.UUID;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -34,7 +37,7 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
     }
 
     @Inject(method = "getTickingRequest", at = @At("RETURN"), cancellable = true)
-    private void eap$keepTickerAwake(appeng.api.networking.IGridNode node,
+    private void eap$keepTickerAwake(IGridNode node,
                                      CallbackInfoReturnable<TickingRequest> cir) {
         if (this.eap$getChannelCardController().shouldKeepTicking()) {
             var original = cir.getReturnValue();
@@ -43,7 +46,7 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
     }
 
     @Inject(method = "tickingRequest", at = @At("TAIL"), cancellable = true)
-    private void eap$maintainChannelLink(appeng.api.networking.IGridNode node, int ticksSinceLastCall,
+    private void eap$maintainChannelLink(IGridNode node, int ticksSinceLastCall,
                                          CallbackInfoReturnable<TickRateModulation> cir) {
         var controller = this.eap$getChannelCardController();
         controller.tick();
@@ -73,7 +76,7 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
     }
 
     @Unique
-    private java.util.UUID eap$getFallbackOwner() {
+    private UUID eap$getFallbackOwner() {
         var node = ((IActionHost) (Object) this).getActionableNode();
         return node != null ? node.getOwningPlayerProfileId() : null;
     }

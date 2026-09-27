@@ -1,7 +1,7 @@
 package com.extendedae_plus.mixin.jei;
 
 import com.extendedae_plus.compat.jei.IngredientListOverlayHelper;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -18,7 +18,7 @@ public class ModernIngredientListRendererMixin {
     @Shadow @Final private List<?> slots;
 
     @Inject(method = "render", at = @At("TAIL"))
-    private void eap$renderNetworkOverlay(GuiGraphics guiGraphics, CallbackInfo callbackInfo) {
+    private void eap$renderNetworkOverlay(GuiGraphicsExtractor guiGraphics, CallbackInfo callbackInfo) {
         IngredientListOverlayHelper.render(guiGraphics, slots);
     }
 }

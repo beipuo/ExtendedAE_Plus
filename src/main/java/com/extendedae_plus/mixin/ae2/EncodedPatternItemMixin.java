@@ -25,7 +25,7 @@ public class EncodedPatternItemMixin {
             var customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
             var tag = customData.copyTag();
             if (tag.contains("encodePlayer")) {
-                String name = tag.getString("encodePlayer");
+                String name = tag.getStringOr("encodePlayer", "");
                 lines.add(Component.translatable("extendedae_plus.pattern.hovertext.player", name).withStyle(ChatFormatting.GRAY));
             }
         }

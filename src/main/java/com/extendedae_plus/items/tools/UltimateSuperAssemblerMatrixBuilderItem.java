@@ -9,23 +9,26 @@ import com.extendedae_plus.content.matrix.supermatrix.UltimateSuperAssemblerMatr
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 /** 仅供创造模式快速放置终极超级装配矩阵的工具。 */
 public class UltimateSuperAssemblerMatrixBuilderItem extends Item {
@@ -43,7 +46,7 @@ public class UltimateSuperAssemblerMatrixBuilderItem extends Item {
         var level = context.getLevel();
         var player = context.getPlayer();
         var stack = context.getItemInHand();
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             return InteractionResult.SUCCESS;
         }
         if (!(level instanceof ServerLevel serverLevel) || player == null) {
@@ -53,9 +56,9 @@ public class UltimateSuperAssemblerMatrixBuilderItem extends Item {
         if (player.isShiftKeyDown() && level.getBlockEntity(context.getClickedPos()) instanceof InterfaceBlockEntity) {
             var interfacePos = context.getClickedPos();
             setBoundInterface(stack, GlobalPos.of(level.dimension(), interfacePos));
-            player.displayClientMessage(Component.translatable(
+            player.sendOverlayMessage(Component.translatable(
                     "item.extendedae_plus.ultimate_super_assembler_matrix_builder.interface_bound",
-                    interfacePos.getX(), interfacePos.getY(), interfacePos.getZ()), true);
+                    interfacePos.getX(), interfacePos.getY(), interfacePos.getZ()));
             return InteractionResult.SUCCESS;
         }
 
@@ -63,27 +66,27 @@ public class UltimateSuperAssemblerMatrixBuilderItem extends Item {
         // 首次点击锁定起点，避免大型结构的预览随准星移动而难以确认落点。
         if (player.isShiftKeyDown() || getSelectedOrigin(stack) == null) {
             setSelectedOrigin(stack, GlobalPos.of(level.dimension(), clickedOrigin));
-            player.displayClientMessage(Component.translatable(
+            player.sendOverlayMessage(Component.translatable(
                     "item.extendedae_plus.ultimate_super_assembler_matrix_builder.selected",
-                    clickedOrigin.getX(), clickedOrigin.getY(), clickedOrigin.getZ()), true);
+                    clickedOrigin.getX(), clickedOrigin.getY(), clickedOrigin.getZ()));
             return InteractionResult.SUCCESS;
         }
 
         var origin = getSelectedOrigin(stack);
         if (origin == null || !origin.dimension().equals(level.dimension())) {
             setSelectedOrigin(stack, GlobalPos.of(level.dimension(), clickedOrigin));
-            player.displayClientMessage(Component.translatable(
+            player.sendOverlayMessage(Component.translatable(
                     "item.extendedae_plus.ultimate_super_assembler_matrix_builder.selected",
-                    clickedOrigin.getX(), clickedOrigin.getY(), clickedOrigin.getZ()), true);
+                    clickedOrigin.getX(), clickedOrigin.getY(), clickedOrigin.getZ()));
             return InteractionResult.SUCCESS;
         }
 
         var placementOrigin = origin.pos();
         var obstruction = UltimateSuperAssemblerMatrixStructure.findFirstObstruction(serverLevel, placementOrigin);
         if (obstruction != null) {
-            player.displayClientMessage(Component.translatable(
+            player.sendOverlayMessage(Component.translatable(
                     "item.extendedae_plus.ultimate_super_assembler_matrix_builder.blocked_at",
-                    obstruction.getX(), obstruction.getY(), obstruction.getZ()), true);
+                    obstruction.getX(), obstruction.getY(), obstruction.getZ()));
             return InteractionResult.FAIL;
         }
 
@@ -112,56 +115,56 @@ public class UltimateSuperAssemblerMatrixBuilderItem extends Item {
             if (grid != null) {
                 refundMaterials(grid.getStorageService().getInventory(), requirements, player);
             }
-            player.displayClientMessage(Component.translatable(
-                    "item.extendedae_plus.ultimate_super_assembler_matrix_builder.blocked"), true);
+            player.sendOverlayMessage(Component.translatable(
+                    "item.extendedae_plus.ultimate_super_assembler_matrix_builder.blocked"));
             return InteractionResult.FAIL;
         }
         clearSelectedOrigin(stack);
-        player.displayClientMessage(Component.translatable(
-                "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed"), true);
+        player.sendOverlayMessage(Component.translatable(
+                "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed"));
         return InteractionResult.SUCCESS;
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
         var stack = player.getItemInHand(hand);
         if (!player.isShiftKeyDown()) {
-            return InteractionResultHolder.pass(stack);
+            return InteractionResult.PASS;
         }
 
-        if (!level.isClientSide && getSelectedOrigin(stack) != null) {
+        if (!level.isClientSide() && getSelectedOrigin(stack) != null) {
             // 潜行右键空气仅取消已锁定的起点，不触发搭建。
             clearSelectedOrigin(stack);
-            player.displayClientMessage(Component.translatable(
-                    "item.extendedae_plus.ultimate_super_assembler_matrix_builder.selection_cleared"), true);
+            player.sendOverlayMessage(Component.translatable(
+                    "item.extendedae_plus.ultimate_super_assembler_matrix_builder.selection_cleared"));
         }
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents,
-            TooltipFlag tooltipFlag) {
-        tooltipComponents.add(Component.translatable(
+    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display,
+            Consumer<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+        tooltipComponents.accept(Component.translatable(
                 "item.extendedae_plus.ultimate_super_assembler_matrix_builder.tooltip.select"));
-        tooltipComponents.add(Component.translatable(
+        tooltipComponents.accept(Component.translatable(
                 "item.extendedae_plus.ultimate_super_assembler_matrix_builder.tooltip.confirm"));
-        tooltipComponents.add(Component.translatable(
+        tooltipComponents.accept(Component.translatable(
                 "item.extendedae_plus.ultimate_super_assembler_matrix_builder.tooltip.reselect"));
-        tooltipComponents.add(Component.translatable(
+        tooltipComponents.accept(Component.translatable(
                 "item.extendedae_plus.ultimate_super_assembler_matrix_builder.tooltip.bind_interface"));
-        tooltipComponents.add(Component.translatable(
+        tooltipComponents.accept(Component.translatable(
                 "item.extendedae_plus.ultimate_super_assembler_matrix_builder.tooltip.preview"));
         var origin = getSelectedOrigin(stack);
         if (origin != null) {
             var pos = origin.pos();
-            tooltipComponents.add(Component.translatable(
+            tooltipComponents.accept(Component.translatable(
                     "item.extendedae_plus.ultimate_super_assembler_matrix_builder.tooltip.selected",
                     pos.getX(), pos.getY(), pos.getZ()));
         }
         var boundInterface = getBoundInterface(stack);
         if (boundInterface != null) {
             var pos = boundInterface.pos();
-            tooltipComponents.add(Component.translatable(
+            tooltipComponents.accept(Component.translatable(
                     "item.extendedae_plus.ultimate_super_assembler_matrix_builder.tooltip.interface_bound",
                     pos.getX(), pos.getY(), pos.getZ()));
         }
@@ -177,18 +180,18 @@ public class UltimateSuperAssemblerMatrixBuilderItem extends Item {
 
     private static GlobalPos getStoredPosition(ItemStack stack, String tagKey) {
         var tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        if (!tag.contains(tagKey, Tag.TAG_COMPOUND)) {
+        if (!tag.contains(tagKey)) {
             return null;
         }
 
-        CompoundTag originTag = tag.getCompound(tagKey);
-        if (!originTag.contains(TAG_DIMENSION, Tag.TAG_STRING) || !originTag.contains(TAG_POS, Tag.TAG_LONG)) {
+        CompoundTag originTag = tag.getCompound(tagKey).orElseThrow();
+        if (!originTag.contains(TAG_DIMENSION) || !originTag.contains(TAG_POS)) {
             return null;
         }
-        return GlobalPos.of(net.minecraft.resources.ResourceKey.create(
-                net.minecraft.core.registries.Registries.DIMENSION,
-                net.minecraft.resources.ResourceLocation.parse(originTag.getString(TAG_DIMENSION))),
-                BlockPos.of(originTag.getLong(TAG_POS)));
+        return GlobalPos.of(ResourceKey.create(
+                Registries.DIMENSION,
+                Identifier.parse(originTag.getString(TAG_DIMENSION).orElseThrow())),
+                BlockPos.of(originTag.getLong(TAG_POS).orElseThrow()));
     }
 
     private static void setSelectedOrigin(ItemStack stack, GlobalPos origin) {
@@ -202,7 +205,7 @@ public class UltimateSuperAssemblerMatrixBuilderItem extends Item {
     private static void setStoredPosition(ItemStack stack, String tagKey, GlobalPos origin) {
         var tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
         var originTag = new CompoundTag();
-        originTag.putString(TAG_DIMENSION, origin.dimension().location().toString());
+        originTag.putString(TAG_DIMENSION, origin.dimension().identifier().toString());
         originTag.putLong(TAG_POS, origin.pos().asLong());
         tag.put(tagKey, originTag);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
@@ -272,7 +275,7 @@ public class UltimateSuperAssemblerMatrixBuilderItem extends Item {
         for (var material : missing) {
             player.sendSystemMessage(Component.translatable(
                     "item.extendedae_plus.ultimate_super_assembler_matrix_builder.material_missing_entry",
-                    material.requirement().key().getItem().getDescription(), material.missingAmount()));
+                    material.requirement().key().getItem().getName(material.requirement().key().toStack()), material.missingAmount()));
         }
     }
 

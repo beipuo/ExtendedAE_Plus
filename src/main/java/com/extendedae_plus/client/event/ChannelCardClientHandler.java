@@ -11,7 +11,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.InputEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 /**
  * 频道卡客户端事件处理器
@@ -49,7 +49,7 @@ public class ChannelCardClientHandler {
         }
         
         // 发送网络包到服务端
-        PacketDistributor.sendToServer(new ChannelCardBindPacket(hand));
+        ClientPacketDistributor.sendToServer(new ChannelCardBindPacket(hand));
     }
 }
 

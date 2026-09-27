@@ -7,8 +7,10 @@ import appeng.recipes.transform.TransformRecipeBuilder;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.init.ModItems;
 import com.glodblock.github.extendedae.common.EAESingletons;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
+import net.minecraft.resources.Identifier;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
@@ -17,7 +19,6 @@ import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
 import net.neoforged.neoforge.common.Tags;
-import net.pedroksl.advanced_ae.common.definitions.AAEFluids;
 import net.pedroksl.advanced_ae.common.definitions.AAEItems;
 import net.pedroksl.advanced_ae.recipes.ReactionChamberRecipeBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -28,14 +29,29 @@ import java.util.concurrent.CompletableFuture;
  * ExtendedAE Plus 配方数据生成器
  * 用于 NeoForge 1.21.1
  */
-public class CrafterRecipe extends RecipeProvider {
+public class CrafterRecipe extends RecipeProvider.Runner {
+
+    @Override
+    public String getName() {
+        return "ExtendedAE Plus recipes";
+    }
 
     public CrafterRecipe(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
         super(output, registries);
     }
 
     @Override
-    protected void buildRecipes(@NotNull RecipeOutput output) {
+    protected RecipeProvider createRecipeProvider(HolderLookup.Provider registries, RecipeOutput output) {
+        return new Recipes(registries, output);
+    }
+
+    private static final class Recipes extends RecipeProvider {
+        private Recipes(HolderLookup.Provider registries, RecipeOutput output) {
+            super(registries, output);
+        }
+
+        @Override
+        protected void buildRecipes() {
         // 高级合成加速器拆解：只返还对应存储核心，不返还基础壳子
         addAcceleratorCoreRecoveryRecipe(output, "4x_crafting_accelerator", ModItems.ACCELERATOR_4x.get(),
                                          AEItems.CELL_COMPONENT_4K
@@ -51,7 +67,7 @@ public class CrafterRecipe extends RecipeProvider {
         );
 
         //超级装配矩阵速度核心
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get())
+        shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get())
                            .pattern("BRB")
                            .pattern("RLR")
                            .pattern("BRB")
@@ -62,7 +78,7 @@ public class CrafterRecipe extends RecipeProvider {
                            .save(output);
 
         //超级装配矩阵合成核心
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get())
+        shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get())
                            .pattern("BRB")
                            .pattern("RLR")
                            .pattern("BRB")
@@ -73,7 +89,7 @@ public class CrafterRecipe extends RecipeProvider {
                            .save(output);
 
         //超级装配矩阵样板核心
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get())
+        shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get())
                            .pattern("BRB")
                            .pattern("RLR")
                            .pattern("BRB")
@@ -84,7 +100,7 @@ public class CrafterRecipe extends RecipeProvider {
                            .save(output);
 
         //标签无线收发器
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.LABELED_WIRELESS_TRANSCEIVER.get())
+        shaped(RecipeCategory.MISC, ModItems.LABELED_WIRELESS_TRANSCEIVER.get())
                            .pattern("CAC")
                            .pattern("ABA")
                            .pattern("CAC")
@@ -95,7 +111,7 @@ public class CrafterRecipe extends RecipeProvider {
                            .save(output);
 
         //镜像样板供应器
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.MIRROR_PATTERN_PROVIDER.get())
+        shaped(RecipeCategory.MISC, ModItems.MIRROR_PATTERN_PROVIDER.get())
                            .pattern("AAA")
                            .pattern("ABA")
                            .pattern("AAA")
@@ -105,7 +121,7 @@ public class CrafterRecipe extends RecipeProvider {
                            .save(output);
 
         //镜像样板绑定工具
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.MIRROR_PATTERN_BINDING_TOOL.get())
+        shaped(RecipeCategory.MISC, ModItems.MIRROR_PATTERN_BINDING_TOOL.get())
                            .pattern("  A")
                            .pattern("BCD")
                            .pattern("BBB")
@@ -119,7 +135,7 @@ public class CrafterRecipe extends RecipeProvider {
                            .save(output);
 
         // 标签库存 ME 接口
-        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.TAG_INVENTORY_ME_INTERFACE.get())
+        shapeless(RecipeCategory.MISC, ModItems.TAG_INVENTORY_ME_INTERFACE.get())
                               .requires(AEBlocks.INTERFACE)
                               .requires(EAESingletons.TAG_EXPORT_BUS)
                               .unlockedBy("has_interface", has(AEBlocks.INTERFACE))
@@ -138,11 +154,12 @@ public class CrafterRecipe extends RecipeProvider {
                                     .input(AEItems.SINGULARITY, 2)
                                     .input(Items.NETHER_STAR, 1)
                                     .input(AAEItems.QUANTUM_ALLOY_PLATE, 4)
-                                    .fluid(AAEFluids.QUANTUM_INFUSION.source(), 2000)
+                                    .fluid(BuiltInRegistries.FLUID.getValue(
+                                            Identifier.fromNamespaceAndPath("advanced_ae", "quantum_infusion")), 2000)
                                     .save(output, "oblivion_singularity");
 
         // 基础核心配方
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.BASIC_CORE.get())
+        shaped(RecipeCategory.MISC, ModItems.BASIC_CORE.get())
                            .pattern("ABA")
                            .pattern("CDE")
                            .pattern("AFA")
@@ -156,7 +173,7 @@ public class CrafterRecipe extends RecipeProvider {
                            .save(output);
 
         // 吞噬盘
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get())
+        shaped(RecipeCategory.MISC, ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get())
                            .pattern("GOG")
                            .pattern("NIN")
                            .pattern("BBB")
@@ -169,7 +186,7 @@ public class CrafterRecipe extends RecipeProvider {
                            .save(output);
 
         //超级装配矩阵框架
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.SUPER_ASSEMBLER_MATRIX_FRAME.get())
+        shaped(RecipeCategory.MISC, ModItems.SUPER_ASSEMBLER_MATRIX_FRAME.get())
                            .pattern("ABA")
                            .pattern("BCB")
                            .pattern("ABA")
@@ -182,7 +199,7 @@ public class CrafterRecipe extends RecipeProvider {
                            .save(output);
 
         //超级装配矩阵墙壁
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get())
+        shaped(RecipeCategory.MISC, ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get())
                            .pattern("ABA")
                            .pattern("BCB")
                            .pattern("ABA")
@@ -195,7 +212,7 @@ public class CrafterRecipe extends RecipeProvider {
                            .save(output);
 
         //超级装配矩阵混合核心
-        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS.get())
+        shapeless(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS.get())
                               .requires(ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get())
                               .requires(ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get())
                               .unlockedBy("has_assembler_matrix_hybrid_plus",
@@ -204,7 +221,7 @@ public class CrafterRecipe extends RecipeProvider {
                               .save(output);
 
         //超级扩展样板供应器扩展卡
-        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC,
+        shapeless(RecipeCategory.MISC,
                                          ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get()
                               )
                               .requires(EAESingletons.EX_PATTERN_PROVIDER)
@@ -215,7 +232,7 @@ public class CrafterRecipe extends RecipeProvider {
                               .save(output);
 
         //终极超级装配矩阵搭建器
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get())
+        shaped(RecipeCategory.MISC, ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get())
                            .pattern(" A ")
                            .pattern("ABA")
                            .pattern(" A ")
@@ -227,7 +244,7 @@ public class CrafterRecipe extends RecipeProvider {
                            .save(output);
 
         //伪装适用方块
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.DISGUISED_BLOCK.get(), 32)
+        shaped(RecipeCategory.MISC, ModItems.DISGUISED_BLOCK.get(), 32)
                            .pattern("AAA")
                            .pattern("ABA")
                            .pattern("AAA")
@@ -237,7 +254,7 @@ public class CrafterRecipe extends RecipeProvider {
                            .save(output);
 
         // iava 人偶
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.C_H716.get(), 1)
+        shaped(RecipeCategory.MISC, ModItems.C_H716.get(), 1)
                            .pattern("ABA")
                            .pattern("BCB")
                            .pattern("ADA")
@@ -249,7 +266,7 @@ public class CrafterRecipe extends RecipeProvider {
                            .save(output);
 
         // Xbai 玩偶
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.XBAI.get(), 1)
+        shaped(RecipeCategory.MISC, ModItems.XBAI.get(), 1)
                            .pattern("ABA")
                            .pattern("CDE")
                            .pattern("AFA")
@@ -265,9 +282,10 @@ public class CrafterRecipe extends RecipeProvider {
 
     private void addAcceleratorCoreRecoveryRecipe(RecipeOutput output, String acceleratorName, ItemLike accelerator,
                                                   ItemLike component) {
-        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, component)
+        shapeless(RecipeCategory.MISC, component)
                               .requires(accelerator)
                               .unlockedBy("has_" + acceleratorName, has(accelerator))
-                              .save(output, ExtendedAEPlus.id(acceleratorName + "_core_recovery"));
+                              .save(output, acceleratorName + "_core_recovery");
+    }
     }
 }

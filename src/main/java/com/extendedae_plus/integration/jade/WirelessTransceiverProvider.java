@@ -1,26 +1,29 @@
 package com.extendedae_plus.integration.jade;
 
 import appeng.api.networking.IGrid;
+import appeng.api.networking.pathing.ChannelMode;
+import appeng.me.GridNode;
 import appeng.api.networking.IGridNode;
 import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
 import com.extendedae_plus.ae.wireless.WirelessMasterRegistry;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import com.extendedae_plus.util.wireless.WirelessTeamUtil;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IServerDataProvider;
 
 public enum WirelessTransceiverProvider implements IServerDataProvider<BlockAccessor> {
     INSTANCE;
 
-    private static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath("extendedae_plus", "wireless_transceiver_info");
+    private static final Identifier UID = Identifier.fromNamespaceAndPath("extendedae_plus", "wireless_transceiver_info");
     // 此类仅用于同步服务端数据，不再包含客户端选项键
 
     @Override
-    public ResourceLocation getUid() {
+    public Identifier getUid() {
         return UID;
     }
 
@@ -34,7 +37,7 @@ public enum WirelessTransceiverProvider implements IServerDataProvider<BlockAcce
             // 添加所有者信息（有FTBTeams时显示团队，否则显示玩家）
             var placerId = blockEntity.getPlacerId();
             if (placerId != null) {
-                data.putUUID("placerId", placerId);
+                data.putIntArray("placerId", UUIDUtil.uuidToIntArray(placerId));
                 var level = blockEntity.getServerLevel();
                 if (level != null) {
                     // 使用WirelessTeamUtil自动判断显示团队或玩家名称
@@ -46,14 +49,7 @@ public enum WirelessTransceiverProvider implements IServerDataProvider<BlockAcce
             // 判断 AE 网络是否可用：节点存在、加入网路且网络通电
             IGridNode node = blockEntity.getGridNode();
             IGrid grid = node == null ? null : node.getGrid();
-            boolean networkUsable = false;
-            if (grid != null) {
-                try {
-                    networkUsable = grid.getEnergyService().isNetworkPowered();
-                } catch (Throwable ignored) {
-                    networkUsable = false;
-                }
-            }
+            boolean networkUsable = grid != null && grid.getEnergyService().isNetworkPowered();
             data.putBoolean("networkUsable", networkUsable);
             
             // 添加频道使用信息（参考AE2的 IUsedChannelProvider 实现）
@@ -65,9 +61,9 @@ public enum WirelessTransceiverProvider implements IServerDataProvider<BlockAcce
                     usedChannels = Math.max(connection.getUsedChannels(), usedChannels);
                 }
                 // 获取节点的最大频道容量（致密线缆为32）
-                if (node instanceof appeng.me.GridNode gridNode) {
+                if (node instanceof GridNode gridNode) {
                     var channelMode = gridNode.getGrid().getPathingService().getChannelMode();
-                    if (channelMode == appeng.api.networking.pathing.ChannelMode.INFINITE) {
+                    if (channelMode == ChannelMode.INFINITE) {
                         maxChannels = -1; // 无限频道
                     } else {
                         maxChannels = gridNode.getMaxChannels();
@@ -92,7 +88,7 @@ public enum WirelessTransceiverProvider implements IServerDataProvider<BlockAcce
                         data.putLong("masterPos", pos.asLong());
                     }
                     if (master.getServerLevel() != null) {
-                        data.putString("masterDim", master.getServerLevel().dimension().location().toString());
+                        data.putString("masterDim", master.getServerLevel().dimension().identifier().toString());
                     }
                 }
             }

@@ -9,7 +9,7 @@ import appeng.client.gui.widgets.AETextField;
 import appeng.core.AEConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -39,7 +39,7 @@ public class GuiUtil {
         if (details == null) {
             return "";
         }
-        java.util.List<GenericStack> outputs = details.getOutputs();
+        List<GenericStack> outputs = details.getOutputs();
         if (outputs == null || outputs.isEmpty()) {
             return "";
         }
@@ -76,7 +76,7 @@ public class GuiUtil {
      * @param slotX 槽位X坐标
      * @param slotY 槽位Y坐标
      */
-    public static void drawAmountText(GuiGraphics guiGraphics, Font font, String text, int slotX, int slotY) {
+    public static void drawAmountText(GuiGraphicsExtractor guiGraphics, Font font, String text, int slotX, int slotY) {
         if (text.isEmpty()) {
             return;
         }
@@ -86,12 +86,12 @@ public class GuiUtil {
         float scale = largeFont ? 0.85f : 0.666f;
         int offset = largeFont ? 0 : -1;
 
-        guiGraphics.pose().pushPose();
+        guiGraphics.pose().pushMatrix();
         // 先以槽位右下角为原点，再缩放文字，避免绝对坐标除以缩放值时的累计取整偏差
-        guiGraphics.pose().translate(slotX + offset + 16 + 1, slotY + offset + 16, 300);
-        guiGraphics.pose().scale(scale, scale, 1.0f);
-        guiGraphics.drawString(font, text, -font.width(text), -5, 0xFFFFFFFF, true);
-        guiGraphics.pose().popPose();
+        guiGraphics.pose().translate(slotX + offset + 16 + 1, slotY + offset + 16);
+        guiGraphics.pose().scale(scale, scale);
+        guiGraphics.text(font, text, -font.width(text), -5, 0xFFFFFFFF, true);
+        guiGraphics.pose().popMatrix();
     }
 
     // Helper: add alpha channel to RGB (rgb is 0xRRGGBB)
@@ -135,7 +135,7 @@ public class GuiUtil {
     }
 
     // 在给定槽位坐标绘制 1px 边框（18x18）和 16x16 半透明背景
-    private static void drawSlotBox(GuiGraphics guiGraphics, int sx, int sy, int borderColor, int backgroundColor) {
+    private static void drawSlotBox(GuiGraphicsExtractor guiGraphics, int sx, int sy, int borderColor, int backgroundColor) {
         guiGraphics.fill(sx - 1, sy - 1, sx + 17, sy, borderColor);
         guiGraphics.fill(sx - 1, sy + 16, sx + 17, sy + 17, borderColor);
         guiGraphics.fill(sx - 1, sy, sx, sy + 16, borderColor);
@@ -146,7 +146,7 @@ public class GuiUtil {
     /**
      * 在槽位上绘制彩色流转的高亮和浅底色
      */
-    public static void drawPatternSlotHighlights(GuiGraphics guiGraphics, List<Slot> slots, Set<ItemStack> matchedStack, Set<PatternContainerRecord> matchedProvider) {
+    public static void drawPatternSlotHighlights(GuiGraphicsExtractor guiGraphics, List<Slot> slots, Set<ItemStack> matchedStack, Set<PatternContainerRecord> matchedProvider) {
         if (slots == null) return;
 
         int rainbowRgb = getRainbowRgb();
@@ -188,7 +188,7 @@ public class GuiUtil {
     /**
      * 在指定槽位坐标绘制彩虹流转的边框与浅底色（用于非 PatternSlot 的高亮场景）
      */
-    public static void drawSlotRainbowHighlight(GuiGraphics guiGraphics, int sx, int sy) {
+    public static void drawSlotRainbowHighlight(GuiGraphicsExtractor guiGraphics, int sx, int sy) {
         int rainbowRgb = getRainbowRgb();
         int borderColor = withAlpha(rainbowRgb, 0xA0);
         int backgroundColor = withAlpha(rainbowRgb, 0x3C);

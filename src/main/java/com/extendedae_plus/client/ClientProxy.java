@@ -1,7 +1,6 @@
 package com.extendedae_plus.client;
 
-import appeng.client.render.crafting.CraftingCubeModel;
-import appeng.init.client.InitScreens;
+import appeng.client.InitScreens;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
 import com.extendedae_plus.api.ids.EAPComponents;
@@ -20,7 +19,11 @@ import com.extendedae_plus.client.screen.LabeledWirelessTransceiverScreen;
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import com.extendedae_plus.menu.TagInventoryMEInterfaceMenu;
 import com.extendedae_plus.menu.SuperCrystalAssemblerMenu;
-import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
+import com.extendedae_plus.menu.NetworkPatternControllerMenu;
+import com.extendedae_plus.client.screen.GlobalProviderModesScreen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -38,37 +41,7 @@ public final class ClientProxy {
     public static void init() {
         if (REGISTERED) return;
         REGISTERED = true;
-        // 注册 Item property
-        ItemProperties.register(ModItems.ENTITY_SPEED_CARD.get(), ExtendedAEPlus.id("mult"),
-                (stack, world, entity, seed) -> (float) EntitySpeedCardItem.readMultiplier(stack));
-
-        // 注册 BasicCore 的 core_type 属性用于模型切换
-        ItemProperties.register(ModItems.BASIC_CORE.get(), ExtendedAEPlus.id("core_type"),
-                (stack, world, entity, seed) -> {
-                    BasicCoreItem.CoreType type = stack.get(EAPComponents.CORE_TYPE.get());
-                    return type != null ? (float) type.id : 0.0f;
-                });
-
-        // 注册五种形成态模型为内置模型
-        BuiltInModelHooks.addBuiltInModel(
-                ExtendedAEPlus.id("block/crafting/4x_accelerator_formed_v2"),
-                new CraftingCubeModel(new EPlusCraftingCubeModelProvider(EPlusCraftingUnitType.ACCELERATOR_4x)));
-
-        BuiltInModelHooks.addBuiltInModel(
-                ExtendedAEPlus.id("block/crafting/16x_accelerator_formed_v2"),
-                new CraftingCubeModel(new EPlusCraftingCubeModelProvider(EPlusCraftingUnitType.ACCELERATOR_16x)));
-
-        BuiltInModelHooks.addBuiltInModel(
-                ExtendedAEPlus.id("block/crafting/64x_accelerator_formed_v2"),
-                new CraftingCubeModel(new EPlusCraftingCubeModelProvider(EPlusCraftingUnitType.ACCELERATOR_64x)));
-
-        BuiltInModelHooks.addBuiltInModel(
-                ExtendedAEPlus.id("block/crafting/256x_accelerator_formed_v2"),
-                new CraftingCubeModel(new EPlusCraftingCubeModelProvider(EPlusCraftingUnitType.ACCELERATOR_256x)));
-
-        BuiltInModelHooks.addBuiltInModel(
-                ExtendedAEPlus.id("block/crafting/1024x_accelerator_formed_v2"),
-                new CraftingCubeModel(new EPlusCraftingCubeModelProvider(EPlusCraftingUnitType.ACCELERATOR_1024x)));
+        // AE2 26.1.10 registers crafting-unit model providers through its model event.
     }
 
     @SubscribeEvent
@@ -76,26 +49,26 @@ public final class ClientProxy {
         // 菜单 -> 屏幕 绑定（显式 ScreenConstructor，避免泛型推断问题）
         event.register(
                 ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(),
-                new net.minecraft.client.gui.screens.MenuScreens.ScreenConstructor<
-                        com.extendedae_plus.menu.NetworkPatternControllerMenu,
-                        com.extendedae_plus.client.screen.GlobalProviderModesScreen>() {
+                new MenuScreens.ScreenConstructor<
+                        NetworkPatternControllerMenu,
+                        GlobalProviderModesScreen>() {
                     @Override
-                    public com.extendedae_plus.client.screen.GlobalProviderModesScreen create(
-                            com.extendedae_plus.menu.NetworkPatternControllerMenu menu,
-                            net.minecraft.world.entity.player.Inventory inv,
-                            net.minecraft.network.chat.Component title) {
-                        return new com.extendedae_plus.client.screen.GlobalProviderModesScreen(menu, inv, title);
+                    public GlobalProviderModesScreen create(
+                            NetworkPatternControllerMenu menu,
+                            Inventory inv,
+                            Component title) {
+                        return new GlobalProviderModesScreen(menu, inv, title);
                     }
                 }
         );
 
         event.register(
                 ModMenuTypes.LABELED_WIRELESS_TRANSCEIVER.get(),
-                new net.minecraft.client.gui.screens.MenuScreens.ScreenConstructor<
+                new MenuScreens.ScreenConstructor<
                         LabeledWirelessTransceiverMenu,
                         LabeledWirelessTransceiverScreen>() {
                     @Override
-                    public LabeledWirelessTransceiverScreen create(LabeledWirelessTransceiverMenu menu, net.minecraft.world.entity.player.Inventory inv, net.minecraft.network.chat.Component title) {
+                    public LabeledWirelessTransceiverScreen create(LabeledWirelessTransceiverMenu menu, Inventory inv, Component title) {
                         return new LabeledWirelessTransceiverScreen(menu, inv, title);
                     }
                 }
@@ -103,13 +76,13 @@ public final class ClientProxy {
 
         event.register(
                 ModMenuTypes.TAG_INVENTORY_ME_INTERFACE.get(),
-                new net.minecraft.client.gui.screens.MenuScreens.ScreenConstructor<
+                new MenuScreens.ScreenConstructor<
                         TagInventoryMEInterfaceMenu,
                         TagInventoryMEInterfaceScreen>() {
                     @Override
                     public TagInventoryMEInterfaceScreen create(TagInventoryMEInterfaceMenu menu,
-                            net.minecraft.world.entity.player.Inventory inv,
-                            net.minecraft.network.chat.Component title) {
+                            Inventory inv,
+                            Component title) {
                         return new TagInventoryMEInterfaceScreen(menu, inv, title);
                     }
                 }

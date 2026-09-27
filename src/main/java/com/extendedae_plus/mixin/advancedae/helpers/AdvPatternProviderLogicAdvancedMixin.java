@@ -15,8 +15,7 @@ import appeng.util.ConfigManager;
 import com.extendedae_plus.api.config.EAPSettings;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogicHost;
 import org.spongepowered.asm.mixin.Final;
@@ -109,13 +108,6 @@ public class AdvPatternProviderLogicAdvancedMixin {
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void eap$readSmartDoublingFromNbt(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
-        // TODO
-        // 适配旧版本中的数据，后续版本删除
-        if (tag.contains("eap_advanced_blocking")) {
-            this.configManager.putSetting(EAPSettings.ADVANCED_BLOCKING,
-                    tag.getBoolean("eap_advanced_blocking") ? YesNo.YES : YesNo.NO);
-            tag.remove("eap_advanced_blocking");
-        }
+    private void eap$readSmartDoublingFromNbt(ValueInput tag, CallbackInfo ci) {
     }
 }

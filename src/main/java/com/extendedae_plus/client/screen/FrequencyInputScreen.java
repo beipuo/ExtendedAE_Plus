@@ -2,13 +2,14 @@ package com.extendedae_plus.client.screen;
 
 import com.extendedae_plus.network.SetWirelessFrequencyC2SPacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+import net.minecraft.client.input.KeyEvent;
 
 /**
  * 频率输入GUI界面
@@ -75,9 +76,9 @@ public class FrequencyInputScreen extends Screen {
      * - renderBackground方法签名在1.21.1中简化
      */
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         // 渲染暗色背景
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
         // 计算窗口位置
         int x = (this.width - WINDOW_WIDTH) / 2;
@@ -94,7 +95,7 @@ public class FrequencyInputScreen extends Screen {
 
         // 绘制标题
         Component title = Component.translatable("gui.extendedae_plus.frequency_input.title");
-        guiGraphics.drawString(
+        guiGraphics.text(
                 this.font,
                 title,
                 x + (WINDOW_WIDTH - this.font.width(title)) / 2,
@@ -110,18 +111,18 @@ public class FrequencyInputScreen extends Screen {
      * API说明：keyPressed方法在1.21.1中保持一致
      */
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         // 回车键确认
-        if (keyCode == 257 || keyCode == 335) { // ENTER or NUMPAD_ENTER
+        if (event.key() == 257 || event.key() == 335) { // ENTER or NUMPAD_ENTER
             this.onConfirm();
             return true;
         }
         // ESC键取消
-        if (keyCode == 256) { // ESC
+        if (event.key() == 256) { // ESC
             this.onClose();
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
     
     @Override
@@ -197,8 +198,8 @@ public class FrequencyInputScreen extends Screen {
             long frequency = Long.parseLong(input);
 
             // 发送数据包到服务端
-            // API说明：NeoForge使用PacketDistributor.sendToServer
-            PacketDistributor.sendToServer(new SetWirelessFrequencyC2SPacket(this.pos, frequency));
+            // API说明：NeoForge使用ClientPacketDistributor.sendToServer
+            ClientPacketDistributor.sendToServer(new SetWirelessFrequencyC2SPacket(this.pos, frequency));
 
             this.onClose();
         } catch (NumberFormatException e) {

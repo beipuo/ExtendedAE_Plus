@@ -1,6 +1,9 @@
 package com.extendedae_plus.network;
 
 import appeng.api.crafting.IPatternDetails;
+import appeng.menu.AEBaseMenu;
+import appeng.menu.me.crafting.CraftingCPUMenu;
+import com.extendedae_plus.ExtendedAEPlus;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.security.IActionHost;
@@ -15,7 +18,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -35,7 +38,7 @@ import java.util.Collection;
  */
 public class CraftingMonitorJumpC2SPacket implements CustomPacketPayload {
     public static final Type<CraftingMonitorJumpC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "crafting_monitor_jump"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "crafting_monitor_jump"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, CraftingMonitorJumpC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> AEKey.writeKey(buf, pkt.what),
@@ -57,13 +60,13 @@ public class CraftingMonitorJumpC2SPacket implements CustomPacketPayload {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
 
             // 必须在 CraftingCPU 界面内
-            if (!(player.containerMenu instanceof appeng.menu.me.crafting.CraftingCPUMenu menu)) {
+            if (!(player.containerMenu instanceof CraftingCPUMenu menu)) {
                 return;
             }
 
             // 通过菜单 target（可能是 BlockEntity/Part/ItemHost）按 IActionHost 获取 Grid
             IGrid grid = null;
-            Object target = ((appeng.menu.AEBaseMenu) menu).getTarget();
+            Object target = ((AEBaseMenu) menu).getTarget();
             if (target instanceof IActionHost host && host.getActionableNode() != null) {
                 grid = host.getActionableNode().getGrid();
             }
@@ -93,7 +96,7 @@ public class CraftingMonitorJumpC2SPacket implements CustomPacketPayload {
                         PatternProviderLogicHost host = ((PatternProviderLogicAccessor) ppl).eap$host();
                         if (host == null) continue;
                         var pbe = host.getBlockEntity();
-                        ServerLevel serverLevel = player.serverLevel();
+                        ServerLevel serverLevel = player.level();
 
                         // 尝试对邻居打开 GUI（优先通过 MenuProvider）
                         for (Direction dir : host.getTargets()) {

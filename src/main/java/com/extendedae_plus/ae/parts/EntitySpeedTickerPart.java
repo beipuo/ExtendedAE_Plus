@@ -16,17 +16,14 @@ import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.storage.MEStorage;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigManagerBuilder;
 import appeng.core.definitions.AEItems;
-import appeng.items.parts.PartModels;
 import appeng.items.tools.NetworkToolItem;
 import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
-import appeng.parts.PartModel;
 import appeng.parts.automation.UpgradeablePart;
 import appeng.util.SettingsFrom;
 import appeng.util.inv.PlayerInternalInventory;
@@ -49,7 +46,7 @@ import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -74,31 +71,10 @@ import java.util.UUID;
  * 功能受<a href="https://github.com/GilbertzRivi/crazyae2addons">Crazy AE2 Addons</a>启发
  */
 public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTickable, MenuProvider, IUpgradeableObject, InterfaceWirelessLinkBridge {
-    private static final ResourceLocation MODEL_BASE = ResourceLocation.fromNamespaceAndPath(
-            ExtendedAEPlus.MODID, "part/entity_speed_ticker_part");
-    @PartModels
-    private static final PartModel MODELS_OFF;
-    @PartModels
-    private static final PartModel MODELS_ON;
-    @PartModels
-    private static final PartModel MODELS_HAS_CHANNEL;
-
-    static {
-        MODELS_OFF = new PartModel(MODEL_BASE, ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "part/entity_speed_ticker_off"));
-        MODELS_ON = new PartModel(MODEL_BASE, ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "part/entity_speed_ticker_on"));
-        MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "part/entity_speed_ticker_has_channel"));
-    }
-
-    public EntitySpeedTickerMenu menu;              // 当前打开的菜单实例
-    private YesNo networkEnergySufficient = YesNo.YES; // 网络能量是否充足
-    /** 频道卡连接统一交给控制器。 */
+    private YesNo networkEnergySufficient = YesNo.UNDECIDED;
+    @Nullable
     private ChannelCardConnectionController channelCardController;
 
-    /**
-     * 构造函数，初始化部件并设置网络节点属性。
-     *
-     * @param partItem 部件物品
-     */
     public EntitySpeedTickerPart(IPartItem<?> partItem) {
         super(partItem);
         this.getMainNode()
@@ -187,17 +163,6 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      *
      * @return 当前状态的模型
      */
-    @Override
-    public IPartModel getStaticModels() {
-        if (this.isActive() && this.isPowered()) {
-            return MODELS_HAS_CHANNEL;
-        } else if (this.isPowered()) {
-            return MODELS_ON;
-        } else {
-            return MODELS_OFF;
-        }
-    }
-
     /**
      * 定义部件的碰撞箱（用于物理碰撞和渲染）
      *

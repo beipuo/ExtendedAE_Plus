@@ -1,5 +1,6 @@
 package com.extendedae_plus.network;
 
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
 import com.extendedae_plus.client.screen.LabeledWirelessTransceiverScreen;
 import net.minecraft.client.Minecraft;
@@ -7,7 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -26,7 +27,7 @@ public record LabelNetworkListS2CPacket(BlockPos pos,
                                         int maxChannels,
                                         int onlineCount) implements CustomPacketPayload {
     public static final Type<LabelNetworkListS2CPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "label_network_list_s2c"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "label_network_list_s2c"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, LabelNetworkListS2CPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {

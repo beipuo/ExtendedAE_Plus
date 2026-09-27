@@ -20,8 +20,8 @@ import com.glodblock.github.extendedae.common.me.taglist.TagPriorityList;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -81,26 +81,26 @@ public class TagInventoryMEInterfaceBlockEntity extends BlockEntity
     @Override
     public void onLoad() {
         super.onLoad();
-        if (this.level != null && !this.level.isClientSide) {
+        if (this.level != null && !this.level.isClientSide()) {
             GridHelper.onFirstTick(this, be -> be.managedNode.create(be.getLevel(), be.getBlockPos()));
         }
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        tag.putString(TAG_WHITE, this.whiteListExpression);
-        tag.putString(TAG_BLACK, this.blackListExpression);
-        this.managedNode.saveToNBT(tag);
+    public void saveAdditional(ValueOutput data) {
+        super.saveAdditional(data);
+        data.putString(TAG_WHITE, this.whiteListExpression);
+        data.putString(TAG_BLACK, this.blackListExpression);
+        this.managedNode.serialize(data);
     }
 
     @Override
-    public void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        this.whiteListExpression = tag.getString(TAG_WHITE);
-        this.blackListExpression = tag.getString(TAG_BLACK);
+    public void loadAdditional(ValueInput data) {
+        super.loadAdditional(data);
+        this.whiteListExpression = data.getString(TAG_WHITE).orElse("");
+        this.blackListExpression = data.getString(TAG_BLACK).orElse("");
         this.filter = null;
-        this.managedNode.loadFromNBT(tag);
+        this.managedNode.deserialize(data);
     }
 
     @Override

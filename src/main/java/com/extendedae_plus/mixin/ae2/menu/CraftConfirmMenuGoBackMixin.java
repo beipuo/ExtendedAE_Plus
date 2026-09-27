@@ -5,9 +5,10 @@ import appeng.api.stacks.AEItemKey;
 import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.me.crafting.CraftingPlanSummary;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
-import com.extendedae_plus.compat.AppliedMekanisticsCompat;
+// import com.extendedae_plus.compat.AppliedMekanisticsCompat;
 import com.extendedae_plus.compat.JeiRuntimeCompat;
-import net.minecraft.client.gui.screens.Screen;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.Minecraft;
 import net.neoforged.fml.ModList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -33,7 +34,9 @@ public class CraftConfirmMenuGoBackMixin {
             // 检测是否按住 Shift
             boolean shiftDown = false;
             try {
-                shiftDown = Screen.hasShiftDown();
+                var window = Minecraft.getInstance().getWindow();
+                shiftDown = InputConstants.isKeyDown(window, InputConstants.KEY_LSHIFT)
+                        || InputConstants.isKeyDown(window, InputConstants.KEY_RSHIFT);
             } catch (Throwable ignored) {}
             if (!shiftDown) return;
 
@@ -51,9 +54,12 @@ public class CraftConfirmMenuGoBackMixin {
                         JeiRuntimeCompat.addBookmark(aeItemKey.getReadOnlyStack());
                     } else if (what instanceof AEFluidKey aeFluidKey) {
                         JeiRuntimeCompat.addBookmark(aeFluidKey.toStack(1000));
-                    } else if (ModList.get().isLoaded("appmek") && ModList.get().isLoaded("mekanism")) {
+                    }
+                    /* Mekanism 与 Applied Mekanistics 发布适配版本后恢复。
+                    else if (ModList.get().isLoaded("appmek") && ModList.get().isLoaded("mekanism")) {
                         AppliedMekanisticsCompat.addBookmark(what);
                     }
+                    */
                 }
             }
         } catch (Throwable ignored) {}

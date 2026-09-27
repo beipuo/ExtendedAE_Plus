@@ -6,6 +6,7 @@ import appeng.api.stacks.AEItemKey;
 import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
 import appeng.me.helpers.PlayerSource;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator.LocatedTerminal;
 import net.minecraft.core.BlockPos;
@@ -13,7 +14,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
@@ -23,7 +24,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public class PickFromWirelessC2SPacket implements CustomPacketPayload {
     public static final Type<PickFromWirelessC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "pick_from_wireless"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "pick_from_wireless"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, PickFromWirelessC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {
@@ -55,7 +56,7 @@ public class PickFromWirelessC2SPacket implements CustomPacketPayload {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
             if (player.isCreative()) return;
 
-            var level = player.serverLevel();
+            var level = player.level();
             BlockState state = level.getBlockState(msg.pos);
             if (state == null || state.isAir()) return;
 
@@ -70,7 +71,7 @@ public class PickFromWirelessC2SPacket implements CustomPacketPayload {
 
             // 计算 pick 对应的物品：使用客户端实际命中位置，保证多部件方块能返回正确克隆物品
             BlockHitResult bhr = new BlockHitResult(msg.hitLoc, msg.face, msg.pos, true);
-            ItemStack picked = state.getBlock().getCloneItemStack(state, bhr, level, msg.pos, player);
+            ItemStack picked = state.getBlock().getCloneItemStack(level, msg.pos, state, true, player);
             if (picked.isEmpty()) {
                 picked = state.getBlock().asItem().getDefaultInstance();
             }
@@ -104,12 +105,12 @@ public class PickFromWirelessC2SPacket implements CustomPacketPayload {
 
             if (placeToMainHand) {
                 if (inHand.isEmpty()) {
-                    inv.setItem(inv.selected, targetKey.toStack((int) extracted));
+                    inv.setItem(inv.getSelectedSlot(), targetKey.toStack((int) extracted));
                 } else {
                     int add = (int) Math.min(extracted, inHand.getMaxStackSize() - inHand.getCount());
                     if (add > 0) {
                         inHand.grow(add);
-                        inv.setItem(inv.selected, inHand);
+                        inv.setItem(inv.getSelectedSlot(), inHand);
                     }
                 }
             } else {

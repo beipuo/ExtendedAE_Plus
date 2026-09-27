@@ -68,7 +68,7 @@ public abstract class TileAssemblerMatrixGlassMixin implements SuperAssemblerMat
         }
         var blockEntity = (BlockEntity) (Object) this;
         var level = blockEntity.getLevel();
-        if (level == null || level.isClientSide || blockEntity.isRemoved()) {
+        if (level == null || level.isClientSide() || blockEntity.isRemoved()) {
             return;
         }
         var state = level.getBlockState(blockEntity.getBlockPos());

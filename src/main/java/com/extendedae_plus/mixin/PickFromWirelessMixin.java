@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -39,7 +39,7 @@ public class PickFromWirelessMixin {
             try {
                 BlockState state = level.getBlockState(bhr.getBlockPos());
                 if (state != null && !state.isAir()) {
-                    ItemStack picked = state.getBlock().getCloneItemStack(state, bhr, level, bhr.getBlockPos(), this.player);
+                    ItemStack picked = state.getBlock().getCloneItemStack(level, bhr.getBlockPos(), state, true, player);
                     if (picked.isEmpty()) {
                         picked = state.getBlock().asItem().getDefaultInstance();
                     }
@@ -58,7 +58,7 @@ public class PickFromWirelessMixin {
         }
 
         Vec3 loc = bhr.getLocation();
-        PacketDistributor.sendToServer(new PickFromWirelessC2SPacket(bhr.getBlockPos(), bhr.getDirection(), loc));
+        ClientPacketDistributor.sendToServer(new PickFromWirelessC2SPacket(bhr.getBlockPos(), bhr.getDirection(), loc));
         ci.cancel();
     }
 }

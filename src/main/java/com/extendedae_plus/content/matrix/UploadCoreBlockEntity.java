@@ -3,6 +3,7 @@ package com.extendedae_plus.content.matrix;
 import appeng.api.networking.IGridNodeListener;
 import appeng.api.orientation.BlockOrientation;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCluster;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixPart;
 import com.glodblock.github.extendedae.common.blocks.matrix.BlockAssemblerMatrixBase;
@@ -28,7 +29,7 @@ public class UploadCoreBlockEntity extends TileAssemblerMatrixFunction implement
     private @Nullable SuperAssemblerMatrixCluster superMatrixCluster;
 
     public UploadCoreBlockEntity(BlockPos pos, BlockState state) {
-        super((BlockEntityType<?>) com.extendedae_plus.init.ModBlockEntities.UPLOAD_CORE_BE.get(), pos, state);
+        super((BlockEntityType<?>) ModBlockEntities.UPLOAD_CORE_BE.get(), pos, state);
     }
 
     @Override

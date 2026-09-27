@@ -10,7 +10,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -71,7 +70,7 @@ public abstract class QuartzCuttingKnifeItemMixin {
 
     @Inject(method = "use", at = @At("HEAD"), cancellable = true)
     private void eap$copyNameOnShiftRightClick(Level level, Player player, InteractionHand hand,
-                                               CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
+                                               CallbackInfoReturnable<InteractionResult> cir) {
         if (!level.isClientSide()) {
             return;
         }
@@ -96,13 +95,12 @@ public abstract class QuartzCuttingKnifeItemMixin {
 
         // 复制到剪贴板并反馈
         boolean success = eap$tryCopyToClipboard(Minecraft.getInstance(), name);
-        player.displayClientMessage(Component.literal(success
+        player.sendSystemMessage(Component.literal(success
                 ? ("已复制方块/部件名: " + name)
-                : "复制失败：整合包可能限制剪贴板或未聚焦窗口"), true);
+                : "复制失败：整合包可能限制剪贴板或未聚焦窗口"));
 
         // 拦截默认行为，不再打开刀具界面
-        ItemStack held = player.getItemInHand(hand);
-        cir.setReturnValue(new InteractionResultHolder<>(InteractionResult.SUCCESS, held));
+        cir.setReturnValue(InteractionResult.SUCCESS);
     }
 
     @Inject(method = "useOn", at = @At("HEAD"), cancellable = true)
@@ -125,9 +123,9 @@ public abstract class QuartzCuttingKnifeItemMixin {
 
         // 复制到剪贴板并反馈
         boolean success = eap$tryCopyToClipboard(Minecraft.getInstance(), name);
-        player.displayClientMessage(Component.literal(success
+        player.sendSystemMessage(Component.literal(success
                 ? ("已复制方块/部件名: " + name)
-                : "复制失败：整合包可能限制剪贴板或未聚焦窗口"), true);
+                : "复制失败：整合包可能限制剪贴板或未聚焦窗口"));
 
         // 拦截默认行为
         cir.setReturnValue(InteractionResult.SUCCESS);
@@ -266,7 +264,7 @@ public abstract class QuartzCuttingKnifeItemMixin {
         try {
             // GLFW 路径 1：使用窗口句柄
             Window window = mc.getWindow();
-            long handle = window == null ? 0L : window.getWindow();
+            long handle = window == null ? 0L : window.handle();
             if (handle != 0L) {
                 GLFW.glfwSetClipboardString(handle, text);
                 return true;

@@ -1,5 +1,7 @@
 package com.extendedae_plus.mixin.neoecoae.compat;
 
+// NeoECOAE 适配暂时禁用，待发布适配版本后恢复；build.gradle 已排除本文件。
+
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.stacks.KeyCounter;

@@ -11,6 +11,7 @@ import appeng.menu.AEBaseMenu;
 import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftingCPUMenu;
 import appeng.parts.AEBasePart;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.util.PatternProviderDataUtil;
@@ -23,7 +24,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -43,7 +44,7 @@ import static com.glodblock.github.extendedae.client.render.EAEHighlightHandler.
  */
 public class CraftingMonitorOpenProviderC2SPacket implements CustomPacketPayload {
     public static final Type<CraftingMonitorOpenProviderC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "crafting_monitor_open_provider"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "crafting_monitor_open_provider"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, CraftingMonitorOpenProviderC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> AEKey.writeKey(buf, pkt.what),
@@ -166,7 +167,7 @@ public class CraftingMonitorOpenProviderC2SPacket implements CustomPacketPayload
         }
 
         if (player != null) {
-            player.displayClientMessage(Component.translatable("chat.ex_pattern_access_terminal.pos", pos.toShortString(), dim.location().getPath()), false);
+            player.sendSystemMessage(Component.translatable("chat.ex_pattern_access_terminal.pos", pos.toShortString(), dim.identifier().getPath()));
         }
     }
 }

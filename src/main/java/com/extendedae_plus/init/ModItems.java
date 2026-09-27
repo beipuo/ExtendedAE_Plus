@@ -1,7 +1,5 @@
 package com.extendedae_plus.init;
 
-import appeng.api.parts.PartModels;
-import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
 import com.extendedae_plus.items.BasicCoreItem;
@@ -255,9 +253,8 @@ public final class ModItems {
 
     private ModItems() {}
 
-    /** 在 AE2 冻结 CableBus 模型依赖前登记实体加速器的全部部件模型。 */
+    /** Part model registration is handled by AE2's 26.1.10 model event. */
     public static void registerPartModels() {
-        PartModels.registerModels(PartModelsHelper.createModels(EntitySpeedTickerPart.class));
     }
 
     /**

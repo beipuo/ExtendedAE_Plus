@@ -122,7 +122,7 @@ public final class WirelessMasterRegistry {
     private record Key(@Nullable ResourceKey<Level> dim, long freq, UUID owner) {
         @Override 
         public String toString() {
-            return (this.dim == null ? "*" : this.dim.location().toString())
+            return (this.dim == null ? "*" : this.dim.identifier().toString())
                     + "#" + this.freq
                     + "@" + this.owner;
         }

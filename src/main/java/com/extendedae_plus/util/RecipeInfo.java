@@ -3,7 +3,7 @@ package com.extendedae_plus.util;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -16,14 +16,14 @@ import java.util.Map;
  */
 public class RecipeInfo {
 	private final Object recipeBase;
-	private final ResourceLocation recipeId;
+	private final Identifier recipeId;
 	private final boolean craftingRecipe;
 	private final List<List<GenericStack>> inputs;
 	private final List<GenericStack> outputs;
 
 	public RecipeInfo(
 		Object recipeBase,
-		ResourceLocation recipeId,
+		Identifier recipeId,
 		boolean craftingRecipe,
 		List<List<GenericStack>> inputs,
 		List<GenericStack> outputs
@@ -39,7 +39,7 @@ public class RecipeInfo {
 		return recipeBase;
 	}
 
-	public ResourceLocation getRecipeId() {
+	public Identifier getRecipeId() {
 		return recipeId;
 	}
 

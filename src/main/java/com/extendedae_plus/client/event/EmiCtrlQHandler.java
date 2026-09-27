@@ -1,6 +1,7 @@
 package com.extendedae_plus.client.event;
 
 import appeng.api.stacks.AEItemKey;
+import com.mojang.blaze3d.platform.InputConstants;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.client.ModKeybindings;
 import com.extendedae_plus.client.emi.BoMMappingStatus;
@@ -13,11 +14,11 @@ import com.extendedae_plus.util.RecipeInfo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -43,7 +44,7 @@ public final class EmiCtrlQHandler {
 		}
 		// isActiveAndMatches 才会校验修饰键（Ctrl）与冲突上下文；KeyMapping.matches 对裸键也会命中
 		if (!ModKeybindings.CREATE_PATTERN_KEY.isActiveAndMatches(
-				com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(event.getKeyCode()))) {
+				InputConstants.Type.KEYSYM.getOrCreate(event.getKeyCode()))) {
 			return;
 		}
 		// 双查看器仲裁：EMI 在场时本类接管，JEI 分支让位（与 InputEvents 的分派优先级一致）。
@@ -51,8 +52,8 @@ public final class EmiCtrlQHandler {
 			return;
 		}
 
-		boolean isAllowSubstitutes = Screen.hasShiftDown();
-		boolean isFluidSubstitutes = Screen.hasAltDown();
+		boolean isAllowSubstitutes = false;
+		boolean isFluidSubstitutes = false;
 
 		// 合成链（配方树/BoM）界面内禁用快捷键编码：批量编码由界面上的 A 按钮承担
 		if (screen instanceof dev.emi.emi.screen.BoMScreen) {
@@ -63,7 +64,7 @@ public final class EmiCtrlQHandler {
 		if (hovered.isEmpty()) {
 			Minecraft mc = Minecraft.getInstance();
 			if (mc.player != null) {
-				mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.hover_item_first"), true);
+				mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.hover_item_first"));
 			}
 			return;
 		}
@@ -72,7 +73,7 @@ public final class EmiCtrlQHandler {
 		if (recipes.isEmpty()) {
 			Minecraft mc = Minecraft.getInstance();
 			if (mc.player != null) {
-				mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.no_recipes_found"), true);
+				mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.no_recipes_found"));
 			}
 			return;
 		}
@@ -85,7 +86,7 @@ public final class EmiCtrlQHandler {
 		List<ItemStack> selectedIngredients = selected.selectBestInputs(Map.of());
 		List<ItemStack> selectedOutputs = convertOutputsToItemStacks(selected);
 
-		PacketDistributor.sendToServer(new CreateCtrlQPatternC2SPacket(
+		ClientPacketDistributor.sendToServer(new CreateCtrlQPatternC2SPacket(
 			selected.getRecipeId(),
 			selected.isCraftingRecipe(),
 			selectedIngredients,
@@ -122,12 +123,12 @@ public final class EmiCtrlQHandler {
 		dev.emi.emi.bom.MaterialTree tree = dev.emi.emi.bom.BoM.tree;
 		if (tree == null || tree.goal == null) {
 			if (mc.player != null) {
-				mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.no_recipes_found"), true);
+				mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.no_recipes_found"));
 			}
 			return 0;
 		}
 
-		Set<ResourceLocation> seen = new HashSet<>();
+		Set<Identifier> seen = new HashSet<>();
 		List<BatchCreateAndUploadPatternC2SPacket.Entry> entries = new ArrayList<>();
 		int skipped = 0;
 		Deque<dev.emi.emi.bom.MaterialNode> stack = new ArrayDeque<>();
@@ -161,8 +162,8 @@ public final class EmiCtrlQHandler {
 
 		if (entries.isEmpty()) {
 			if (mc.player != null) {
-				mc.player.displayClientMessage(
-					Component.translatable("message.extendedae_plus.bom_encode.nothing_to_encode"), true);
+				mc.player.sendSystemMessage(
+					Component.translatable("message.extendedae_plus.bom_encode.nothing_to_encode"));
 			}
 			return 0;
 		}
@@ -170,7 +171,7 @@ public final class EmiCtrlQHandler {
 		// 单封包条目上限，超出时分批发送，避免一棵大树塞爆一个数据包。
 		int limit = BatchCreateAndUploadPatternC2SPacket.MAX_ENTRIES;
 		for (int from = 0; from < entries.size(); from += limit) {
-			PacketDistributor.sendToServer(new BatchCreateAndUploadPatternC2SPacket(
+			ClientPacketDistributor.sendToServer(new BatchCreateAndUploadPatternC2SPacket(
 				new ArrayList<>(entries.subList(from, Math.min(from + limit, entries.size()))),
 				isAllowSubstitutes,
 				isFluidSubstitutes
@@ -178,8 +179,8 @@ public final class EmiCtrlQHandler {
 		}
 
 		if (skipped > 0 && mc.player != null) {
-			mc.player.displayClientMessage(Component.translatable(
-				"message.extendedae_plus.bom_encode.skipped_no_recipe", skipped), true);
+			mc.player.sendSystemMessage(Component.translatable(
+				"message.extendedae_plus.bom_encode.skipped_no_recipe", skipped));
 		}
 		return entries.size();
 	}

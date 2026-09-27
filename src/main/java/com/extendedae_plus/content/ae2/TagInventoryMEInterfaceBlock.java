@@ -4,7 +4,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -27,11 +26,11 @@ public class TagInventoryMEInterfaceBlock extends Block implements EntityBlock {
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack heldItem, BlockState state, Level level,
+    protected InteractionResult useItemOn(ItemStack heldItem, BlockState state, Level level,
             BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         return this.openMenu(level, pos, player).consumesAction()
-                ? ItemInteractionResult.sidedSuccess(level.isClientSide)
-                : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+                ? InteractionResult.SUCCESS
+                : InteractionResult.PASS;
     }
 
     @Override
@@ -41,7 +40,7 @@ public class TagInventoryMEInterfaceBlock extends Block implements EntityBlock {
     }
 
     private InteractionResult openMenu(Level level, BlockPos pos, Player player) {
-        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
+        if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity instanceof TagInventoryMEInterfaceBlockEntity tagInterface
                     && blockEntity instanceof MenuProvider provider) {
@@ -52,6 +51,6 @@ public class TagInventoryMEInterfaceBlock extends Block implements EntityBlock {
                 });
             }
         }
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.SUCCESS;
     }
 }

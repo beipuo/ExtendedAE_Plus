@@ -25,6 +25,7 @@ import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -134,7 +135,7 @@ public class SuperAssemblerMatrixCluster {
         );
     }
 
-    public java.util.Iterator<IGridNode> getGridNodes() {
+    public Iterator<IGridNode> getGridNodes() {
         var nodes = new ArrayList<IGridNode>();
         for (var part : this.parts) {
             if (part instanceof SuperAssemblerMatrixBlockEntity blockEntity) {

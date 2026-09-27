@@ -3,7 +3,7 @@ package com.extendedae_plus.client.screen;
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.client.gui.AEBaseScreen;
-import appeng.client.gui.Icon;
+import appeng.util.Icon;
 import appeng.client.gui.style.PaletteColor;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AETextField;
@@ -23,12 +23,14 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -43,7 +45,7 @@ public class SuperAssemblerMatrixScreen extends AEBaseScreen<SuperAssemblerMatri
     private static final int ROW_HEIGHT = 18;
     private static final int GUI_PADDING_X = 8;
     private static final int SLOT_SIZE = 18;
-    private static final ResourceLocation BG = AppEng.makeId("textures/guis/assembler_matrix.png");
+    private static final Identifier BG = AppEng.makeId("textures/guis/assembler_matrix.png");
     private static final Rect2i EMPTY_ROW1 = new Rect2i(0, 203, 160, 16);
     private static final Rect2i EMPTY_ROW2 = new Rect2i(0, 219, 160, 18);
 
@@ -75,8 +77,8 @@ public class SuperAssemblerMatrixScreen extends AEBaseScreen<SuperAssemblerMatri
                 Component.translatable("gui.extendedae_plus.super_assembler_matrix.tooltip")));
 
         var cancel = new ActionEPPButton(
-                button -> PacketDistributor.sendToServer(new SuperAssemblerMatrixActionC2SPacket("cancel")),
-                Icon.CLEAR
+                button -> ClientPacketDistributor.sendToServer(new SuperAssemblerMatrixActionC2SPacket("cancel")),
+                Icon.TOOLBAR_BUTTON_BACKGROUND
         );
         cancel.setMessage(Component.translatable("gui.extendedae_plus.super_assembler_matrix.cancel"));
         this.addToLeftToolbar(cancel);
@@ -90,15 +92,18 @@ public class SuperAssemblerMatrixScreen extends AEBaseScreen<SuperAssemblerMatri
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (button == 1 && this.searchField.isMouseOver(mouseX, mouseY)) {
             this.searchField.setValue("");
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         this.menu.slots.removeIf(slot -> slot instanceof SuperAssemblerMatrixSlot);
         int textColor = this.style.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
         int scrollLevel = this.scrollbar.getCurrentScroll();
@@ -119,17 +124,17 @@ public class SuperAssemblerMatrixScreen extends AEBaseScreen<SuperAssemblerMatri
                 }
             }
         }
-        guiGraphics.drawString(
+        guiGraphics.text(
                 this.font,
                 Component.translatable("gui.extendedae_plus.super_assembler_matrix.concurrent",
                         this.concurrentExecutions),
                 80, 19,
-                textColor, false
+                textColor
         );
     }
 
     @Override
-    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, float partialTicks) {
+    public void drawBG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         int size = this.rows.size();
         if (size < 4) {
@@ -147,7 +152,7 @@ public class SuperAssemblerMatrixScreen extends AEBaseScreen<SuperAssemblerMatri
     }
 
     @Override
-    protected void slotClicked(Slot slot, int slotIdx, int mouseButton, ClickType clickType) {
+    protected void slotClicked(Slot slot, int slotIdx, int mouseButton, ContainerInput clickType) {
         if (slot instanceof SuperAssemblerMatrixSlot matrixSlot) {
             InventoryAction action = null;
             switch (clickType) {
@@ -166,7 +171,7 @@ public class SuperAssemblerMatrixScreen extends AEBaseScreen<SuperAssemblerMatri
                 }
             }
             if (action != null) {
-                PacketDistributor.sendToServer(new InventoryActionPacket(
+                ClientPacketDistributor.sendToServer(new InventoryActionPacket(
                         action, matrixSlot.getActuallySlot(), matrixSlot.getID()));
             }
             return;
@@ -187,9 +192,11 @@ public class SuperAssemblerMatrixScreen extends AEBaseScreen<SuperAssemblerMatri
         this.concurrentExecutions = concurrentExecutions;
     }
 
-    private void blit(GuiGraphics guiGraphics, int offsetX, int offsetY, Rect2i srcRect) {
-        guiGraphics.blit(BG, offsetX, offsetY, srcRect.getX(), srcRect.getY(),
-                srcRect.getWidth(), srcRect.getHeight());
+    private void blit(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, Rect2i srcRect) {
+        guiGraphics.blit(BG, offsetX, offsetY, srcRect.getWidth(), srcRect.getHeight(),
+                srcRect.getX() / 256.0f, srcRect.getY() / 256.0f,
+                (srcRect.getX() + srcRect.getWidth()) / 256.0f,
+                (srcRect.getY() + srcRect.getHeight()) / 256.0f);
     }
 
     private void resetScrollbar() {

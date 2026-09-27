@@ -75,7 +75,6 @@ public class BasicCoreItem extends Item {
 
     // ==================== Tooltip ====================
     @OnlyIn(Dist.CLIENT)
-    @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         if (!isTyped(stack)) {
             tooltip.add(Component.translatable("tooltip." + ExtendedAEPlus.MODID + ".basic_core.untyped")

@@ -8,7 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -21,7 +21,7 @@ import java.util.List;
  */
 public class ProvidersListS2CPacket implements CustomPacketPayload {
     public static final Type<ProvidersListS2CPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "providers_list"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "providers_list"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ProvidersListS2CPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {

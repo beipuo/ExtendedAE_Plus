@@ -1,7 +1,7 @@
 package com.extendedae_plus.mixin.ae2.client.gui;
 
 import appeng.client.gui.AEBaseScreen;
-import appeng.client.gui.Icon;
+import appeng.util.Icon;
 import appeng.client.gui.me.items.PatternEncodingTermScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.WidgetStyle;
@@ -13,12 +13,11 @@ import com.extendedae_plus.mixin.accessor.ScreenAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
 import com.extendedae_plus.network.RequestProvidersListC2SPacket;
 import com.extendedae_plus.network.ReturnLastPatternC2SPacket;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -47,66 +46,18 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
         // 复用已存在的按钮实例，避免重复创建
         if (eap$uploadBtn == null) {
             eap$uploadBtn = new IconButton(btn -> {
-                if (Screen.hasShiftDown()) {
-                    PacketDistributor.sendToServer(ReturnLastPatternC2SPacket.INSTANCE);
+                if (Minecraft.getInstance().hasShiftDown()) {
+                    ClientPacketDistributor.sendToServer(ReturnLastPatternC2SPacket.INSTANCE);
                 } else {
-                    PacketDistributor.sendToServer(RequestProvidersListC2SPacket.INSTANCE);
+                    ClientPacketDistributor.sendToServer(RequestProvidersListC2SPacket.INSTANCE);
                 }
             }) {
-                private final float eap$scale = 0.75f; // 约 12x12
-
                 @Override
                 protected Icon getIcon() {
                     return Icon.ARROW_UP;
                 }
-
-                @Override
-                public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partial) {
-                    // 参照 AE2 IconButton 实现，改为自定义缩放
-                    if (this.visible) {
-                        var icon = this.getIcon();
-                        var blitter = icon.getBlitter();
-                        if (!this.active) {
-                            blitter.opacity(0.5f);
-                        }
-
-                        // 动态更新宽高用于聚焦边框/命中框
-                        this.width = Math.round(16 * eap$scale);
-                        this.height = Math.round(16 * eap$scale);
-
-                        com.mojang.blaze3d.systems.RenderSystem.disableDepthTest();
-                        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
-
-                        if (isFocused()) {
-                            guiGraphics.fill(getX() - 1, getY() - 1, getX() + width + 1, getY(), 0xFFFFFFFF);
-                            guiGraphics.fill(getX() - 1, getY(), getX(), getY() + height, 0xFFFFFFFF);
-                            guiGraphics.fill(getX() + width, getY(), getX() + width + 1, getY() + height, 0xFFFFFFFF);
-                            guiGraphics.fill(getX() - 1, getY() + height, getX() + width + 1, getY() + height + 1, 0xFFFFFFFF);
-                        }
-
-                        var pose = guiGraphics.pose();
-                        pose.pushPose();
-                        pose.translate(getX(), getY(), 0.0F);
-                        pose.scale(eap$scale, eap$scale, 1.f);
-                        if (!this.isDisableBackground()) {
-                            Icon.TOOLBAR_BUTTON_BACKGROUND.getBlitter().dest(0, 0).blit(guiGraphics);
-                        }
-                        if (Screen.hasShiftDown()) {
-                            pose.translate(16.0F, 16.0F, 0.0F);
-                            pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(180.0F));
-                        }
-                        blitter.dest(0, 0).blit(guiGraphics);
-                        pose.popPose();
-
-                        com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
-                    }
-                }
-
-                @Override
-                public Rect2i getTooltipArea() {
-                    return new Rect2i(getX(), getY(), Math.round(16 * eap$scale), Math.round(16 * eap$scale));
-                }
             };
+            eap$uploadBtn.setHalfSize(true);
             eap$updateUploadButtonTooltip();
         }
 
@@ -210,7 +161,7 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
             return;
         }
         eap$uploadBtn.setTooltip(Tooltip.create(Component.translatable(
-                Screen.hasShiftDown()
+                Minecraft.getInstance().hasShiftDown()
                         ? "extendedae_plus.button.return_last_pattern"
                         : "extendedae_plus.button.choose_provider"
         )));

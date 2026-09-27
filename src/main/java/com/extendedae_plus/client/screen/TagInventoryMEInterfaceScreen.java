@@ -4,30 +4,30 @@ import com.extendedae_plus.content.ae2.TagInventoryMEInterfaceBlockEntity;
 import com.extendedae_plus.menu.TagInventoryMEInterfaceMenu;
 import com.extendedae_plus.network.TagInventoryFilterC2SPacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.KeyEvent;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.regex.Pattern;
 
 public class TagInventoryMEInterfaceScreen extends AbstractContainerScreen<TagInventoryMEInterfaceMenu> {
 
-    private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath("ae2", "textures/guis/background.png");
+    private static final Identifier BACKGROUND = Identifier.fromNamespaceAndPath("ae2", "textures/guis/background.png");
     private static final Pattern TAG_EXPRESSION_FILTER = Pattern.compile("[0-9A-Za-z* &|^!():/_.\\r\\n-]*");
 
     private EditBox whiteListInput;
     private EditBox blackListInput;
 
     public TagInventoryMEInterfaceScreen(TagInventoryMEInterfaceMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
-        this.imageWidth = 220;
-        this.imageHeight = 130;
+        super(menu, inventory, title, 220, 130);
         this.inventoryLabelY = this.imageHeight;
     }
 
@@ -59,7 +59,7 @@ public class TagInventoryMEInterfaceScreen extends AbstractContainerScreen<TagIn
     }
 
     private void saveFilters() {
-        PacketDistributor.sendToServer(new TagInventoryFilterC2SPacket(
+        ClientPacketDistributor.sendToServer(new TagInventoryFilterC2SPacket(
                 this.menu.getBlockEntityPos(),
                 this.whiteListInput.getValue(),
                 this.blackListInput.getValue()));
@@ -69,37 +69,36 @@ public class TagInventoryMEInterfaceScreen extends AbstractContainerScreen<TagIn
     }
 
     @Override
-    public void render(@NotNull GuiGraphics gfx, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(gfx, mouseX, mouseY, partialTicks);
-        super.render(gfx, mouseX, mouseY, partialTicks);
-        this.renderTooltip(gfx, mouseX, mouseY);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor gfx, int mouseX, int mouseY, float partialTicks) {
+        super.extractRenderState(gfx, mouseX, mouseY, partialTicks);
     }
 
     @Override
-    protected void renderBg(GuiGraphics gfx, float partialTicks, int mouseX, int mouseY) {
-        gfx.blit(BACKGROUND, this.leftPos, this.topPos, this.imageWidth, this.imageHeight, 0, 0, 256, 256, 256, 256);
+    public void extractBackground(GuiGraphicsExtractor gfx, int mouseX, int mouseY, float partialTicks) {
+        gfx.blit(BACKGROUND, this.leftPos, this.topPos, this.imageWidth, this.imageHeight,
+                0.0f, 0.0f, 1.0f, 1.0f);
     }
 
     @Override
-    protected void renderLabels(GuiGraphics gfx, int mouseX, int mouseY) {
-        gfx.drawString(this.font, this.title, 8, 6, 0x404040, false);
-        gfx.drawString(this.font,
+    protected void extractLabels(GuiGraphicsExtractor gfx, int mouseX, int mouseY) {
+        gfx.text(this.font, this.title, 8, 6, 0x404040, false);
+        gfx.text(this.font,
                 Component.translatable("gui.extendedae_plus.tag_inventory_me_interface.whitelist"),
                 12, 22, 0x404040, false);
-        gfx.drawString(this.font,
+        gfx.text(this.font,
                 Component.translatable("gui.extendedae_plus.tag_inventory_me_interface.blacklist"),
                 12, 58, 0x404040, false);
-        gfx.drawString(this.font,
+        gfx.text(this.font,
                 Component.translatable("gui.extendedae_plus.tag_inventory_me_interface.hint"),
                 12, 104, 0x606060, false);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         if (this.getFocused() instanceof EditBox
-                && Minecraft.getInstance().options.keyInventory.matches(keyCode, scanCode)) {
+                && Minecraft.getInstance().options.keyInventory.matches(event)) {
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 }

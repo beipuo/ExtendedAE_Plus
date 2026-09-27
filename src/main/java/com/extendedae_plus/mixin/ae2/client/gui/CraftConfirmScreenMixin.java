@@ -13,7 +13,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.fml.ModList;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -45,7 +45,7 @@ public class CraftConfirmScreenMixin {
             if (widgets == null) return;
 
             var widgetsMap = ((WidgetContainerAccessor) widgets).eap$getWidgetsMap();
-            boolean shiftDown = Screen.hasShiftDown();
+            boolean shiftDown = net.minecraft.client.Minecraft.getInstance().hasShiftDown();
             CraftingPlanSummary plan = self.getMenu().getPlan();
             boolean forceStart = shiftDown && plan != null && plan.isSimulation();
 
@@ -88,7 +88,7 @@ public class CraftConfirmScreenMixin {
     private void eap$syncForceStartFlagBeforeStart(CallbackInfo ci) {
         CraftConfirmScreen self = (CraftConfirmScreen) (Object) this;
         var plan = self.getMenu().getPlan();
-        boolean forceStart = Screen.hasShiftDown() && plan != null && plan.isSimulation();
-        PacketDistributor.sendToServer(new ForceCraftStartFlagC2SPacket(forceStart));
+        boolean forceStart = net.minecraft.client.Minecraft.getInstance().hasShiftDown() && plan != null && plan.isSimulation();
+        ClientPacketDistributor.sendToServer(new ForceCraftStartFlagC2SPacket(forceStart));
     }
 }

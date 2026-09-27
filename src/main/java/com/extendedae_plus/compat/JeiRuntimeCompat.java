@@ -1,6 +1,5 @@
 package com.extendedae_plus.compat;
 
-import com.extendedae_plus.mixin.jei.accessor.BookmarkListAccessor;
 import com.extendedae_plus.mixin.jei.accessor.BookmarkOverlayAccessor;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import mezz.jei.api.constants.VanillaTypes;
@@ -9,10 +8,11 @@ import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.recipe.IRecipeManager;
-import mezz.jei.api.recipe.RecipeType;
+import mezz.jei.api.recipe.types.IRecipeType;
 import mezz.jei.api.runtime.IJeiRuntime;
 import mezz.jei.common.Internal;
 import mezz.jei.gui.bookmarks.BookmarkList;
+import mezz.jei.gui.bookmarks.IngredientBookmark;
 import mezz.jei.gui.bookmarks.RecipeBookmark;
 import mezz.jei.gui.input.IClickableIngredientInternal;
 import mezz.jei.gui.overlay.IngredientListOverlay;
@@ -49,10 +49,10 @@ public final class JeiRuntimeCompat {
 
 		try {
 			IRecipeManager recipeManager = jeiRuntime.getRecipeManager();
-			List<RecipeType<?>> candidates = jeiRuntime.getJeiHelpers().getAllRecipeTypes()
+			List<IRecipeType<?>> candidates = jeiRuntime.getJeiHelpers().getAllRecipeTypes()
 				.filter(type -> type.getRecipeClass().isInstance(recipe))
 				.toList();
-			RecipeType<?> matched = candidates.size() == 1
+			IRecipeType<?> matched = candidates.size() == 1
 				? candidates.getFirst()
 				: candidates.stream()
 					.filter(type -> containsRecipe(recipeManager, type, recipe))
@@ -69,17 +69,15 @@ public final class JeiRuntimeCompat {
 		}
 	}
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	private static boolean containsRecipe(IRecipeManager recipeManager, RecipeType<?> type, Object recipe) {
-		return recipeManager.createRecipeLookup((RecipeType) type)
+	private static boolean containsRecipe(IRecipeManager recipeManager, IRecipeType<?> type, Object recipe) {
+		return recipeManager.createRecipeLookup(type)
 			.includeHidden()
 			.get()
 			.anyMatch(candidate -> candidate == recipe || Objects.equals(candidate, recipe));
 	}
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	private static String getCategoryTitle(IRecipeManager recipeManager, RecipeType<?> type) {
-		return recipeManager.getRecipeCategory((RecipeType) type).getTitle().getString();
+	private static String getCategoryTitle(IRecipeManager recipeManager, IRecipeType<?> type) {
+		return recipeManager.getRecipeCategory(type).getTitle().getString();
 	}
 
 	public static Optional<ITypedIngredient<?>> getIngredientUnderMouse() {
@@ -201,9 +199,10 @@ public final class JeiRuntimeCompat {
 			return;
 		}
 		BookmarkList bookmarkList = ((BookmarkOverlayAccessor) overlay).eap$getBookmarkList();
-		jeiRuntime.getIngredientManager().createTypedIngredient(type, ingredient, false)
-			.map(((BookmarkListAccessor) bookmarkList).eap$getBookmarkFactory()::create)
-                  .ifPresent(bookmarkList::add);
+		var ingredientManager = jeiRuntime.getIngredientManager();
+		ingredientManager.createTypedIngredient(type, ingredient, false)
+			.map(typed -> IngredientBookmark.create(typed, ingredientManager))
+			.ifPresent(bookmarkList::add);
 	}
 
 	private static void addBookmarkUnchecked(Object ingredient) {
@@ -212,8 +211,9 @@ public final class JeiRuntimeCompat {
 			return;
 		}
 		BookmarkList bookmarkList = ((BookmarkOverlayAccessor) overlay).eap$getBookmarkList();
-		jeiRuntime.getIngredientManager().createTypedIngredient(ingredient, false)
-			.map(((BookmarkListAccessor) bookmarkList).eap$getBookmarkFactory()::create)
+		var ingredientManager = jeiRuntime.getIngredientManager();
+		ingredientManager.createTypedIngredient(ingredient, false)
+			.map(typed -> IngredientBookmark.create(typed, ingredientManager))
 			.ifPresent(bookmarkList::add);
 	}
 

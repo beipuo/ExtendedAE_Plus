@@ -7,34 +7,18 @@ import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.client.settings.KeyModifier;
 import org.lwjgl.glfw.GLFW;
 
-/**
- * ExtendedAE Plus 快捷键定义
- */
 public final class ModKeybindings {
-	private ModKeybindings() {
-	}
+    private static final KeyMapping.Category CATEGORY = new KeyMapping.Category(
+            ExtendedAEPlus.id("key.categories.extendedae_plus"));
 
-	/**
-	 * Ctrl+Q 快速创建样板快捷键
-	 */
-	public static final KeyMapping CREATE_PATTERN_KEY = new KeyMapping(
-		"key.extendedae_plus.create_pattern",
-		KeyConflictContext.GUI,
-		KeyModifier.CONTROL,
-		InputConstants.Type.KEYSYM,
-		GLFW.GLFW_KEY_Q,
-		"key.categories.extendedae_plus"
-	);
+    private ModKeybindings() {
+    }
 
-	/**
-	 * 填充JEI物品名称到搜索框快捷键
-	 */
-	public static final KeyMapping FILL_SEARCH_KEY = new KeyMapping(
-		"key.extendedae_plus.fill_search",
-		KeyConflictContext.GUI,
-		InputConstants.Type.KEYSYM,
-		GLFW.GLFW_KEY_F,
-		"key.categories.extendedae_plus"
-	);
+    public static final KeyMapping CREATE_PATTERN_KEY = new KeyMapping(
+            "key.extendedae_plus.create_pattern", KeyConflictContext.GUI, KeyModifier.CONTROL,
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Q, CATEGORY);
+
+    public static final KeyMapping FILL_SEARCH_KEY = new KeyMapping(
+            "key.extendedae_plus.fill_search", KeyConflictContext.GUI, KeyModifier.NONE,
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F, CATEGORY);
 }
-

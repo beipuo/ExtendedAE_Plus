@@ -6,14 +6,15 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record TagInventoryFilterC2SPacket(BlockPos pos, String whiteListExpression, String blackListExpression)
         implements CustomPacketPayload {
 
     public static final Type<TagInventoryFilterC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "tag_inventory_filter"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "tag_inventory_filter"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, TagInventoryFilterC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, packet) -> {
@@ -36,7 +37,7 @@ public record TagInventoryFilterC2SPacket(BlockPos pos, String whiteListExpressi
 
     public static void handle(TagInventoryFilterC2SPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            if (!(context.player() instanceof net.minecraft.server.level.ServerPlayer player)) {
+            if (!(context.player() instanceof ServerPlayer player)) {
                 return;
             }
             if (player.distanceToSqr(packet.pos.getX() + 0.5, packet.pos.getY() + 0.5, packet.pos.getZ() + 0.5) > 64.0) {

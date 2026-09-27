@@ -18,9 +18,10 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.core.component.DataComponents;
@@ -237,7 +238,7 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
     }
 
     private void updateState() {
-        if (this.level == null || this.level.isClientSide) return;
+        if (this.level == null || this.level.isClientSide()) return;
         if (ExtendedAEPlus.isServerStopping()) return;
         if (this.beingRemoved || this.isRemoved()) return;
         BlockState currentState = this.getBlockState();
@@ -290,40 +291,32 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
     }
 
     @Override
-    public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        tag.putLong("frequency", frequency);
+    public void saveAdditional(ValueOutput data) {
+        super.saveAdditional(data);
+        data.putLong("frequency", frequency);
         if (labelForDisplay != null) {
-            tag.putString("label", labelForDisplay);
+            data.putString("label", labelForDisplay);
         }
         if (placerId != null) {
-            tag.putUUID("placerId", placerId);
+            data.store("placerId", UUIDUtil.CODEC, placerId);
         }
         if (placerName != null) {
-            tag.putString("placerName", placerName);
+            data.putString("placerName", placerName);
         }
         if (managedNode != null) {
-            managedNode.saveToNBT(tag);
+            managedNode.serialize(data);
         }
     }
 
     @Override
-    public void loadTag(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadTag(tag, registries);
-        this.frequency = tag.getLong("frequency");
-        if (tag.contains("label")) {
-            this.labelForDisplay = tag.getString("label");
-        } else {
-            this.labelForDisplay = null;
-        }
-        if (tag.hasUUID("placerId")) {
-            this.placerId = tag.getUUID("placerId");
-        }
-        if (tag.contains("placerName")) {
-            this.placerName = tag.getString("placerName");
-        }
+    public void loadTag(ValueInput data) {
+        super.loadTag(data);
+        this.frequency = data.getLongOr("frequency", 0L);
+        this.labelForDisplay = data.getString("label").orElse(null);
+        this.placerId = data.read("placerId", UUIDUtil.CODEC).orElse(null);
+        this.placerName = data.getString("placerName").orElse(null);
         if (managedNode != null) {
-            managedNode.loadFromNBT(tag);
+            managedNode.deserialize(data);
         }
     }
 

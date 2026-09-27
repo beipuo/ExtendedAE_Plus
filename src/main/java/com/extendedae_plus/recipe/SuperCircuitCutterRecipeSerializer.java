@@ -9,7 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import org.jetbrains.annotations.NotNull;
 
-public final class SuperCircuitCutterRecipeSerializer implements RecipeSerializer<SuperCircuitCutterRecipe> {
+public final class SuperCircuitCutterRecipeSerializer {
     public static final MapCodec<SuperCircuitCutterRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             ItemStack.CODEC.fieldOf("output").forGetter(SuperCircuitCutterRecipe::output),
             IngredientStack.ITEM_CODEC.fieldOf("input").forGetter(SuperCircuitCutterRecipe::input)
@@ -19,13 +19,5 @@ public final class SuperCircuitCutterRecipeSerializer implements RecipeSerialize
             IngredientStack.ITEM_STREAM_CODEC, SuperCircuitCutterRecipe::input,
             SuperCircuitCutterRecipe::new);
 
-    @Override
-    public @NotNull MapCodec<SuperCircuitCutterRecipe> codec() {
-        return CODEC;
-    }
-
-    @Override
-    public @NotNull StreamCodec<RegistryFriendlyByteBuf, SuperCircuitCutterRecipe> streamCodec() {
-        return STREAM_CODEC;
-    }
+    public static final RecipeSerializer<SuperCircuitCutterRecipe> INSTANCE = new RecipeSerializer<>(CODEC, STREAM_CODEC);
 }

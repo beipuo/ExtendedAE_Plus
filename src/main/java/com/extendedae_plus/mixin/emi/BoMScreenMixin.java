@@ -6,10 +6,11 @@ import dev.emi.emi.bom.BoM;
 import dev.emi.emi.screen.BoMScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -42,9 +43,9 @@ public abstract class BoMScreenMixin {
 	@Shadow private List<?> nodes;
 	@Shadow public abstract float getScale();
 
-	@Unique private static final ResourceLocation EAP_UPLOAD_TEX =
+	@Unique private static final Identifier EAP_UPLOAD_TEX =
 			ExtendedAEPlus.id("textures/gui/upload.png");
-	@Unique private static final ResourceLocation EAP_UPLOAD_ERROR_TEX =
+	@Unique private static final Identifier EAP_UPLOAD_ERROR_TEX =
 			ExtendedAEPlus.id("textures/gui/upload_error.png");
 	// 与 mode 按钮（总耗材标题右侧 totalCostWidth/2+4 处的 16x16）同尺寸并左右对称
 	@Unique private static final int EAP_BTN_SIZE = 16;
@@ -62,7 +63,7 @@ public abstract class BoMScreenMixin {
 	 * 上一棵树留下的按钮范围与节点标记会残留，导致空界面上仍能悬停出提示或点出动作。
 	 */
 	@Inject(method = "render", at = @At("HEAD"))
-	private void eap$resetOverlayState(GuiGraphics raw, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+	private void eap$resetOverlayState(GuiGraphicsExtractor raw, int mouseX, int mouseY, float delta, CallbackInfo ci) {
 		eapBtnX = Integer.MIN_VALUE;
 		BoMMappingOverlay.reset();
 	}
@@ -80,7 +81,7 @@ public abstract class BoMScreenMixin {
 			),
 			require = 1
 	)
-	private void eap$drawOverlay(GuiGraphics raw, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+	private void eap$drawOverlay(GuiGraphicsExtractor raw, int mouseX, int mouseY, float delta, CallbackInfo ci) {
 		BoMScreen self = (BoMScreen) (Object) this;
 		float scale = getScale();
 		int treeX = BoMMappingOverlay.toTreeX(self, mouseX, scale, offX);
@@ -91,7 +92,7 @@ public abstract class BoMScreenMixin {
 	}
 
 	@Unique
-	private void eap$drawUploadButton(GuiGraphics raw, int treeX, int treeY) {
+	private void eap$drawUploadButton(GuiGraphicsExtractor raw, int treeX, int treeY) {
 		eapBtnX = Integer.MIN_VALUE;
 		if (BoM.tree == null || BoM.tree.goal == null) {
 			return;
@@ -109,18 +110,8 @@ public abstract class BoMScreenMixin {
 		boolean hovered = treeX >= x && treeX < x + EAP_BTN_SIZE
 				&& treeY >= y && treeY < y + EAP_BTN_SIZE;
 
-		// 图标自带颜色（白＝可编码，红＝缺映射），悬停只做明暗提示：
-		// 白色图标用 mode 按钮同款蓝色高亮；红色图标改为平时压暗、悬停回满亮，
-		// 因为红色乘上蓝色高亮会变成看不清的暗紫。
-		if (blocked) {
-			float b = hovered ? 1f : 0.75f;
-			raw.setColor(b, b, b, 1f);
-		} else if (hovered) {
-			raw.setColor(0.5f, 0.6f, 1f, 1f);
-		}
 		raw.blit(blocked ? EAP_UPLOAD_ERROR_TEX : EAP_UPLOAD_TEX, x, y, 0, 0,
 				EAP_BTN_SIZE, EAP_BTN_SIZE, EAP_BTN_SIZE, EAP_BTN_SIZE);
-		raw.setColor(1f, 1f, 1f, 1f);
 
 		eapBtnX = x;
 		eapBtnY = y;
@@ -128,12 +119,12 @@ public abstract class BoMScreenMixin {
 
 	/** 提示必须画在缩放矩阵之外，否则提示框会跟着树一起缩放。 */
 	@Inject(method = "render", at = @At("TAIL"), remap = false)
-	private void eap$drawOverlayTooltips(GuiGraphics raw, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+	private void eap$drawOverlayTooltips(GuiGraphicsExtractor raw, int mouseX, int mouseY, float delta, CallbackInfo ci) {
 		Font font = Minecraft.getInstance().font;
 
 		List<Component> markerTooltip = BoMMappingOverlay.hoveredTooltip();
 		if (markerTooltip != null) {
-			raw.renderComponentTooltip(font, markerTooltip, mouseX, mouseY);
+			raw.setComponentTooltipForNextFrame(font, markerTooltip, mouseX, mouseY);
 			return;
 		}
 
@@ -143,7 +134,7 @@ public abstract class BoMScreenMixin {
 		Component tip = eapBlockingCount > 0
 				? Component.translatable("tooltip.extendedae_plus.bom_encode.blocked", eapBlockingCount)
 				: Component.translatable("tooltip.extendedae_plus.bom_encode.ready");
-		raw.renderTooltip(font, tip, mouseX, mouseY);
+		raw.setTooltipForNextFrame(font, tip, mouseX, mouseY);
 	}
 
 	@Unique
@@ -179,12 +170,12 @@ public abstract class BoMScreenMixin {
 		if (eapBlockingCount > 0) {
 			Minecraft mc = Minecraft.getInstance();
 			if (mc.player != null) {
-				mc.player.displayClientMessage(Component.translatable(
-						"message.extendedae_plus.bom_encode.blocked", eapBlockingCount), true);
+				mc.player.sendSystemMessage(Component.translatable(
+						"message.extendedae_plus.bom_encode.blocked", eapBlockingCount));
 			}
 		} else {
 			com.extendedae_plus.client.event.EmiCtrlQHandler.encodeBoMTreeAll(
-					Screen.hasShiftDown(), Screen.hasAltDown());
+					Minecraft.getInstance().hasShiftDown(), Minecraft.getInstance().hasAltDown());
 		}
 		cir.setReturnValue(true);
 	}

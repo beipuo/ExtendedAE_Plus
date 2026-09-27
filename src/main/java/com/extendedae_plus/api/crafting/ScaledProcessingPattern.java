@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -141,7 +142,7 @@ public class ScaledProcessingPattern implements IPatternDetails {
 
         sb.append("Inputs: [");
         sb.append(String.join(", ",
-                java.util.Arrays.stream(this.original.getInputs())
+                Arrays.stream(this.original.getInputs())
                         .filter(i -> i.getPossibleInputs() != null && i.getPossibleInputs().length > 0)
                         .map(i -> {
                             GenericStack stack = i.getPossibleInputs()[0];

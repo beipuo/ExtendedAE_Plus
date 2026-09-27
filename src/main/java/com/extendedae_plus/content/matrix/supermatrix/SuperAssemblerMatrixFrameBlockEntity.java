@@ -1,9 +1,10 @@
 package com.extendedae_plus.content.matrix.supermatrix;
 
 import com.extendedae_plus.init.ModBlockEntities;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.model.data.ModelData;
+import net.neoforged.neoforge.model.data.ModelData;
 
 public class SuperAssemblerMatrixFrameBlockEntity extends SuperAssemblerMatrixBlockEntity {
 
@@ -21,11 +22,11 @@ public class SuperAssemblerMatrixFrameBlockEntity extends SuperAssemblerMatrixBl
 
     @Override
     public ModelData getModelData() {
-        if (this.level == null) {
+        if (!(this.level instanceof ClientLevel clientLevel)) {
             return ModelData.EMPTY;
         }
         // 优化渲染器从方块实体读取模型数据，确保连接纹理不会退化成单方块外观。
-        return MatrixFrameModelData.create(this.level, this.worldPosition, ModelData.EMPTY);
+        return MatrixFrameModelData.create(clientLevel, this.worldPosition, ModelData.EMPTY);
     }
 
     private void refreshLoadedFrameModels() {

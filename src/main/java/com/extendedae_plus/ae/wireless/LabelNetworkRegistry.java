@@ -11,13 +11,17 @@ import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.util.wireless.WirelessTeamUtil;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.saveddata.SavedDataType;
+import net.minecraft.core.UUIDUtil;
+import com.mojang.serialization.Codec;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -34,7 +38,11 @@ import java.util.*;
  */
 public class LabelNetworkRegistry extends SavedData {
     public static final String SAVE_ID = ExtendedAEPlus.MODID + "_label_networks";
-    private static final Factory<LabelNetworkRegistry> FACTORY = new Factory<>(LabelNetworkRegistry::new, LabelNetworkRegistry::load);
+    private static final SavedDataType<LabelNetworkRegistry> TYPE = new SavedDataType<>(
+            Identifier.parse(SAVE_ID),
+            LabelNetworkRegistry::new,
+            CompoundTag.CODEC.xmap(tag -> load(tag, null), data -> data.save(new CompoundTag(), null)),
+            null);
     private static final long CHANNEL_START = 1_000_000L;
     private static final UUID PUBLIC_NETWORK_UUID = new UUID(0, 0);
 
@@ -44,7 +52,7 @@ public class LabelNetworkRegistry extends SavedData {
     /* 入口 API */
     public static LabelNetworkRegistry get(MinecraftServer server) {
         ServerLevel level = server.getLevel(ServerLevel.OVERWORLD);
-        return level.getDataStorage().computeIfAbsent(FACTORY, SAVE_ID);
+        return level.getDataStorage().computeIfAbsent(TYPE);
     }
 
     public record LabelNetworkSnapshot(String label, long channel) {}
@@ -169,7 +177,6 @@ public class LabelNetworkRegistry extends SavedData {
     }
 
     /* 序列化 */
-    @Override
     public @NotNull CompoundTag save(@NotNull CompoundTag tag, HolderLookup.Provider registries) {
         tag.putLong("nextChannel", nextChannel);
         ListTag list = new ListTag();
@@ -177,9 +184,9 @@ public class LabelNetworkRegistry extends SavedData {
             CompoundTag nbt = new CompoundTag();
             nbt.putString("label", k.label());
             if (k.dim() != null) {
-                nbt.putString("dim", k.dim().location().toString());
+                nbt.putString("dim", k.dim().identifier().toString());
             }
-            nbt.putUUID("owner", k.owner());
+            nbt.store("owner", UUIDUtil.CODEC, k.owner());
             nbt.putLong("channel", v.channel);
             nbt.put("endpoints", v.saveEndpoints());
             list.add(nbt);
@@ -190,16 +197,16 @@ public class LabelNetworkRegistry extends SavedData {
 
     public static LabelNetworkRegistry load(CompoundTag tag, HolderLookup.Provider registries) {
         LabelNetworkRegistry reg = new LabelNetworkRegistry();
-        reg.nextChannel = tag.getLong("nextChannel");
-        ListTag list = tag.getList("networks", CompoundTag.TAG_COMPOUND);
+        reg.nextChannel = tag.getLong("nextChannel").orElse(CHANNEL_START);
+        ListTag list = tag.getList("networks").orElse(new ListTag());
         for (int i = 0; i < list.size(); i++) {
-            CompoundTag nbt = list.getCompound(i);
-            String label = nbt.getString("label");
-            ResourceKey<Level> dim = nbt.contains("dim") ? ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(nbt.getString("dim"))) : null;
-            UUID owner = nbt.getUUID("owner");
-            long channel = nbt.getLong("channel");
+            CompoundTag nbt = list.getCompound(i).orElseThrow();
+            String label = nbt.getString("label").orElse("");
+            ResourceKey<Level> dim = nbt.contains("dim") ? ResourceKey.create(Registries.DIMENSION, Identifier.parse(nbt.getString("dim").orElse(""))) : null;
+            UUID owner = nbt.read("owner", UUIDUtil.CODEC).orElse(PUBLIC_NETWORK_UUID);
+            long channel = nbt.getLong("channel").orElse(0L);
             LabelNetwork net = new LabelNetwork(dim, label, owner, channel);
-            net.loadEndpoints(nbt.getList("endpoints", CompoundTag.TAG_COMPOUND));
+            net.loadEndpoints(nbt.getList("endpoints").orElse(new ListTag()));
             reg.networks.put(new Key(dim, label, owner), net);
         }
         return reg;
@@ -288,7 +295,7 @@ public class LabelNetworkRegistry extends SavedData {
         public void loadEndpoints(ListTag list) {
             endpoints.clear();
             for (int i = 0; i < list.size(); i++) {
-                endpoints.add(EndpointRef.load(list.getCompound(i)));
+                endpoints.add(EndpointRef.load(list.getCompound(i).orElseThrow()));
             }
         }
 
@@ -306,7 +313,7 @@ public class LabelNetworkRegistry extends SavedData {
         public CompoundTag save() {
             CompoundTag tag = new CompoundTag();
             if (dim != null) {
-                tag.putString("dim", dim.location().toString());
+                tag.putString("dim", dim.identifier().toString());
             }
             tag.putLong("pos", pos.asLong());
             return tag;
@@ -314,9 +321,9 @@ public class LabelNetworkRegistry extends SavedData {
 
         public static EndpointRef load(CompoundTag tag) {
             ResourceKey<Level> d = tag.contains("dim")
-                    ? ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(tag.getString("dim")))
+                    ? ResourceKey.create(Registries.DIMENSION, Identifier.parse(tag.getString("dim").orElse("")))
                     : null;
-            BlockPos p = BlockPos.of(tag.getLong("pos"));
+            BlockPos p = BlockPos.of(tag.getLong("pos").orElse(0L));
             return new EndpointRef(d, p);
         }
     }
@@ -351,7 +358,7 @@ public class LabelNetworkRegistry extends SavedData {
         }
 
         @Override
-        public @Nullable IGridNode getGridNode(@Nullable net.minecraft.core.Direction dir) {
+        public @Nullable IGridNode getGridNode(@Nullable Direction dir) {
             return managedNode == null ? null : managedNode.getNode();
         }
     }

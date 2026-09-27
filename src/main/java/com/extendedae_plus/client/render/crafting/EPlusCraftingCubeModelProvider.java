@@ -4,86 +4,48 @@ import appeng.client.render.crafting.AbstractCraftingUnitModelProvider;
 import appeng.client.render.crafting.LightBakedModel;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.Material;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.ChunkRenderTypeSet;
-import net.neoforged.neoforge.client.model.data.ModelData;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
+import net.minecraft.client.resources.model.ModelDebugName;
+import net.minecraft.client.resources.model.sprite.Material;
+import net.minecraft.client.resources.model.sprite.MaterialBaker;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Function;
-
-/**
- * 形成态光照模型。
- */
-public class EPlusCraftingCubeModelProvider
-        extends AbstractCraftingUnitModelProvider<EPlusCraftingUnitType> {
-
-    public static final ChunkRenderTypeSet CUTOUT = ChunkRenderTypeSet.of(RenderType.cutout());
-    private static final List<Material> MATERIALS = new ArrayList<>();
-
-    //将环形边框与基础发光底图放在本模组命名空间
-    protected static final Material RING_CORNER = texture(ExtendedAEPlus.MODID, "ring_corner");
-    protected static final Material RING_SIDE_HOR = texture(ExtendedAEPlus.MODID, "ring_side_hor");
-    protected static final Material RING_SIDE_VER = texture(ExtendedAEPlus.MODID, "ring_side_ver");
-    protected static final Material LIGHT_BASE = texture(ExtendedAEPlus.MODID, "light_base");
-
-    // 亮面贴图（formed 时使用）
-    protected static final Material ACCELERATOR_4X_LIGHT = texture(ExtendedAEPlus.MODID,
-            "4x_accelerator_light");
-    protected static final Material ACCELERATOR_16X_LIGHT = texture(ExtendedAEPlus.MODID,
-            "16x_accelerator_light");
-    protected static final Material ACCELERATOR_64X_LIGHT = texture(ExtendedAEPlus.MODID,
-            "64x_accelerator_light");
-    protected static final Material ACCELERATOR_256X_LIGHT = texture(ExtendedAEPlus.MODID,
-            "256x_accelerator_light");
-    protected static final Material ACCELERATOR_1024X_LIGHT = texture(ExtendedAEPlus.MODID,
-            "1024x_accelerator_light");
+public final class EPlusCraftingCubeModelProvider extends AbstractCraftingUnitModelProvider<EPlusCraftingUnitType> {
+    private static final Material RING_CORNER = texture("ring_corner");
+    private static final Material RING_SIDE_HOR = texture("ring_side_hor");
+    private static final Material RING_SIDE_VER = texture("ring_side_ver");
+    private static final Material LIGHT_BASE = texture("light_base");
+    private static final Material LIGHT_4X = texture("4x_accelerator_light");
+    private static final Material LIGHT_16X = texture("16x_accelerator_light");
+    private static final Material LIGHT_64X = texture("64x_accelerator_light");
+    private static final Material LIGHT_256X = texture("256x_accelerator_light");
+    private static final Material LIGHT_1024X = texture("1024x_accelerator_light");
 
     public EPlusCraftingCubeModelProvider(EPlusCraftingUnitType type) {
         super(type);
     }
 
     @Override
-    public List<Material> getMaterials() {
-        return Collections.unmodifiableList(MATERIALS);
+    public BlockStateModel bake(MaterialBaker baker) {
+        ModelDebugName name = getClass()::getName;
+        return new LightBakedModel(
+                baker.get(RING_CORNER, name),
+                baker.get(RING_SIDE_HOR, name),
+                baker.get(RING_SIDE_VER, name),
+                baker.get(LIGHT_BASE, name),
+                baker.get(lightMaterial(), name));
     }
 
-    @Override
-    public BakedModel getBakedModel(Function<Material, TextureAtlasSprite> spriteGetter) {
-        TextureAtlasSprite ringCorner = spriteGetter.apply(RING_CORNER);
-        TextureAtlasSprite ringSideHor = spriteGetter.apply(RING_SIDE_HOR);
-        TextureAtlasSprite ringSideVer = spriteGetter.apply(RING_SIDE_VER);
-
-        return new LightBakedModel(ringCorner, ringSideHor, ringSideVer,
-                spriteGetter.apply(LIGHT_BASE), this.getLightMaterial(spriteGetter)) {
-            public ChunkRenderTypeSet getRenderTypes(BlockState state, RandomSource rand, ModelData data) {
-                return CUTOUT;
-            }
+    private Material lightMaterial() {
+        return switch (type) {
+            case ACCELERATOR_4x -> LIGHT_4X;
+            case ACCELERATOR_16x -> LIGHT_16X;
+            case ACCELERATOR_64x -> LIGHT_64X;
+            case ACCELERATOR_256x -> LIGHT_256X;
+            case ACCELERATOR_1024x -> LIGHT_1024X;
         };
     }
 
-    private TextureAtlasSprite getLightMaterial(Function<Material, TextureAtlasSprite> textureGetter) {
-        return switch (this.type) {
-            case ACCELERATOR_4x -> textureGetter.apply(ACCELERATOR_4X_LIGHT);
-            case ACCELERATOR_16x -> textureGetter.apply(ACCELERATOR_16X_LIGHT);
-            case ACCELERATOR_64x -> textureGetter.apply(ACCELERATOR_64X_LIGHT);
-            case ACCELERATOR_256x -> textureGetter.apply(ACCELERATOR_256X_LIGHT);
-            case ACCELERATOR_1024x -> textureGetter.apply(ACCELERATOR_1024X_LIGHT);
-        };
-    }
-
-    private static Material texture(String namespace, String name) {
-        var mat = new Material(TextureAtlas.LOCATION_BLOCKS,
-                ResourceLocation.fromNamespaceAndPath(namespace, "block/crafting/" + name));
-        MATERIALS.add(mat);
-        return mat;
+    private static Material texture(String name) {
+        return new Material(ExtendedAEPlus.id("block/crafting/" + name));
     }
 }

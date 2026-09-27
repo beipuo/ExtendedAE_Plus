@@ -27,12 +27,12 @@ import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.inventory.Slot;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -135,7 +135,7 @@ public abstract class AEBaseScreenMixin {
             return;
         }
         // 仅在 Shift + 左键 时触发
-        if (button != 0 || !net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (button != 0 || !Minecraft.getInstance().hasShiftDown()) {
             return;
         }
         try {
@@ -147,7 +147,7 @@ public abstract class AEBaseScreenMixin {
             if (key == null) {
                 return;
             }
-            PacketDistributor.sendToServer(new CraftingMonitorJumpC2SPacket(key));
+            ClientPacketDistributor.sendToServer(new CraftingMonitorJumpC2SPacket(key));
             cir.setReturnValue(true);
         } catch (Throwable ignored) {
         }
@@ -165,7 +165,7 @@ public abstract class AEBaseScreenMixin {
             return;
         }
         // 仅在 Shift + 右键 时触发
-        if (button != 1 || !net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (button != 1 || !Minecraft.getInstance().hasShiftDown()) {
             return;
         }
         try {
@@ -177,7 +177,7 @@ public abstract class AEBaseScreenMixin {
             if (key == null) {
                 return;
             }
-            PacketDistributor.sendToServer(new CraftingMonitorOpenProviderC2SPacket(key));
+            ClientPacketDistributor.sendToServer(new CraftingMonitorOpenProviderC2SPacket(key));
             cir.setReturnValue(true);
         } catch (Throwable ignored) {
         }
@@ -187,7 +187,7 @@ public abstract class AEBaseScreenMixin {
      * 重写renderSlot方法，为所有可见的样板槽位添加数量显示
      */
     @Inject(method = "renderSlot", at = @At("TAIL"), remap = false)
-    private void eap$renderSlotAmounts(GuiGraphics guiGraphics, Slot s, CallbackInfo ci) {
+    private void eap$renderSlotAmounts(GuiGraphicsExtractor guiGraphics, Slot s, CallbackInfo ci) {
         Object self = this;
 
         // 只处理AppEngSlot类型的槽位
@@ -233,7 +233,7 @@ public abstract class AEBaseScreenMixin {
 
     // 在 AEBaseScreen.drawText 完成某个文本绘制后，若该文本为“样板”标签，则紧接着绘制页码。
     @Inject(method = "drawText", at = @At("TAIL"), remap = false)
-    private void eap$appendPageAfterPatternsLabel(GuiGraphics guiGraphics,
+    private void eap$appendPageAfterPatternsLabel(GuiGraphicsExtractor guiGraphics,
                                                   Text text,
                                                   @Nullable TextOverride override,
                                                   CallbackInfo ci) {
@@ -333,13 +333,13 @@ public abstract class AEBaseScreenMixin {
             }
             int padding = 4;
             if (scale == 1.0f) {
-                guiGraphics.drawString(font, pageText, x + lineWidth + padding, y, color, false);
+                guiGraphics.text(font, pageText, x + lineWidth + padding, y, color, false);
             } else {
-                guiGraphics.pose().pushPose();
-                guiGraphics.pose().translate(x, y, 1);
-                guiGraphics.pose().scale(scale, scale, 1);
-                guiGraphics.drawString(font, pageText, lineWidth + padding, 0, color, false);
-                guiGraphics.pose().popPose();
+                guiGraphics.pose().pushMatrix();
+                guiGraphics.pose().translate(x, y);
+                guiGraphics.pose().scale(scale, scale);
+                guiGraphics.text(font, pageText, lineWidth + padding, 0, color, false);
+                guiGraphics.pose().popMatrix();
             }
         } catch (Throwable ignored) {
         }
@@ -364,7 +364,7 @@ public abstract class AEBaseScreenMixin {
 
     // 在 drawBG 方法末尾调用输入框背景渲染
     @Inject(method = "drawBG", at = @At("TAIL"), remap = false)
-    private void eap$renderInputBackground(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
+    private void eap$renderInputBackground(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
         Object self = this;
         if (self instanceof IInputBackgroundRenderer renderer) {
             renderer.eap$renderInputBackground(guiGraphics);

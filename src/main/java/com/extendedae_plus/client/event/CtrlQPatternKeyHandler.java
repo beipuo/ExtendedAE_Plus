@@ -1,6 +1,7 @@
 package com.extendedae_plus.client.event;
 
 import appeng.api.stacks.AEItemKey;
+import com.mojang.blaze3d.platform.InputConstants;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.client.ModKeybindings;
 import com.extendedae_plus.compat.JeiRuntimeCompat;
@@ -15,13 +16,13 @@ import mezz.jei.api.ingredients.ITypedIngredient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.util.HashMap;
 import java.util.List;
@@ -45,18 +46,15 @@ public final class CtrlQPatternKeyHandler {
 
 		int keyCode = event.getKeyCode();
 		int scanCode = event.getScanCode();
-		boolean isAllowSubstitutes = Screen.hasShiftDown();
-		boolean isFluidSubstitutes = Screen.hasAltDown();
+		boolean isAllowSubstitutes = false;
+		boolean isFluidSubstitutes = false;
 		// isActiveAndMatches 才会校验修饰键（Ctrl）与冲突上下文；KeyMapping.matches 对裸键也会命中
 		if (!ModKeybindings.CREATE_PATTERN_KEY.isActiveAndMatches(
-				com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(keyCode))) {
+				InputConstants.Type.KEYSYM.getOrCreate(keyCode))) {
 			return;
 		}
 
-		// 双查看器仲裁：EMI 在场时由 EmiCtrlQHandler 接管（与 InputEvents 的分派优先级一致）。
-		if (com.extendedae_plus.compat.EmiHelper.isLoaded()) {
-			return;
-		}
+		// EMI 26.1.2 发布后恢复仲裁逻辑；当前保留 JEI Ctrl+Q 路径。
 
 		if (JeiRuntimeCompat.getRuntime() == null) {
 			return;
@@ -73,7 +71,7 @@ public final class CtrlQPatternKeyHandler {
 		if (ingredient.isEmpty()) {
 			Minecraft mc = Minecraft.getInstance();
 			if (mc.player != null) {
-				mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.hover_item_first"), true);
+				mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.hover_item_first"));
 			}
 			return;
 		}
@@ -82,7 +80,7 @@ public final class CtrlQPatternKeyHandler {
 		if (recipes.isEmpty()) {
 			Minecraft mc = Minecraft.getInstance();
 			if (mc.player != null) {
-				mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.no_recipes_found"), true);
+				mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.no_recipes_found"));
 			}
 			return;
 		}
@@ -95,7 +93,7 @@ public final class CtrlQPatternKeyHandler {
 		List<ItemStack> selectedIngredients = selectIngredientsWithJeiPriority(selected);
 		List<ItemStack> selectedOutputs = convertOutputsToItemStacks(selected);
 
-		PacketDistributor.sendToServer(new CreateCtrlQPatternC2SPacket(
+		ClientPacketDistributor.sendToServer(new CreateCtrlQPatternC2SPacket(
 			selected.getRecipeId(),
 			selected.isCraftingRecipe(),
 			selectedIngredients,
@@ -131,11 +129,11 @@ public final class CtrlQPatternKeyHandler {
 
 	private static void handleCraftingRecipeBookmark(Object recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
 		try {
-			ResourceLocation recipeId = getRecipeId(recipeBookmark);
+			Identifier recipeId = getRecipeId(recipeBookmark);
 			if (recipeId == null) {
 				Minecraft mc = Minecraft.getInstance();
 				if (mc.player != null) {
-					mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.recipe_not_found"), true);
+					mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.recipe_not_found"));
 				}
 				return;
 			}
@@ -144,18 +142,10 @@ public final class CtrlQPatternKeyHandler {
 			if (mc.level == null) {
 				return;
 			}
-			var recipeOpt = mc.level.getRecipeManager().byKey(recipeId);
-			if (recipeOpt.isEmpty()) {
-				if (mc.player != null) {
-					mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.recipe_not_found"), true);
-				}
-				return;
-			}
-
 			List<RecipeInfo> recipeInfos = findRecipeInfosForBookmark(recipeBookmark);
 			if (recipeInfos.isEmpty()) {
 				if (mc.player != null) {
-					mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.no_recipes_found"), true);
+					mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.no_recipes_found"));
 				}
 				return;
 			}
@@ -165,7 +155,7 @@ public final class CtrlQPatternKeyHandler {
 			List<ItemStack> selectedOutputs = convertOutputsToItemStacks(matching);
 			ExtendedAEPatternUploadUtil.presetCraftingProviderSearchKey();
 
-			PacketDistributor.sendToServer(new CreateAndUploadPatternC2SPacket(
+			ClientPacketDistributor.sendToServer(new CreateAndUploadPatternC2SPacket(
 				recipeId,
 				matching.isCraftingRecipe(),
 				selectedIngredients,
@@ -179,11 +169,11 @@ public final class CtrlQPatternKeyHandler {
 
 	private static void handleProcessingRecipeBookmark(Object recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
 		try {
-			ResourceLocation recipeId = getRecipeId(recipeBookmark);
+			Identifier recipeId = getRecipeId(recipeBookmark);
 			if (recipeId == null) {
 				Minecraft mc = Minecraft.getInstance();
 				if (mc.player != null) {
-					mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.recipe_not_found"), true);
+					mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.recipe_not_found"));
 				}
 				return;
 			}
@@ -192,26 +182,18 @@ public final class CtrlQPatternKeyHandler {
 			if (mc.level == null) {
 				return;
 			}
-			var recipeOpt = mc.level.getRecipeManager().byKey(recipeId);
-			if (recipeOpt.isEmpty()) {
-				if (mc.player != null) {
-					mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.recipe_not_found"), true);
-				}
-				return;
-			}
-
 			Object recipeBase = null;
 			try {
 				var getRecipeMethod = recipeBookmark.getClass().getMethod("getRecipe");
 				recipeBase = getRecipeMethod.invoke(recipeBookmark);
 			} catch (Throwable ignored) {
 			}
-			setLastProcessingNameFromRecipe(recipeBase != null ? recipeBase : recipeOpt.get());
+			setLastProcessingNameFromRecipe(recipeBase);
 
 			List<RecipeInfo> recipeInfos = findRecipeInfosForBookmark(recipeBookmark);
 			if (recipeInfos.isEmpty()) {
 				if (mc.player != null) {
-					mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.no_recipes_found"), true);
+					mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.no_recipes_found"));
 				}
 				return;
 			}
@@ -220,7 +202,7 @@ public final class CtrlQPatternKeyHandler {
 			List<ItemStack> selectedIngredients = selectIngredientsWithJeiPriority(matching);
 			List<ItemStack> selectedOutputs = convertOutputsToItemStacks(matching);
 
-			PacketDistributor.sendToServer(new CreateCtrlQPatternC2SPacket(
+			ClientPacketDistributor.sendToServer(new CreateCtrlQPatternC2SPacket(
 				recipeId,
 				matching.isCraftingRecipe(),
 				selectedIngredients,
@@ -265,7 +247,7 @@ public final class CtrlQPatternKeyHandler {
 		return List.of();
 	}
 
-	private static RecipeInfo matchById(List<RecipeInfo> recipeInfos, ResourceLocation recipeId) {
+	private static RecipeInfo matchById(List<RecipeInfo> recipeInfos, Identifier recipeId) {
 		for (RecipeInfo info : recipeInfos) {
 			if (recipeId.equals(info.getRecipeId())) {
 				return info;
@@ -274,7 +256,7 @@ public final class CtrlQPatternKeyHandler {
 		return recipeInfos.get(0);
 	}
 
-	private static ResourceLocation getRecipeId(Object recipeBookmark) {
+	private static Identifier getRecipeId(Object recipeBookmark) {
 		if (recipeBookmark == null) {
 			return null;
 		}
@@ -283,7 +265,7 @@ public final class CtrlQPatternKeyHandler {
 		try {
 			var getRecipeUidMethod = recipeBookmark.getClass().getMethod("getRecipeUid");
 			Object recipeId = getRecipeUidMethod.invoke(recipeBookmark);
-			if (recipeId instanceof ResourceLocation rl) {
+			if (recipeId instanceof Identifier rl) {
 				return rl;
 			}
 		} catch (Throwable ignored) {
@@ -296,7 +278,7 @@ public final class CtrlQPatternKeyHandler {
 			if (recipe != null && recipeCategory != null) {
 				try {
 					Object recipeId = recipeCategory.getClass().getMethod("getRegistryName", Object.class).invoke(recipeCategory, recipe);
-					if (recipeId instanceof ResourceLocation rl) {
+					if (recipeId instanceof Identifier rl) {
 						return rl;
 					}
 				} catch (Throwable ignored) {
@@ -305,7 +287,7 @@ public final class CtrlQPatternKeyHandler {
 							continue;
 						}
 						Object recipeId = m.invoke(recipeCategory, recipe);
-						if (recipeId instanceof ResourceLocation rl) {
+						if (recipeId instanceof Identifier rl) {
 							return rl;
 						}
 					}
@@ -319,7 +301,7 @@ public final class CtrlQPatternKeyHandler {
 			var f = recipeBookmark.getClass().getDeclaredField("recipeUid");
 			f.setAccessible(true);
 			Object recipeId = f.get(recipeBookmark);
-			if (recipeId instanceof ResourceLocation rl) {
+			if (recipeId instanceof Identifier rl) {
 				return rl;
 			}
 		} catch (Throwable ignored) {

@@ -2,7 +2,9 @@ package com.extendedae_plus.recipe;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.glodblock.github.extendedae.recipe.CrystalAssemblerRecipe;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
@@ -27,9 +29,9 @@ public final class SuperCrystalAssemblerRecipeManager {
             return List.of();
         }
 
-        RecipeManager recipeManager = level.getRecipeManager();
+        RecipeManager recipeManager = (RecipeManager) level.recipeAccess();
         List<RecipeHolder<SuperCrystalAssemblerRecipe>> localRecipes =
-                recipeManager.getAllRecipesFor(SuperCrystalAssemblerRecipe.TYPE);
+                List.copyOf(recipeManager.recipeMap().byType(SuperCrystalAssemblerRecipe.TYPE));
         List<RecipeHolder<CrystalAssemblerRecipe>> extendedAeRecipes = getExtendedAeRecipes(recipeManager);
 
         CacheEntry cached = CACHE.get(recipeManager);
@@ -51,16 +53,16 @@ public final class SuperCrystalAssemblerRecipeManager {
         if (!ModList.get().isLoaded(EXTENDED_AE)) {
             return List.of();
         }
-        return recipeManager.getAllRecipesFor(CrystalAssemblerRecipe.TYPE);
+        return List.copyOf(recipeManager.recipeMap().byType(CrystalAssemblerRecipe.TYPE));
     }
 
     private static RecipeHolder<SuperCrystalAssemblerRecipe> convert(RecipeHolder<CrystalAssemblerRecipe> holder) {
         CrystalAssemblerRecipe recipe = holder.value();
-        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(
+        Identifier id = Identifier.fromNamespaceAndPath(
                 ExtendedAEPlus.MODID,
-                "compat/extendedae/" + holder.id().getPath());
-        return new RecipeHolder<>(id, new SuperCrystalAssemblerRecipe(
-                recipe.output,
+                "compat/extendedae/" + holder.id().identifier().getPath());
+        return new RecipeHolder<>(ResourceKey.create(Registries.RECIPE, id), new SuperCrystalAssemblerRecipe(
+                recipe.output.create(),
                 recipe.getInputs(),
                 Optional.ofNullable(recipe.getFluid())));
     }

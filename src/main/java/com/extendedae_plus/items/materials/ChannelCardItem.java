@@ -1,21 +1,24 @@
 package com.extendedae_plus.items.materials;
 
 import appeng.items.materials.UpgradeCardItem;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * 频道卡：存储频道号、所有者UUID和团队信息
@@ -42,7 +45,7 @@ public class ChannelCardItem extends UpgradeCardItem {
 
     public static long getChannel(ItemStack stack) {
         CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        return tag.contains(TAG_CHANNEL) ? tag.getLong(TAG_CHANNEL) : 0L;
+        return tag.getLongOr(TAG_CHANNEL, 0L);
     }
 
     /**
@@ -50,7 +53,7 @@ public class ChannelCardItem extends UpgradeCardItem {
      */
     public static void setOwnerUUID(ItemStack stack, UUID ownerUUID) {
         CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        tag.putUUID(TAG_OWNER_UUID, ownerUUID);
+        tag.store(TAG_OWNER_UUID, UUIDUtil.CODEC, ownerUUID);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
@@ -60,7 +63,7 @@ public class ChannelCardItem extends UpgradeCardItem {
     @Nullable
     public static UUID getOwnerUUID(ItemStack stack) {
         CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        return tag.hasUUID(TAG_OWNER_UUID) ? tag.getUUID(TAG_OWNER_UUID) : null;
+        return tag.read(TAG_OWNER_UUID, UUIDUtil.CODEC).orElse(null);
     }
 
     /**
@@ -78,7 +81,7 @@ public class ChannelCardItem extends UpgradeCardItem {
     @Nullable
     public static String getTeamName(ItemStack stack) {
         CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        return tag.contains(TAG_TEAM_NAME) ? tag.getString(TAG_TEAM_NAME) : null;
+        return tag.getString(TAG_TEAM_NAME).orElse(null);
     }
 
     /**
@@ -92,37 +95,36 @@ public class ChannelCardItem extends UpgradeCardItem {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> lines, TooltipFlag flag) {
-        super.appendHoverText(stack, context, lines, flag);
-        
-        // 显示频道
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display,
+            Consumer<Component> lines, TooltipFlag flag) {
+        super.appendHoverText(stack, context, display, lines, flag);
+
         long ch = getChannel(stack);
         if (ch == 0L) {
-            lines.add(Component.translatable("item.extendedae_plus.channel_card.channel.unset"));
+            lines.accept(Component.translatable("item.extendedae_plus.channel_card.channel.unset"));
         } else {
-            lines.add(Component.translatable("item.extendedae_plus.channel_card.channel", ch));
+            lines.accept(Component.translatable("item.extendedae_plus.channel_card.channel", ch));
         }
-        
-        // 显示所有者信息
+
         UUID ownerUUID = getOwnerUUID(stack);
         String teamName = getTeamName(stack);
-        
+
         if (ownerUUID != null) {
             if (teamName != null && !teamName.isEmpty()) {
-                lines.add(Component.translatable("item.extendedae_plus.channel_card.owner.team", teamName));
+                lines.accept(Component.translatable("item.extendedae_plus.channel_card.owner.team", teamName));
             } else {
-                lines.add(Component.translatable("item.extendedae_plus.channel_card.owner.player", ownerUUID.toString().substring(0, 8)));
+                lines.accept(Component.translatable("item.extendedae_plus.channel_card.owner.player", ownerUUID.toString().substring(0, 8)));
             }
         } else {
-            lines.add(Component.translatable("item.extendedae_plus.channel_card.owner.unset"));
+            lines.accept(Component.translatable("item.extendedae_plus.channel_card.owner.unset"));
         }
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         
-        if (!level.isClientSide) {
+        if (!level.isClientSide()) {
             long ch = getChannel(stack);
             long next;
             
@@ -136,15 +138,15 @@ public class ChannelCardItem extends UpgradeCardItem {
             
             if (next != ch) {
                 setChannel(stack, next);
-                player.displayClientMessage(Component.translatable("item.extendedae_plus.channel_card.set", next), true);
+                player.sendOverlayMessage(Component.translatable("item.extendedae_plus.channel_card.set", next));
             }
         }
         
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
     }
     
     @Override
-    public boolean onLeftClickEntity(ItemStack stack, Player player, net.minecraft.world.entity.Entity entity) {
+    public boolean onLeftClickEntity(ItemStack stack, Player player, Entity entity) {
         // 左键实体时不做任何事，避免伤害实体
         if (player.isShiftKeyDown()) {
             return true; // 取消默认行为

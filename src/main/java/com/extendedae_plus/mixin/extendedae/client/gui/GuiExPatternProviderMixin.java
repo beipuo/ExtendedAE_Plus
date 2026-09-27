@@ -1,6 +1,6 @@
 package com.extendedae_plus.mixin.extendedae.client.gui;
 
-import appeng.client.gui.Icon;
+import de.mari_023.ae2wtlib.api.gui.Icon;
 import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.menu.SlotSemantics;
@@ -9,6 +9,7 @@ import com.extendedae_plus.api.IExPatternButton;
 import com.extendedae_plus.api.IExPatternPage;
 import com.extendedae_plus.api.bridge.ExPatternProviderMenuPageBridge;
 import com.extendedae_plus.client.gui.NewIcon;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import com.extendedae_plus.network.ScalePatternsC2SPacket;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
@@ -110,7 +111,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             this.repositionSlots(SlotSemantics.STORAGE);
             this.hoveredSlot = null;
             this.eap$updatePageSlotActivity();
-        }, Icon.ARROW_LEFT
+        }, NewIcon.ARROW_LEFT
         );
 
         this.nextPage = new ActionEPPButton((b) -> {
@@ -125,7 +126,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             this.repositionSlots(SlotSemantics.STORAGE);
             this.hoveredSlot = null;
             this.eap$updatePageSlotActivity();
-        }, Icon.ARROW_RIGHT
+        }, NewIcon.ARROW_RIGHT
         );
 
         this.addToLeftToolbar(this.nextPage);

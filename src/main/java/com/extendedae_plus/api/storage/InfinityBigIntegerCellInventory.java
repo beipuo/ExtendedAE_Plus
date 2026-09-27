@@ -1,6 +1,7 @@
 package com.extendedae_plus.api.storage;
 
 import appeng.api.config.Actionable;
+import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
 import appeng.api.networking.security.IActionSource;
 import appeng.api.stacks.AEItemKey;
@@ -20,6 +21,7 @@ import com.extendedae_plus.util.storage.InfinityStorageManager;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -223,7 +225,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         CustomData data = this.self.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
         CompoundTag tag = data.copyTag();
         UUID newUUID = UUID.randomUUID();
-        tag.putUUID(InfinityConstants.INFINITY_CELL_UUID, newUUID);
+        tag.store(InfinityConstants.INFINITY_CELL_UUID, UUIDUtil.CODEC, newUUID);
         this.self.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         this.cellUuid = newUUID;
         return newUUID;
@@ -252,7 +254,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
 
         CompoundTag tag = data.copyTag();
         return tag.contains(InfinityConstants.INFINITY_CELL_UUID)
-                ? tag.getUUID(InfinityConstants.INFINITY_CELL_UUID)
+                ? tag.read(InfinityConstants.INFINITY_CELL_UUID, UUIDUtil.CODEC).orElse(null)
                 : null;
     }
 
@@ -276,7 +278,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         return this.cell.getUpgrades(this.self);
     }
 
-    private appeng.api.config.FuzzyMode getFuzzyMode() {
+    private FuzzyMode getFuzzyMode() {
         return this.cell.getFuzzyMode(this.self);
     }
 

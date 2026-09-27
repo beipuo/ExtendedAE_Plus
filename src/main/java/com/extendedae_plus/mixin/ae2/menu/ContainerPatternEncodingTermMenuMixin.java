@@ -57,7 +57,7 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
 
     @Unique
     private void eap$scheduleUploadWithRetry(ServerPlayer sp, PatternEncodingTermMenu menu, int attemptsLeft) {
-        sp.server.execute(() -> {
+        sp.level().getServer().execute(() -> {
             try {
                 if (attemptsLeft < 0) {
                     return;
@@ -123,7 +123,7 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
                 return; // 不是编码样板
             }
             // 为避免与 AE2 后续同步竞争，切到下一 tick 执行
-            sp.server.execute(() -> {
+            sp.level().getServer().execute(() -> {
                 try {
                     ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToMatrix(sp, menu);
                 } catch (Throwable ignored) {
@@ -139,7 +139,7 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
         ItemStack itemStack = cir.getReturnValue();
         if (itemStack != null && !itemStack.isEmpty()) {
             CustomData.update(DataComponents.CUSTOM_DATA, itemStack, tag -> {
-                tag.putString("encodePlayer", this.epp$player.getGameProfile().getName());
+                tag.putString("encodePlayer", this.epp$player.getGameProfile().name());
             });
             cir.setReturnValue(itemStack);
         }

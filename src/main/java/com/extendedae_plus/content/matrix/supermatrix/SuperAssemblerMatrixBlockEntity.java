@@ -8,6 +8,11 @@ import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridMultiblock;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.IGridNodeListener;
+import appeng.api.networking.security.IActionSource;
+import appeng.api.stacks.AEKey;
+import java.util.Iterator;
+import java.util.Collections;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.storage.IStorageService;
 import appeng.api.networking.ticking.IGridTickable;
@@ -27,6 +32,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
@@ -45,7 +52,7 @@ public abstract class SuperAssemblerMatrixBlockEntity extends AENetworkedBlockEn
         ICraftingProvider, IGridTickable, PatternContainer, SuperAssemblerMatrixPart {
 
     private static final InternalInventory EMPTY_PATTERN_INVENTORY = InternalInventory.empty();
-    private static final IItemHandler EMPTY_PATTERN_HANDLER = EMPTY_PATTERN_INVENTORY.toItemHandler();
+    private static final IItemHandler EMPTY_PATTERN_HANDLER = null;
 
     private boolean core;
     private boolean unloading;
@@ -75,15 +82,15 @@ public abstract class SuperAssemblerMatrixBlockEntity extends AENetworkedBlockEn
     }
 
     @Override
-    public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        tag.putBoolean("superMatrixCore", this.core);
+    public void saveAdditional(ValueOutput data) {
+        super.saveAdditional(data);
+        data.putBoolean("superMatrixCore", this.core);
     }
 
     @Override
-    public void loadTag(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadTag(tag, registries);
-        this.core = tag.getBoolean("superMatrixCore");
+    public void loadTag(ValueInput data) {
+        super.loadTag(data);
+        this.core = data.getBooleanOr("superMatrixCore", false);
     }
 
     @Override
@@ -202,13 +209,13 @@ public abstract class SuperAssemblerMatrixBlockEntity extends AENetworkedBlockEn
         this.getMainNode().ifPresent((grid, node) -> grid.getTickManager().wakeDevice(node));
     }
 
-    public long insertToNetwork(appeng.api.stacks.AEKey key, long amount) {
+    public long insertToNetwork(AEKey key, long amount) {
         var grid = this.getMainNode().getGrid();
         if (grid == null || amount <= 0) {
             return 0;
         }
         var storage = grid.getService(IStorageService.class);
-        return storage.getInventory().insert(key, amount, Actionable.MODULATE, appeng.api.networking.security.IActionSource.ofMachine(this));
+        return storage.getInventory().insert(key, amount, Actionable.MODULATE, IActionSource.ofMachine(this));
     }
 
     @Override
@@ -252,14 +259,14 @@ public abstract class SuperAssemblerMatrixBlockEntity extends AENetworkedBlockEn
         ICraftingProvider.requestUpdate(this.getMainNode());
     }
 
-    private java.util.Iterator<IGridNode> getMultiblockNodes() {
+    private Iterator<IGridNode> getMultiblockNodes() {
         return this.unloading || this.superCluster == null
-                ? java.util.Collections.emptyIterator()
+                ? Collections.emptyIterator()
                 : this.superCluster.getGridNodes();
     }
 
     @Override
-    public void onMainNodeStateChanged(appeng.api.networking.IGridNodeListener.State reason) {
+    public void onMainNodeStateChanged(IGridNodeListener.State reason) {
         this.eap$updateSuperMatrixStatus();
     }
 }

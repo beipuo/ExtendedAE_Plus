@@ -7,6 +7,7 @@ import appeng.helpers.patternprovider.PatternContainer;
 import appeng.util.inv.filter.IAEItemFilter;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
@@ -31,7 +32,7 @@ public final class CtrlQPendingUploadUtil {
 		clearPendingCtrlQUpload(player);
 		String id = UUID.randomUUID().toString();
 		player.getPersistentData().putString(PENDING_DATA_KEY, id);
-		player.getPersistentData().put(PENDING_STACK_KEY, pattern.saveOptional(player.registryAccess()));
+		player.getPersistentData().put(PENDING_STACK_KEY, ItemStack.OPTIONAL_CODEC.encodeStart(player.registryAccess().createSerializationContext(NbtOps.INSTANCE), pattern).getOrThrow());
 		return id;
 	}
 
@@ -43,7 +44,7 @@ public final class CtrlQPendingUploadUtil {
 
 	public static boolean hasPendingCtrlQPattern(ServerPlayer player) {
 		if (player == null) return false;
-		String id = player.getPersistentData().getString(PENDING_DATA_KEY);
+		String id = player.getPersistentData().getString(PENDING_DATA_KEY).orElse("");
 		if (id == null || id.isBlank()) return false;
 		return !getPendingCtrlQPattern(player).isEmpty();
 	}
@@ -61,7 +62,7 @@ public final class CtrlQPendingUploadUtil {
 		if (remain.isEmpty()) {
 			clearPendingCtrlQUpload(player);
 		} else {
-			player.getPersistentData().put(PENDING_STACK_KEY, remain.saveOptional(player.registryAccess()));
+			player.getPersistentData().put(PENDING_STACK_KEY, ItemStack.OPTIONAL_CODEC.encodeStart(player.registryAccess().createSerializationContext(NbtOps.INSTANCE), remain).getOrThrow());
 		}
 		return true;
 	}
@@ -112,13 +113,13 @@ public final class CtrlQPendingUploadUtil {
 
 	private static ItemStack getPendingCtrlQPattern(ServerPlayer player) {
 		if (player == null) return ItemStack.EMPTY;
-		String id = player.getPersistentData().getString(PENDING_DATA_KEY);
+		String id = player.getPersistentData().getString(PENDING_DATA_KEY).orElse("");
 		if (id == null || id.isBlank()) return ItemStack.EMPTY;
 
 		CompoundTag data = player.getPersistentData();
 		if (!data.contains(PENDING_STACK_KEY)) return ItemStack.EMPTY;
-		CompoundTag stackTag = data.getCompound(PENDING_STACK_KEY);
-		ItemStack stack = ItemStack.parseOptional(player.registryAccess(), stackTag);
+		CompoundTag stackTag = data.getCompound(PENDING_STACK_KEY).orElseThrow();
+		ItemStack stack = ItemStack.OPTIONAL_CODEC.parse(player.registryAccess().createSerializationContext(NbtOps.INSTANCE), stackTag).getOrThrow();
 		if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
 			clearPendingCtrlQUpload(player);
 			return ItemStack.EMPTY;

@@ -7,6 +7,7 @@ import com.extendedae_plus.client.screen.FrequencyInputScreen;
 import com.extendedae_plus.content.ae2.TagInventoryMEInterfaceBlockEntity;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -48,8 +49,8 @@ public final class WrenchHook {
                 BlockState state = level.getBlockState(pos);
                 var block = state.getBlock();
 
-                if (!level.isClientSide) {
-                    var drops = Block.getDrops(state, (net.minecraft.server.level.ServerLevel) level, pos, te, player, stack);
+                if (!level.isClientSide()) {
+                    var drops = Block.getDrops(state, (ServerLevel) level, pos, te, player, stack);
                     for (var item : drops) {
                         player.getInventory().placeItemBackInInventory(item);
                     }
@@ -62,7 +63,7 @@ public final class WrenchHook {
                 block.destroy(level, hit.getBlockPos(), state);
 
                 event.setCanceled(true);
-                event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
+                event.setCancellationResult(InteractionResult.SUCCESS);
             }
             // 普通 BlockEntity 不会被 AE2 的扳手钩子识别，在这里补充标签库存接口的拆除入口。
             else if (be instanceof TagInventoryMEInterfaceBlockEntity) {
@@ -70,8 +71,8 @@ public final class WrenchHook {
                 BlockState state = level.getBlockState(pos);
                 var block = state.getBlock();
 
-                if (!level.isClientSide) {
-                    var drops = Block.getDrops(state, (net.minecraft.server.level.ServerLevel) level, pos, be, player, stack);
+                if (!level.isClientSide()) {
+                    var drops = Block.getDrops(state, (ServerLevel) level, pos, be, player, stack);
                     for (var item : drops) {
                         player.getInventory().placeItemBackInInventory(item);
                     }
@@ -83,15 +84,15 @@ public final class WrenchHook {
                 block.destroy(level, pos, state);
 
                 event.setCanceled(true);
-                event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
+                event.setCancellationResult(InteractionResult.SUCCESS);
             }
             // AE2 并行处理器系列（CraftingUnitBlock）潜行扳手拆除：直接入背包
             else {
                 var pos = hit.getBlockPos();
                 BlockState state = level.getBlockState(pos);
                 if (state.getBlock() instanceof CraftingUnitBlock) {
-                    if (!level.isClientSide) {
-                        var drops = Block.getDrops(state, (net.minecraft.server.level.ServerLevel) level, pos, level.getBlockEntity(pos), player, stack);
+                    if (!level.isClientSide()) {
+                        var drops = Block.getDrops(state, (ServerLevel) level, pos, level.getBlockEntity(pos), player, stack);
                         for (var item : drops) {
                             player.getInventory().placeItemBackInInventory(item);
                         }
@@ -104,7 +105,7 @@ public final class WrenchHook {
                     state.getBlock().destroy(level, pos, state);
 
                     event.setCanceled(true);
-                    event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
+                    event.setCancellationResult(InteractionResult.SUCCESS);
                 }
             }
         } else if (!InteractionUtil.isInAlternateUseMode(player) && InteractionUtil.canWrenchRotate(stack)) {
@@ -112,7 +113,7 @@ public final class WrenchHook {
             BlockEntity be = level.getBlockEntity(hit.getBlockPos());
             if (be instanceof WirelessTransceiverBlockEntity te) {
                 // 仅在服务端切换与同步，避免仅客户端生效导致看起来"无效果"
-                if (!level.isClientSide) {
+                if (!level.isClientSide()) {
                     boolean newLocked = !te.isLocked();
                     te.setLocked(newLocked);
                     // 同步方块更新到客户端
@@ -124,9 +125,9 @@ public final class WrenchHook {
                         ExtendedAEPlus.LOGGER.debug("sendBlockUpdated failed: {}", t.toString());
                     }
                     // 提示玩家（服务端消息下发到客户端）
-                    player.displayClientMessage(Component.translatable(
+                    player.sendOverlayMessage(Component.translatable(
                             newLocked ? "extendedae_plus.wireless.locked" : "extendedae_plus.wireless.unlocked"
-                    ), true);
+                    ));
                     // 轻微反馈音效
                     level.playSound(player, hit.getBlockPos(), SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.5F, newLocked ? 0.6F : 0.9F);
                     ExtendedAEPlus.LOGGER.debug("Wrench toggle lock at {} -> {}", pos, newLocked);
@@ -135,7 +136,7 @@ public final class WrenchHook {
                 }
 
                 event.setCanceled(true);
-                event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
+                event.setCancellationResult(InteractionResult.SUCCESS);
             }
         }
     }
@@ -162,7 +163,7 @@ public final class WrenchHook {
         if (InteractionUtil.isInAlternateUseMode(player) && InteractionUtil.canWrenchRotate(stack)) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof WirelessTransceiverBlockEntity te) {
-                if (level.isClientSide) {
+                if (level.isClientSide()) {
                     // 客户端：打开频率输入GUI
                     FrequencyInputScreen.open(pos, te.getFrequency());
                     ExtendedAEPlus.LOGGER.debug("Opening frequency input GUI for transceiver at {}", pos);

@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public class LegacyIngredientListRendererMixin {
     @Shadow @Final private List<?> slots;
 
     @Inject(method = "render", at = @At("TAIL"))
-    private void eap$renderNetworkOverlay(GuiGraphics guiGraphics, CallbackInfo callbackInfo) {
+    private void eap$renderNetworkOverlay(GuiGraphicsExtractor guiGraphics, CallbackInfo callbackInfo) {
         IngredientListOverlayHelper.render(guiGraphics, slots);
     }
 }

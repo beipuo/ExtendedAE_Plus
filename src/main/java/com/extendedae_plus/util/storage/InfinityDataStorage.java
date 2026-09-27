@@ -7,6 +7,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
 
 import java.math.BigInteger;
 
@@ -44,7 +47,9 @@ public class InfinityDataStorage {
                 continue;
             }
 
-            keys.add(entry.getKey().toTagGeneric(registries));
+            var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registries);
+            entry.getKey().toTagGeneric(output);
+            keys.add(output.buildResult());
             CompoundTag amountTag = new CompoundTag();
             amountTag.putByteArray("value", amount.toByteArray());
             amountsTag.add(amountTag);
@@ -58,8 +63,8 @@ public class InfinityDataStorage {
 
     // 从 NBT 数据反序列化创建 DataStorage 实例，兼容旧版列表式存档结构
     public static InfinityDataStorage loadFromNBT(CompoundTag nbt, HolderLookup.Provider registries) {
-        ListTag keys = nbt.getList(InfinityConstants.INFINITY_CELL_KEYS, ListTag.TAG_COMPOUND);
-        ListTag amounts = nbt.getList(InfinityConstants.INFINITY_CELL_AMOUNTS, ListTag.TAG_COMPOUND);
+        ListTag keys = nbt.getList(InfinityConstants.INFINITY_CELL_KEYS).orElse(new ListTag());
+        ListTag amounts = nbt.getList(InfinityConstants.INFINITY_CELL_AMOUNTS).orElse(new ListTag());
         if (keys.size() != amounts.size()) {
             AELog.warn("Loading storage cell with mismatched amounts/tags: %d != %d", amounts.size(), keys.size());
         }
@@ -68,8 +73,8 @@ public class InfinityDataStorage {
         BigInteger computedItemCount = BigInteger.ZERO;
         int limit = Math.min(keys.size(), amounts.size());
         for (int i = 0; i < limit; i++) {
-            AEKey key = AEKey.fromTagGeneric(registries, keys.getCompound(i));
-            BigInteger amount = new BigInteger(amounts.getCompound(i).getByteArray("value"));
+            AEKey key = AEKey.fromTagGeneric(TagValueInput.create(ProblemReporter.DISCARDING, registries, keys.getCompound(i).orElseThrow()));
+            BigInteger amount = new BigInteger(amounts.getCompound(i).orElseThrow().getByteArray("value").orElse(new byte[0]));
             if (key == null || amount.compareTo(BigInteger.ZERO) <= 0) {
                 continue;
             }

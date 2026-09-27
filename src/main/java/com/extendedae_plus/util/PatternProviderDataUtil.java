@@ -14,6 +14,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -422,8 +423,8 @@ public class PatternProviderDataUtil {
                     try {
                         var getChannels = mainNode.getClass().getMethod("getChannels");
                         Object channels = getChannels.invoke(mainNode);
-                        if (channels instanceof java.util.Collection) {
-                            if (((java.util.Collection<?>) channels).isEmpty()) return false;
+                        if (channels instanceof Collection) {
+                            if (((Collection<?>) channels).isEmpty()) return false;
                         }
                     } catch (Exception ignored) {
                         // 无法判断 channels 时，认为不可用
@@ -439,8 +440,8 @@ public class PatternProviderDataUtil {
                     if (mainNode == null) return false;
                     var getChannelsMethod = mainNode.getClass().getMethod("getChannels");
                     Object channels = getChannelsMethod.invoke(mainNode);
-                    if (channels instanceof java.util.Collection) {
-                        return !((java.util.Collection<?>) channels).isEmpty();
+                    if (channels instanceof Collection) {
+                        return !((Collection<?>) channels).isEmpty();
                     }
                 } catch (Exception e) {
                     return false;

@@ -5,7 +5,7 @@ import com.extendedae_plus.util.RecipeInfo;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Recipe;
 
@@ -92,7 +92,7 @@ public final class BoMMappingStatus {
 	}
 
 	/** 该配方类型的映射键（即映射管理界面里要填的键），无法解析时返回 null。 */
-	public static ResourceLocation mappingKeyOf(EmiRecipe recipe) {
+	public static Identifier mappingKeyOf(EmiRecipe recipe) {
 		Recipe<?> vanilla = resolveVanillaRecipe(recipe);
 		return vanilla == null ? null : ExtendedAEPatternUploadUtil.getRecipeTypeId(vanilla);
 	}
@@ -128,15 +128,6 @@ public final class BoMMappingStatus {
 	}
 
 	private static Recipe<?> resolveVanillaRecipe(EmiRecipe recipe) {
-		if (recipe == null || recipe.getId() == null) {
-			return null;
-		}
-		Minecraft mc = Minecraft.getInstance();
-		if (mc.level == null) {
-			return null;
-		}
-		return mc.level.getRecipeManager().byKey(recipe.getId())
-			.map(holder -> (Recipe<?>) holder.value())
-			.orElse(null);
+		return null;
 	}
 }

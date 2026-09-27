@@ -1,5 +1,7 @@
 package com.extendedae_plus.network;
 
+import com.extendedae_plus.ExtendedAEPlus;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -11,7 +13,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
@@ -21,21 +23,21 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public class OpenProviderUiC2SPacket implements CustomPacketPayload {
     public static final Type<OpenProviderUiC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "open_provider_ui"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "open_provider_ui"));
 
     public static final StreamCodec<FriendlyByteBuf, OpenProviderUiC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {
                 buf.writeLong(pkt.posLong);
-                buf.writeResourceLocation(pkt.dimId);
+                buf.writeIdentifier(pkt.dimId);
                 buf.writeVarInt(pkt.faceOrd);
             },
-            buf -> new OpenProviderUiC2SPacket(buf.readLong(), buf.readResourceLocation(), buf.readVarInt())
+            buf -> new OpenProviderUiC2SPacket(buf.readLong(), buf.readIdentifier(), buf.readVarInt())
     );
     private final long posLong;
-    private final ResourceLocation dimId;
+    private final Identifier dimId;
     private final int faceOrd; // 目前保留，若目标需要可用
 
-    public OpenProviderUiC2SPacket(long posLong, ResourceLocation dimId, int faceOrd) {
+    public OpenProviderUiC2SPacket(long posLong, Identifier dimId, int faceOrd) {
         this.posLong = posLong;
         this.dimId = dimId;
         this.faceOrd = faceOrd;
@@ -52,7 +54,7 @@ public class OpenProviderUiC2SPacket implements CustomPacketPayload {
 
             // 校验维度与方块
             ResourceKey<Level> levelKey = ResourceKey.create(Registries.DIMENSION, msg.dimId);
-            ServerLevel level = player.server.getLevel(levelKey);
+            ServerLevel level = player.level().getServer().getLevel(levelKey);
             if (level == null) {
                 return; // 无效维度
             }

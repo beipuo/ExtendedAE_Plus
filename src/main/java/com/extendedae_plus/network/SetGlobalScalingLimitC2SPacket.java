@@ -13,7 +13,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +27,7 @@ import java.util.Set;
 public class SetGlobalScalingLimitC2SPacket implements CustomPacketPayload {
 
     public static final Type<SetGlobalScalingLimitC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "set_global_scaling_limit"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "set_global_scaling_limit"));
 
     public static final StreamCodec<FriendlyByteBuf, SetGlobalScalingLimitC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, packet) -> {
@@ -49,7 +49,7 @@ public class SetGlobalScalingLimitC2SPacket implements CustomPacketPayload {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
 
-            var level = player.serverLevel();
+            var level = player.level();
             var blockEntity = level.getBlockEntity(message.controllerPos);
 
             if (!(blockEntity instanceof IInWorldGridNodeHost gridNodeHost)) return;
@@ -62,7 +62,7 @@ public class SetGlobalScalingLimitC2SPacket implements CustomPacketPayload {
 
             int affectedCount = applyToAllPatternProviders(grid, message.limit);
 
-            player.displayClientMessage(
+            player.sendSystemMessage(
                     Component.translatable("extendedae_plus.message.global_scaling_limit_applied", affectedCount, message.limit),
                     true);
         });

@@ -11,9 +11,10 @@ import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
@@ -77,7 +78,7 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     }
 
     public void updateStates() {
-        if(this.level== null||this.level.isClientSide) return;
+        if(this.level== null||this.level.isClientSide()) return;
         IGridNode node = this.getGridNode();
         int states=5;
 
@@ -304,24 +305,18 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     }
 
     @Override
-    public void loadTag(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadTag(tag, registries);
-        this.frequency = tag.getLong("frequency");
-        this.masterMode = tag.getBoolean("master");
-        this.locked = tag.getBoolean("locked");
-
-        if (tag.hasUUID("placerId")) {
-            this.placerId = tag.getUUID("placerId");
-            this.masterLink.setPlacerId(this.placerId);
-            this.slaveLink.setPlacerId(this.placerId);
-        }
-
-        if (tag.contains("placerName")) {
-            this.placerName = tag.getString("placerName");
-        }
+    public void loadTag(ValueInput data) {
+        super.loadTag(data);
+        this.frequency = data.getLongOr("frequency", 1L);
+        this.masterMode = data.getBooleanOr("master", false);
+        this.locked = data.getBooleanOr("locked", false);
+        this.placerId = data.read("placerId", UUIDUtil.CODEC).orElse(null);
+        this.masterLink.setPlacerId(this.placerId);
+        this.slaveLink.setPlacerId(this.placerId);
+        this.placerName = data.getString("placerName").orElse(null);
 
         if (this.managedNode != null) {
-            this.managedNode.loadFromNBT(tag);
+            this.managedNode.deserialize(data);
         }
         // 应用到链接器
         if (this.masterMode) {
@@ -333,19 +328,19 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
 
     /* ===================== NBT ===================== */
     @Override
-    public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        tag.putLong("frequency", this.frequency);
-        tag.putBoolean("master", this.masterMode);
-        tag.putBoolean("locked", this.locked);
+    public void saveAdditional(ValueOutput data) {
+        super.saveAdditional(data);
+        data.putLong("frequency", this.frequency);
+        data.putBoolean("master", this.masterMode);
+        data.putBoolean("locked", this.locked);
         if (this.placerId != null) {
-            tag.putUUID("placerId", this.placerId);
+            data.store("placerId", UUIDUtil.CODEC, this.placerId);
         }
         if (this.placerName != null) {
-            tag.putString("placerName", this.placerName);
+            data.putString("placerName", this.placerName);
         }
         if (this.managedNode != null) {
-            this.managedNode.saveToNBT(tag);
+            this.managedNode.serialize(data);
         }
     }
 

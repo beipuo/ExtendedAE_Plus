@@ -11,10 +11,12 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
-import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.AbstractRecipeCategory;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
+import mezz.jei.api.recipe.types.IRecipeType;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,16 +25,16 @@ public final class SuperCircuitCutterCategory extends AbstractRecipeCategory<Rec
     // JEI 接收的配方对象是 RecipeHolder，泛型信息在运行时会被擦除。
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private static final Class<RecipeHolder<SuperCircuitCutterRecipe>> RECIPE_HOLDER_CLASS = (Class) RecipeHolder.class;
-    public static final RecipeType<RecipeHolder<SuperCircuitCutterRecipe>> TYPE =
-            new RecipeType<>(SuperCircuitCutterRecipe.ID, RECIPE_HOLDER_CLASS);
+    public static final IRecipeType<RecipeHolder<SuperCircuitCutterRecipe>> TYPE =
+            IRecipeType.create(SuperCircuitCutterRecipe.ID, RECIPE_HOLDER_CLASS);
     private final IDrawable background;
     private final IDrawableAnimated progress;
 
     public SuperCircuitCutterCategory(IGuiHelper helpers) {
         super(TYPE,
-                ModItems.CIRCUIT_CUTTER_PLUS.get().getDescription(),
+                Component.translatable(ModItems.CIRCUIT_CUTTER_PLUS.get().getDescriptionId()),
                 helpers.createDrawableItemStack(ModItems.CIRCUIT_CUTTER_PLUS.get().getDefaultInstance()), 94, 26);
-        ResourceLocation texture = AppEng.makeId("textures/guis/circuit_cutter.png");
+        Identifier texture = AppEng.makeId("textures/guis/circuit_cutter.png");
         background = helpers.createDrawable(texture, 43, 32, 94, 26);
         IDrawableStatic progressDrawable = helpers.drawableBuilder(texture, 176, 0, 6, 18)
                 .addPadding(4, 0, 88, 0).build();
@@ -44,16 +46,16 @@ public final class SuperCircuitCutterCategory extends AbstractRecipeCategory<Rec
             @NotNull IFocusGroup focuses) {
         var input = holder.value().input();
         var slot = builder.addSlot(RecipeIngredientRole.INPUT, 3, 5).setSlotName("input");
-        for (var stack : input.getIngredient().getItems()) {
-            slot.addItemStack(stack.copyWithCount(input.getAmount()));
+        for (var item : input.getIngredient().items().toList()) {
+            slot.add(new ItemStack(item, input.getAmount()));
         }
         builder.addSlot(RecipeIngredientRole.OUTPUT, 66, 5).setSlotName("output")
-                .addItemStack(holder.value().output().copy());
+                .add(holder.value().output().copy());
     }
 
     @Override
     public void draw(@NotNull RecipeHolder<SuperCircuitCutterRecipe> holder, @NotNull IRecipeSlotsView slots,
-            @NotNull GuiGraphics graphics, double mouseX, double mouseY) {
+            @NotNull GuiGraphicsExtractor graphics, double mouseX, double mouseY) {
         background.draw(graphics);
         progress.draw(graphics);
     }

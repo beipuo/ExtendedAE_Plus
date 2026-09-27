@@ -2,7 +2,9 @@ package com.extendedae_plus.recipe;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.glodblock.github.extendedae.recipe.CircuitCutterRecipe;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
@@ -26,9 +28,9 @@ public final class SuperCircuitCutterRecipeManager {
             return List.of();
         }
 
-        RecipeManager recipeManager = level.getRecipeManager();
+        RecipeManager recipeManager = (RecipeManager) level.recipeAccess();
         List<RecipeHolder<SuperCircuitCutterRecipe>> localRecipes =
-                recipeManager.getAllRecipesFor(SuperCircuitCutterRecipe.TYPE);
+                List.copyOf(recipeManager.recipeMap().byType(SuperCircuitCutterRecipe.TYPE));
         List<RecipeHolder<CircuitCutterRecipe>> extendedAeRecipes = getExtendedAeRecipes(recipeManager);
 
         CacheEntry cached = CACHE.get(recipeManager);
@@ -50,15 +52,15 @@ public final class SuperCircuitCutterRecipeManager {
         if (!ModList.get().isLoaded(EXTENDED_AE)) {
             return List.of();
         }
-        return recipeManager.getAllRecipesFor(CircuitCutterRecipe.TYPE);
+        return List.copyOf(recipeManager.recipeMap().byType(CircuitCutterRecipe.TYPE));
     }
 
     private static RecipeHolder<SuperCircuitCutterRecipe> convert(RecipeHolder<CircuitCutterRecipe> holder) {
         CircuitCutterRecipe recipe = holder.value();
-        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(
+        Identifier id = Identifier.fromNamespaceAndPath(
                 ExtendedAEPlus.MODID,
-                "compat/extendedae/" + holder.id().getPath());
-        return new RecipeHolder<>(id, new SuperCircuitCutterRecipe(recipe.output, recipe.getInput()));
+                "compat/extendedae/" + holder.id().identifier().getPath());
+        return new RecipeHolder<>(ResourceKey.create(Registries.RECIPE, id), new SuperCircuitCutterRecipe(recipe.output.create(), recipe.getInput()));
     }
 
     private record CacheEntry(

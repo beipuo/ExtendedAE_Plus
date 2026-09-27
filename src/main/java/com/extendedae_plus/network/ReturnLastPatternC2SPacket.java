@@ -11,7 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -22,7 +22,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  */
 public class ReturnLastPatternC2SPacket implements CustomPacketPayload {
     public static final Type<ReturnLastPatternC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "return_last_pattern"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "return_last_pattern"));
 
     public static final ReturnLastPatternC2SPacket INSTANCE = new ReturnLastPatternC2SPacket();
 

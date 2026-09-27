@@ -6,13 +6,13 @@ import com.extendedae_plus.api.crafting.IForceCraftStartSync;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public class ForceCraftStartFlagC2SPacket implements CustomPacketPayload {
     public static final Type<ForceCraftStartFlagC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "force_craft_start_flag"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "force_craft_start_flag"));
 
     public static final StreamCodec<FriendlyByteBuf, ForceCraftStartFlagC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> buf.writeBoolean(pkt.forceStart),

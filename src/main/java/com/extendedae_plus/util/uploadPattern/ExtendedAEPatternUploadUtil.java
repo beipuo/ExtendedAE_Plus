@@ -11,6 +11,9 @@ import appeng.crafting.pattern.AESmithingTablePattern;
 import appeng.crafting.pattern.AEStonecuttingPattern;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
+import appeng.helpers.patternprovider.PatternProviderLogic;
+import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
+import java.util.concurrent.atomic.AtomicInteger;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
@@ -35,7 +38,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -60,11 +63,11 @@ public class ExtendedAEPatternUploadUtil {
 
     // --------------------------- 配置：RecipeType 中文名称映射 ---------------------------
     private static final String CONFIG_RELATIVE = "extendedae_plus/recipe_type_names.json";
-    private static final Map<ResourceLocation, String> CUSTOM_NAMES = new ConcurrentHashMap<>();
+    private static final Map<Identifier, String> CUSTOM_NAMES = new ConcurrentHashMap<>();
     private static final Map<String, String> CUSTOM_ALIASES = new ConcurrentHashMap<>();
     /** 每次重载映射表递增，供客户端缓存（如合成树映射标记）判断失效。 */
-    private static final java.util.concurrent.atomic.AtomicInteger MAPPING_VERSION =
-            new java.util.concurrent.atomic.AtomicInteger();
+    private static final AtomicInteger MAPPING_VERSION =
+            new AtomicInteger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     // 最近一次打开供应器选择界面时的预设搜索关键字。
     // 处理样板会写入映射后的配方类型关键字，合成样板固定使用 crafting（可通过映射改名）。
@@ -122,7 +125,7 @@ public class ExtendedAEPatternUploadUtil {
 
             String json = Files.readString(cfgPath);
             JsonObject obj = GSON.fromJson(json, JsonObject.class);
-            Map<ResourceLocation, String> map = new HashMap<>();
+            Map<Identifier, String> map = new HashMap<>();
             Map<String, String> alias = new HashMap<>();
             if (obj != null) {
                 for (Map.Entry<String, JsonElement> e : obj.entrySet()) {
@@ -134,7 +137,7 @@ public class ExtendedAEPatternUploadUtil {
                         if (k.contains(":")) {
                             // 形如 namespace:path
                             try {
-                                var rl = ResourceLocation.tryParse(k);
+                                var rl = Identifier.tryParse(k);
                                 if (rl != null) {
                                     map.put(rl, name);
                                 }
@@ -161,7 +164,7 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     /** 公开配方类型 ID 解析，供客户端判断映射状态。 */
-    public static ResourceLocation getRecipeTypeId(Recipe<?> recipe) {
+    public static Identifier getRecipeTypeId(Recipe<?> recipe) {
         return recipe == null ? null : resolveRecipeTypeId(recipe.getType());
     }
 
@@ -169,7 +172,7 @@ public class ExtendedAEPatternUploadUtil {
      * 该配方类型是否存在用户自定义的供应器映射。
      * 注意：{@link #resolveRecipeTypeSearchKey} 在无映射时会回退成 path，不能用它判断有无映射。
      */
-    public static boolean hasCustomRecipeTypeMapping(ResourceLocation typeId) {
+    public static boolean hasCustomRecipeTypeMapping(Identifier typeId) {
         if (typeId == null) {
             return false;
         }
@@ -183,7 +186,7 @@ public class ExtendedAEPatternUploadUtil {
 
     /** 有自定义映射时返回供应器搜索词，否则返回 null。 */
     public static String mappedSearchKeyOrNull(Recipe<?> recipe) {
-        ResourceLocation typeId = getRecipeTypeId(recipe);
+        Identifier typeId = getRecipeTypeId(recipe);
         if (!hasCustomRecipeTypeMapping(typeId)) {
             return null;
         }
@@ -337,13 +340,13 @@ public class ExtendedAEPatternUploadUtil {
         }
 
         return new LastUploadRecord(
-                data.getString(LAST_UPLOAD_KIND_KEY),
-                data.contains(LAST_UPLOADED_PROVIDER_KEY) ? data.getLong(LAST_UPLOADED_PROVIDER_KEY) : Long.MIN_VALUE,
-                data.getInt(LAST_UPLOAD_SLOT_KEY),
-                data.getLong(LAST_UPLOAD_POS_KEY),
-                data.getString(LAST_UPLOAD_SIDE_KEY),
-                data.getString(LAST_UPLOAD_DIM_KEY),
-                data.getBoolean(LAST_UPLOAD_MATRIX_PLUS_KEY)
+                data.getString(LAST_UPLOAD_KIND_KEY).orElse(""),
+                data.getLong(LAST_UPLOADED_PROVIDER_KEY).orElse(Long.MIN_VALUE),
+                data.getInt(LAST_UPLOAD_SLOT_KEY).orElse(0),
+                data.getLong(LAST_UPLOAD_POS_KEY).orElse(Long.MIN_VALUE),
+                data.getString(LAST_UPLOAD_SIDE_KEY).orElse(""),
+                data.getString(LAST_UPLOAD_DIM_KEY).orElse(""),
+                data.getBoolean(LAST_UPLOAD_MATRIX_PLUS_KEY).orElse(false)
         );
     }
 
@@ -368,11 +371,12 @@ public class ExtendedAEPatternUploadUtil {
         if (dimension == null || dimension.isEmpty()) {
             return player.level();
         }
-        ResourceLocation id = ResourceLocation.tryParse(dimension);
-        if (id == null || player.server == null) {
+        Identifier id = Identifier.tryParse(dimension);
+        var server = player.level().getServer();
+        if (id == null || server == null) {
             return null;
         }
-        return player.server.getLevel(ResourceKey.create(Registries.DIMENSION, id));
+        return server.getLevel(ResourceKey.create(Registries.DIMENSION, id));
     }
 
     /**
@@ -411,7 +415,7 @@ public class ExtendedAEPatternUploadUtil {
             // 更新内存映射
             if (key.contains(":")) {
                 try {
-                    var rl = ResourceLocation.tryParse(key);
+                    var rl = Identifier.tryParse(key);
                     if (rl != null) {
                         CUSTOM_NAMES.put(rl, cnValue);
                     }
@@ -473,7 +477,7 @@ public class ExtendedAEPatternUploadUtil {
 
     private static boolean mappingKeysEqual(String first, String second) {
         if (first.contains(":") || second.contains(":")) {
-            return Objects.equals(ResourceLocation.tryParse(first), ResourceLocation.tryParse(second));
+            return Objects.equals(Identifier.tryParse(first), Identifier.tryParse(second));
         }
         return first.equalsIgnoreCase(second);
     }
@@ -496,8 +500,8 @@ public class ExtendedAEPatternUploadUtil {
             JsonObject obj = GSON.fromJson(json, JsonObject.class);
             if (obj == null) return 0;
 
-            java.util.List<String> toRemove = new java.util.ArrayList<>();
-            for (java.util.Map.Entry<String, JsonElement> e : obj.entrySet()) {
+            List<String> toRemove = new ArrayList<>();
+            for (Map.Entry<String, JsonElement> e : obj.entrySet()) {
                 JsonElement v = e.getValue();
                 if (v != null && v.isJsonPrimitive()) {
                     String name = v.getAsString();
@@ -519,7 +523,7 @@ public class ExtendedAEPatternUploadUtil {
             for (String k : toRemove) {
                 if (k.contains(":")) {
                     try {
-                        var rl = ResourceLocation.tryParse(k);
+                        var rl = Identifier.tryParse(k);
                         if (rl != null) {
                             String cur = CUSTOM_NAMES.get(rl);
                             if (target.equals(cur)) {
@@ -574,7 +578,7 @@ public class ExtendedAEPatternUploadUtil {
             return alias;
         }
 
-        ResourceLocation recipeType = ResourceLocation.tryParse(normalized);
+        Identifier recipeType = Identifier.tryParse(normalized);
         if (recipeType != null) {
             String mapped = resolveRecipeTypeSearchKey(recipeType, null);
             if (mapped != null && !mapped.isBlank() && !mapped.equals(recipeType.getPath())) {
@@ -590,7 +594,7 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     /** 统一解析配方类型，优先配置映射，其次使用配方查看器提供的分类标题。 */
-    public static String resolveRecipeTypeSearchKey(ResourceLocation key, String displayName) {
+    public static String resolveRecipeTypeSearchKey(Identifier key, String displayName) {
         if (key == null) return null;
 
         String custom = CUSTOM_NAMES.get(key);
@@ -607,13 +611,13 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     /** 注册表反查失败时，RecipeType.simple 创建的类型仍会通过 toString 暴露其 ID。 */
-    private static ResourceLocation resolveRecipeTypeId(RecipeType<?> type) {
+    private static Identifier resolveRecipeTypeId(RecipeType<?> type) {
         if (type == null) return null;
-        ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
+        Identifier key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
         if (key != null) {
             return key;
         }
-        return ResourceLocation.tryParse(type.toString());
+        return Identifier.tryParse(type.toString());
     }
 
     // 注意：GTCEu 的映射方法已在下方提供基于 Object 的反射版本，避免重复定义。
@@ -629,7 +633,7 @@ public class ExtendedAEPatternUploadUtil {
             Object typeObj = mGetType.invoke(gtRecipeObj);
             String idStr = String.valueOf(typeObj);
             if (idStr == null || idStr.isBlank()) return null;
-            var rl = ResourceLocation.tryParse(idStr);
+            var rl = Identifier.tryParse(idStr);
             // 1) 别名优先（使用 path 作为最终搜索关键字）
             String path = rl != null ? rl.getPath() : null;
             if (path != null) {
@@ -657,7 +661,7 @@ public class ExtendedAEPatternUploadUtil {
         try {
             Object type = recipeBase.getClass().getMethod("getType").invoke(recipeBase);
             if (type instanceof RecipeType<?> rt) {
-                ResourceLocation key = resolveRecipeTypeId(rt);
+                Identifier key = resolveRecipeTypeId(rt);
                 if (key != null) {
                     String resolved = resolveRecipeTypeSearchKey(key, null);
                     if (resolved != null && !resolved.isBlank()) return resolved;
@@ -821,7 +825,7 @@ public class ExtendedAEPatternUploadUtil {
                     recordMatrixUpload(
                             player,
                             target.pos(),
-                            player.level().dimension().location().toString(),
+                            player.level().dimension().identifier().toString(),
                             target.plus(),
                             findLastChangedSlot(target.patternInventory(), before, target.patternInventory().size())
                     );
@@ -908,7 +912,7 @@ public class ExtendedAEPatternUploadUtil {
                     recordMatrixUpload(
                             player,
                             target.pos(),
-                            player.level().dimension().location().toString(),
+                            player.level().dimension().identifier().toString(),
                             target.plus(),
                             findLastChangedSlot(target.patternInventory(), before, target.patternInventory().size())
                     );
@@ -1012,12 +1016,12 @@ public class ExtendedAEPatternUploadUtil {
                     String className = machineClass.getName();
                     if (className != null && className.contains("MeteoritePatternProvider")) {
                         @SuppressWarnings("unchecked")
-                        java.util.Set<?> hosts = grid.getMachines((Class) machineClass);
+                        Set<?> hosts = grid.getMachines((Class) machineClass);
                         for (Object host : hosts) {
-                            if (host instanceof appeng.helpers.patternprovider.PatternProviderLogicHost logicHost) {
-                                appeng.helpers.patternprovider.PatternProviderLogic logic = logicHost.getLogic();
+                            if (host instanceof PatternProviderLogicHost logicHost) {
+                                PatternProviderLogic logic = logicHost.getLogic();
                                 if (logic != null) {
-                                    appeng.api.inventories.InternalInventory inv = logic.getPatternInv();
+                                    InternalInventory inv = logic.getPatternInv();
                                     if (inv != null) {
                                         result.add(new MatrixInventoryTarget(inv, inv, null, false));
                                     }
@@ -1060,7 +1064,7 @@ public class ExtendedAEPatternUploadUtil {
      */
     private static List<?> findAllMatrixPatternHandlers(IGrid grid) {
         // NeoForge 1.21 能力系统与 API 变更，此处先返回空列表，避免编译期依赖旧能力系统
-        return java.util.Collections.emptyList();
+        return Collections.emptyList();
     }
 
     // --------------------------- 重复样板检测 ---------------------------
@@ -1553,7 +1557,7 @@ public class ExtendedAEPatternUploadUtil {
             side = part.getSide().getSerializedName();
         }
         String dimension = blockEntity.getLevel() != null
-                ? blockEntity.getLevel().dimension().location().toString()
+                ? blockEntity.getLevel().dimension().identifier().toString()
                 : "";
         return new HostLocator(blockEntity.getBlockPos().asLong(), side, dimension);
     }
@@ -1579,7 +1583,7 @@ public class ExtendedAEPatternUploadUtil {
         if (dimension == null || dimension.isEmpty()) {
             return true;
         }
-        return level != null && dimension.equals(level.dimension().location().toString());
+        return level != null && dimension.equals(level.dimension().identifier().toString());
     }
 
     private static ItemStack[] snapshotInventory(InternalInventory inv, int slotLimit) {
@@ -1794,10 +1798,10 @@ public class ExtendedAEPatternUploadUtil {
         // 先确定目标容器名称，用于同名回退
         String targetName = getProviderDisplayName(providerId, accessMenu);
         // 构建尝试顺序：先指定ID，其次同名的其他ID
-        java.util.List<Long> tryIds = new java.util.ArrayList<>();
+        List<Long> tryIds = new ArrayList<>();
         tryIds.add(providerId);
         try {
-            java.util.List<Long> all = getAllProviderIds(accessMenu);
+            List<Long> all = getAllProviderIds(accessMenu);
             for (Long id : all) {
                 if (id == null || id.longValue() == providerId) continue;
                 String name = getProviderDisplayName(id, accessMenu);
@@ -1837,15 +1841,15 @@ public class ExtendedAEPatternUploadUtil {
     /**
      * 列出当前菜单中所有供应器的服务器ID（原样返回 byId 的 key 集合）。
      */
-    public static java.util.List<Long> getAllProviderIds(PatternAccessTermMenu menu) {
-        java.util.List<Long> result = new java.util.ArrayList<>();
+    public static List<Long> getAllProviderIds(PatternAccessTermMenu menu) {
+        List<Long> result = new ArrayList<>();
         if (menu == null) return result;
         try {
-            java.lang.reflect.Field byIdField = findByIdField(menu.getClass());
+            Field byIdField = findByIdField(menu.getClass());
             if (byIdField == null) return result;
             byIdField.setAccessible(true);
             @SuppressWarnings("unchecked")
-            java.util.Map<Long, Object> byId = (java.util.Map<Long, Object>) byIdField.get(menu);
+            Map<Long, Object> byId = (Map<Long, Object>) byIdField.get(menu);
             if (byId != null) {
                 result.addAll(byId.keySet());
             }
@@ -2038,7 +2042,7 @@ public class ExtendedAEPatternUploadUtil {
 
         // 以名称为键，同名供应器依次尝试：先 index 指定的，再同名的其他
         String targetName = getProviderDisplayName(container);
-        java.util.List<PatternContainer> tryList = new java.util.ArrayList<>();
+        List<PatternContainer> tryList = new ArrayList<>();
         tryList.add(container);
         try {
             for (PatternContainer c : list) {
@@ -2085,7 +2089,7 @@ public class ExtendedAEPatternUploadUtil {
             var it = any.getBlockEntities();
             while (it.hasNext()) {
                 var te = it.next();
-                if (te instanceof com.extendedae_plus.content.matrix.UploadCoreBlockEntity) {
+                if (te instanceof UploadCoreBlockEntity) {
                     cores++;
                 }
             }

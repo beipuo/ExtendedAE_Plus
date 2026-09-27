@@ -3,7 +3,7 @@ package com.extendedae_plus.client.gui.widgets;
 import appeng.api.config.Setting;
 import appeng.core.network.ServerboundPacket;
 import com.extendedae_plus.network.packet.EAPConfigButtonPacket;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 public class EAPServerSettingToggleButton<T extends Enum<T>> extends EAPSettingToggleButton<T> {
 
@@ -13,6 +13,6 @@ public class EAPServerSettingToggleButton<T extends Enum<T>> extends EAPSettingT
 
     private static <T extends Enum<T>> void sendToServer(EAPSettingToggleButton<T> button, boolean backwards) {
         ServerboundPacket message = new EAPConfigButtonPacket(button.getSetting(), backwards);
-        PacketDistributor.sendToServer(message);
+        ClientPacketDistributor.sendToServer(message);
     }
 }

@@ -1,15 +1,17 @@
 package com.extendedae_plus.compat;
 
+import appeng.api.inventories.BaseInternalInventory;
 import appeng.api.inventories.InternalInventory;
 import net.minecraft.world.item.ItemStack;
-
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
 /**
  * 保持库存对象身份稳定，同时动态限制对外可访问的槽位范围。
  */
-public final class DynamicSizeInternalInventory implements InternalInventory {
+public final class DynamicSizeInternalInventory extends BaseInternalInventory {
     private final InternalInventory delegate;
     private final IntSupplier sizeSupplier;
 

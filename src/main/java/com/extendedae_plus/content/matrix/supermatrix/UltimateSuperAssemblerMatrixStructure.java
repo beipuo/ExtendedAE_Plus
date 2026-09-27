@@ -7,7 +7,7 @@ import appeng.api.stacks.AEItemKey;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.level.block.Block;
@@ -29,7 +29,7 @@ public final class UltimateSuperAssemblerMatrixStructure {
     private static final int SIZE_X = 14;
     private static final int SIZE_Y = 16;
     private static final int SIZE_Z = 14;
-    private static final ResourceLocation DEFINITION = ResourceLocation.fromNamespaceAndPath(
+    private static final Identifier DEFINITION = Identifier.fromNamespaceAndPath(
             ExtendedAEPlus.MODID, "structures/ultimate_super_assembler_matrix.json");
     private static final List<BlockPos> UPLOAD_CORE_ANCHORS = List.of(
             new BlockPos(6, 4, 6), new BlockPos(7, 4, 6),
@@ -182,7 +182,9 @@ public final class UltimateSuperAssemblerMatrixStructure {
                 String state = entry.get("state").getAsString();
                 int propertyStart = state.indexOf('[');
                 String blockId = propertyStart < 0 ? state : state.substring(0, propertyStart);
-                var block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(blockId));
+                var block = BuiltInRegistries.BLOCK.get(Identifier.parse(blockId))
+                        .map(reference -> reference.value())
+                        .orElse(Blocks.AIR);
                 if (block == Blocks.AIR && !"minecraft:air".equals(blockId)) {
                     ExtendedAEPlus.LOGGER.error("终极超级装配矩阵结构包含未知方块: {}", blockId);
                     return null;

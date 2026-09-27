@@ -9,7 +9,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class RequestMappingProvidersC2SPacket implements CustomPacketPayload {
 	public static final Type<RequestMappingProvidersC2SPacket> TYPE = new Type<>(
-		ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "request_mapping_providers"));
+		Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "request_mapping_providers"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, RequestMappingProvidersC2SPacket> STREAM_CODEC =
 		StreamCodec.of(
@@ -47,7 +47,7 @@ public class RequestMappingProvidersC2SPacket implements CustomPacketPayload {
 
 			IGrid grid = CtrlQPendingUploadUtil.findPlayerGrid(player);
 			if (grid == null) {
-				player.displayClientMessage(Component.translatable("message.extendedae_plus.no_network"), false);
+				player.sendSystemMessage(Component.translatable("message.extendedae_plus.no_network"), false);
 				return;
 			}
 

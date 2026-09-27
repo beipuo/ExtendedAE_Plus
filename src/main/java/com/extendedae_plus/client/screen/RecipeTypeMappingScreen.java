@@ -6,8 +6,11 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.StyleManager;
 import appeng.client.gui.widgets.AE2Button;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -271,61 +274,64 @@ public class RecipeTypeMappingScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
         // 显式转发 AETextField 点击，确保点击纹理边缘也能获得焦点。
-        if (this.filterInput != null && this.filterInput.mouseClicked(mouseX, mouseY, button)) {
+        if (this.filterInput != null && this.filterInput.mouseClicked(event, doubleClick)) {
             this.setFocused(this.filterInput);
             return true;
         }
-        if (this.keyInput != null && this.keyInput.mouseClicked(mouseX, mouseY, button)) {
+        if (this.keyInput != null && this.keyInput.mouseClicked(event, doubleClick)) {
             this.setFocused(this.keyInput);
             return true;
         }
-        if (this.valueInput != null && this.valueInput.mouseClicked(mouseX, mouseY, button)) {
+        if (this.valueInput != null && this.valueInput.mouseClicked(event, doubleClick)) {
             this.setFocused(this.valueInput);
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
+        int keyCode = event.key();
         if (this.filterInput != null && this.filterInput.isFocused()
-                && keyCode == 65 && hasControlDown()) {
+                && keyCode == 65 && (event.modifiers() & 2) != 0) {
             // Ctrl+A 只修改选区，不触发列表重建，避免全选状态被刷新清掉。
             this.filterInput.selectAll();
             return true;
         }
         if (this.filterInput != null && this.filterInput.isFocused()
-                && this.filterInput.keyPressed(keyCode, scanCode, modifiers)) {
+                && this.filterInput.keyPressed(event)) {
             return true;
         }
         if (this.keyInput != null && this.keyInput.isFocused()
-                && this.keyInput.keyPressed(keyCode, scanCode, modifiers)) {
+                && this.keyInput.keyPressed(event)) {
             return true;
         }
         if (this.valueInput != null && this.valueInput.isFocused()
-                && this.valueInput.keyPressed(keyCode, scanCode, modifiers)) {
+                && this.valueInput.keyPressed(event)) {
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
-    public boolean charTyped(char codePoint, int modifiers) {
+    public boolean charTyped(CharacterEvent event) {
         if (this.filterInput != null && this.filterInput.isFocused()
-                && this.filterInput.charTyped(codePoint, modifiers)) {
+                && this.filterInput.charTyped(event)) {
             return true;
         }
         if (this.keyInput != null && this.keyInput.isFocused()
-                && this.keyInput.charTyped(codePoint, modifiers)) {
+                && this.keyInput.charTyped(event)) {
             return true;
         }
         if (this.valueInput != null && this.valueInput.isFocused()
-                && this.valueInput.charTyped(codePoint, modifiers)) {
+                && this.valueInput.charTyped(event)) {
             return true;
         }
-        return super.charTyped(codePoint, modifiers);
+        return super.charTyped(event);
     }
 
     @Override
@@ -338,23 +344,23 @@ public class RecipeTypeMappingScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         int panelWidth = Math.min(600, this.width - 20);
         int panelHeight = Math.min(390, this.height - 20);
         int panelX = (this.width - panelWidth) / 2;
         int panelY = (this.height - panelHeight) / 2;
-        this.renderBackground(graphics, mouseX, mouseY, partialTick);
-        super.render(graphics, mouseX, mouseY, partialTick);
+        this.extractBackground(graphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
         // 仅使用原版模糊背景，避免额外绘制不透明面板遮住世界背景。
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, panelY + 9, 0xFFFFFFFF);
+        graphics.centeredText(this.font, this.title, this.width / 2, panelY + 9, 0xFFFFFFFF);
         Component pageText = Component.translatable("extendedae_plus.screen.mapping_management.page",
                 this.filteredMappings.isEmpty() ? 0 : this.page + 1,
                 Math.max(1, (this.filteredMappings.size() + this.pageSize - 1) / this.pageSize),
                 this.filteredMappings.size());
-        graphics.drawCenteredString(this.font, pageText, this.width / 2, panelY + panelHeight - 48, 0xFFB0B0B0);
+        graphics.centeredText(this.font, pageText, this.width / 2, panelY + panelHeight - 48, 0xFFB0B0B0);
         if (!this.status.getString().isEmpty()) {
-            graphics.drawString(this.font, this.status, panelX + 12, panelY + panelHeight - 66, this.statusColor, false);
+            graphics.text(this.font, this.status, panelX + 12, panelY + panelHeight - 66, this.statusColor, false);
         }
     }
 

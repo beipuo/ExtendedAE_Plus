@@ -1,7 +1,7 @@
 package com.extendedae_plus.client.gui;
 
 import appeng.client.gui.style.Blitter;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class NewIcon {
     public static final Blitter MULTIPLY2;
@@ -10,10 +10,12 @@ public class NewIcon {
     public static final Blitter DIVIDE5;
     public static final Blitter MULTIPLY10;
     public static final Blitter DIVIDE10;
+    public static final Blitter ARROW_LEFT;
+    public static final Blitter ARROW_RIGHT;
     @SuppressWarnings("all")
     // 贴图当前存放于 assets/extendedae_plus/textures/gui/nicons.png
     // 与 MODID (extendedaeplus) 不同，因此这里直接指定贴图所在命名空间
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath("extendedae_plus", "textures/gui/nicons.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath("extendedae_plus", "textures/gui/nicons.png");
 
     static {
         MULTIPLY2 = Blitter.texture(TEXTURE, 64, 64).src(32, 0, 16, 16);
@@ -22,6 +24,8 @@ public class NewIcon {
         DIVIDE5 = Blitter.texture(TEXTURE, 64, 64).src(16, 0, 16, 16);
         MULTIPLY10 = Blitter.texture(TEXTURE, 64, 64).src(0, 16, 16, 16);
         DIVIDE10 = Blitter.texture(TEXTURE, 64, 64).src(16, 16, 16, 16);
+        ARROW_LEFT = Blitter.texture(TEXTURE, 64, 64).src(32, 16, 16, 16);
+        ARROW_RIGHT = Blitter.texture(TEXTURE, 64, 64).src(48, 16, 16, 16);
 
     }
 }

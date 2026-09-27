@@ -8,7 +8,7 @@ import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAccessor;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.pedroksl.advanced_ae.gui.advpatternprovider.AdvPatternProviderMenu;
@@ -20,7 +20,7 @@ public class SetPerProviderScalingLimitC2SPacket implements CustomPacketPayload 
     private final int limit;
 
     public static final CustomPacketPayload.Type<SetPerProviderScalingLimitC2SPacket> TYPE = new CustomPacketPayload.Type<>(
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "set_per_provider_scaling_limit"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "set_per_provider_scaling_limit"));
 
 
     public SetPerProviderScalingLimitC2SPacket(int limit) {

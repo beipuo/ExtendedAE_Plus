@@ -9,6 +9,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.fml.ModList;
@@ -21,7 +22,7 @@ public class ExtendedAEPlusClient {
 		container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
 		
 		// 注册按键绑定
-		modEventBus.addListener((net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent event) -> {
+		modEventBus.addListener((RegisterKeyMappingsEvent event) -> {
 			event.register(ModKeybindings.CREATE_PATTERN_KEY);
 			event.register(ModKeybindings.FILL_SEARCH_KEY);
 		});
@@ -32,9 +33,8 @@ public class ExtendedAEPlusClient {
 		ExtendedAEPlus.LOGGER.info("HELLO FROM CLIENT SETUP");
 		ExtendedAEPlus.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
 
-		// EMI 或 JEI 任一存在即注册输入监听；InputEvents 内部按查看器来源自守卫，
-		// 未安装对应查看器时相关分支不会被触发，避免触碰缺失模组的类导致类加载失败。
-		if (ModList.get().isLoaded("jei") || ModList.get().isLoaded("emi")) {
+		// EMI 26.1.2 发布后恢复 EMI 条件；当前仅在 JEI 存在时注册输入监听。
+		if (ModList.get().isLoaded("jei")) {
 			try {
 				Class<?> bootstrap = Class.forName("com.extendedae_plus.integration.jei.JeiClientBootstrap");
 				java.lang.reflect.Method m = bootstrap.getMethod("register");

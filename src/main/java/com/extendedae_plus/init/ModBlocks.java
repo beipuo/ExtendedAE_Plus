@@ -69,35 +69,35 @@ public final class ModBlocks {
     public static final DeferredBlock<CraftingUnitBlock> ACCELERATOR_4x = BLOCKS.register(
             "4x_crafting_accelerator",
             () -> {
-                return new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_4x);
+                return new CraftingUnitBlock(BlockBehaviour.Properties.of(), EPlusCraftingUnitType.ACCELERATOR_4x);
             }
     );
 
     public static final DeferredBlock<CraftingUnitBlock> ACCELERATOR_16x = BLOCKS.register(
             "16x_crafting_accelerator",
             () -> {
-                return new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_16x);
+                return new CraftingUnitBlock(BlockBehaviour.Properties.of(), EPlusCraftingUnitType.ACCELERATOR_16x);
             }
     );
 
     public static final DeferredBlock<CraftingUnitBlock> ACCELERATOR_64x = BLOCKS.register(
             "64x_crafting_accelerator",
             () -> {
-                return new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_64x);
+                return new CraftingUnitBlock(BlockBehaviour.Properties.of(), EPlusCraftingUnitType.ACCELERATOR_64x);
             }
     );
 
     public static final DeferredBlock<CraftingUnitBlock> ACCELERATOR_256x = BLOCKS.register(
             "256x_crafting_accelerator",
             () -> {
-                return new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_256x);
+                return new CraftingUnitBlock(BlockBehaviour.Properties.of(), EPlusCraftingUnitType.ACCELERATOR_256x);
             }
     );
 
     public static final DeferredBlock<CraftingUnitBlock> ACCELERATOR_1024x = BLOCKS.register(
             "1024x_crafting_accelerator",
             () -> {
-                return new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_1024x);
+                return new CraftingUnitBlock(BlockBehaviour.Properties.of(), EPlusCraftingUnitType.ACCELERATOR_1024x);
             }
     );
 

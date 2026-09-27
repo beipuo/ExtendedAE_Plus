@@ -96,11 +96,6 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
     }
 
     @Override
-    public IItemHandler getExposedItemHandler(@Nullable Direction side) {
-        return exposedInventory.toItemHandler();
-    }
-
-    @Override
     public AECableType getCableConnectionType(Direction direction) {
         return AECableType.COVERED;
     }
@@ -300,22 +295,6 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
     protected void writeToStream(RegistryFriendlyByteBuf data) {
         super.writeToStream(data);
         data.writeBoolean(working);
-    }
-
-    @Override
-    public void saveAdditional(CompoundTag data, HolderLookup.Provider registries) {
-        super.saveAdditional(data, registries);
-        data.putInt("progress", progress);
-        upgrades.writeToNBT(data, "upgrades", registries);
-        configManager.writeToNBT(data, registries);
-    }
-
-    @Override
-    public void loadTag(CompoundTag data, HolderLookup.Provider registries) {
-        super.loadTag(data, registries);
-        progress = data.getInt("progress");
-        upgrades.readFromNBT(data, "upgrades", registries);
-        configManager.readFromNBT(data, registries);
     }
 
     @Override

@@ -53,73 +53,7 @@ import java.util.List;
 	 * 处理配方：材料/产物取自 EMI 栈（v1 仅支持物品栈，流体条目跳过）。
 	 */
 	public static RecipeInfo fromEmiRecipe(EmiRecipe recipe) {
-		if (recipe == null || recipe.getId() == null || recipe.getOutputs().isEmpty()) {
-			return null;
-		}
-
-		var mc = Minecraft.getInstance();
-		if (mc.level == null) {
-			return null;
-		}
-
-		var holderOpt = mc.level.getRecipeManager().byKey(recipe.getId());
-		boolean crafting = holderOpt.isPresent() && holderOpt.get().value() instanceof CraftingRecipe;
-
-		GenericStack output = firstOutput(recipe);
-		if (output == null) {
-			return null;
-		}
-
-		List<List<GenericStack>> inputs;
-		if (crafting && holderOpt.get().value() instanceof net.minecraft.world.item.crafting.ShapedRecipe shaped) {
-			// 有序配方：getIngredients() 是宽×高的紧凑行主序，必须按宽度还原到 3x3 的真实槽位
-			// （如 1x3 竖条形的材料应位于槽位 0,3,6），否则 AE2 解码时 matches() 复验失败 → 无效样板。
-			var ingredients = shaped.getIngredients();
-			int width = Math.max(1, shaped.getWidth());
-			List<List<GenericStack>> grid = new ArrayList<>(9);
-			for (int i = 0; i < 9; i++) {
-				grid.add(new ArrayList<>());
-			}
-			for (int i = 0; i < ingredients.size() && i < 9; i++) {
-				int slot = (i / width) * 3 + (i % width);
-				ItemStack[] items = ingredients.get(i).getItems();
-				if (items.length > 0 && !items[0].isEmpty()) {
-					GenericStack gs = GenericStack.fromItemStack(items[0].copy());
-					if (gs != null) {
-						grid.get(slot).add(gs);
-					}
-				}
-			}
-			inputs = grid;
-		} else if (crafting) {
-			// 无序合成：顺序无关，紧凑填充即可
-			inputs = new ArrayList<>();
-			for (var ingredient : ((CraftingRecipe) holderOpt.get().value()).getIngredients()) {
-				List<GenericStack> candidates = new ArrayList<>();
-				ItemStack[] items = ingredient.getItems();
-				if (items.length > 0 && !items[0].isEmpty()) {
-					GenericStack gs = GenericStack.fromItemStack(items[0].copy());
-					if (gs != null) {
-						candidates.add(gs);
-					}
-				}
-				inputs.add(candidates);
-			}
-		} else {
-			inputs = new ArrayList<>();
-			for (EmiIngredient slot : recipe.getInputs()) {
-				List<GenericStack> candidates = new ArrayList<>();
-				for (EmiStack option : slot.getEmiStacks()) {
-					GenericStack gs = toGenericStack(option);
-					if (gs != null) {
-						candidates.add(gs);
-					}
-				}
-				inputs.add(candidates);
-			}
-		}
-
-		return new RecipeInfo(recipe, recipe.getId(), crafting, inputs, List.of(output));
+		return null;
 	}
 
 	private static GenericStack firstOutput(EmiRecipe recipe) {
@@ -149,13 +83,14 @@ import java.util.List;
 				long mb = Math.max(1, amount / 81);
 				return new GenericStack(AEFluidKey.of(fluid), mb);
 			}
-			// 化学品（Mek 氧化机、溶解室、注入室等一整批配方的输入/产物）需要 AppMek 提供的 AE2 键类型。
+			/* Mekanism 与 Applied Mekanistics 发布适配版本后恢复。
 			if (MekanismChemicalGate.isAvailable()) {
 				GenericStack chemical = MekanismChemicalCompat.toGenericStack(key, stack.getAmount());
 				if (chemical != null) {
 					return chemical;
 				}
 			}
+			*/
 		} catch (Throwable ignored) {
 		}
 		return null;

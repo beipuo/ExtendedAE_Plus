@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "com.extendedae_plus.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "plugin": "com.extendedae_plus.mixin.ExtendedAEPlusMixinPlugin",
   "mixins": [
     "advancedae.AdvPatternProviderLogicContainsModifyMixin",
@@ -90,11 +90,7 @@
     "extendedae.container.ContainerExPatternProviderMixin",
     "extendedae.container.ContainerExPatternTerminalMixin",
     "extendedae.container.ContainerWirelessExPatternTerminalMixin",
-    "minecraft.accessor.BlockEntityAccessor",
-    "neoecoae.accessor.ECOCraftingCPULogicAccessor",
-    "neoecoae.accessor.ECOExecutingCraftingJobAccessor",
-    "neoecoae.accessor.ECOTaskProgressAccessor",
-    "neoecoae.compat.PatternProviderLogicVirtualCompletionMixin"
+    "minecraft.accessor.BlockEntityAccessor"
   ],
   "client": [
     "accessor.AbstractContainerScreenAccessor",
@@ -122,9 +118,6 @@
     "ae2.client.gui.ScreenStyleMixin",
     "ae2.client.gui.SlotGridLayoutMixin",
     "ae2.menu.CraftConfirmMenuGoBackMixin",
-    "emi.AE2EmiEncodePatternTransferHandlerMixin",
-    "emi.BoMScreenMixin",
-    "emi.BoMScreenNodeAccessor",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.accessor.GuiExPatternTerminalGroupHeaderRowAccessor",
     "extendedae.accessor.GuiExPatternTerminalSlotsRowAccessor",
@@ -136,12 +129,10 @@
     "hooks.ModelBakeryMixin",
     "jei.AE2JeiEncodePatternTransferHandlerMixin",
     "jei.BookmarkOverlayMixin",
-    "jei.EncodePatternTransferHandlerMixin",
     "jei.EncodingHelperMixin",
     "jei.LegacyIngredientListRendererMixin",
     "jei.ModernIngredientListRendererMixin",
     "jei.accessor.BookmarkOverlayAccessor",
-    "jei.accessor.BookmarkListAccessor",
     "jei.accessor.LegacyIngredientListSlotMixin",
     "jei.accessor.ModernIngredientListSlotMixin"
   ],

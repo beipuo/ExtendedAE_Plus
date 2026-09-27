@@ -25,7 +25,7 @@ import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.ISubtypeRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,10 +34,10 @@ import java.util.List;
 
 @JeiPlugin
 public class ExtendedAEJeiPlugin implements IModPlugin {
-    private static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "jei_plugin");
+    private static final Identifier UID = Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "jei_plugin");
 
     @Override
-    public @NotNull ResourceLocation getPluginUid() {
+    public @NotNull Identifier getPluginUid() {
         return UID;
     }
 
@@ -57,12 +57,6 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
                         return EntitySpeedCardItem.readMultiplier(ingredient);
                     }
 
-                    @Override
-                    public @NotNull String getLegacyStringSubtypeInfo(@NotNull ItemStack ingredient,
-                                                                      @NotNull UidContext context) {
-                        // 返回同样的值给旧接口兼容
-                        return String.valueOf(EntitySpeedCardItem.readMultiplier(ingredient));
-                    }
                 }
         );
 
@@ -86,21 +80,6 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
                         return type.id + "_" + stage;  // 如 "1_1", "2_3"
                     }
 
-                    @Override
-                    public @NotNull String getLegacyStringSubtypeInfo(@NotNull ItemStack stack,
-                                                                      @NotNull UidContext context) {
-                        if (!BasicCoreItem.isTyped(stack)) {
-                            return "untyped";
-                        }
-
-                        BasicCoreItem.CoreType type = BasicCoreItem.getType(stack).orElse(null);
-                        if (type == null) {
-                            return "untyped";
-                        }
-
-                        int stage = BasicCoreItem.getStage(stack);
-                        return type.id + "_" + stage;
-                    }
                 }
         );
     }

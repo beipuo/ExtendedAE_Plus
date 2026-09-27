@@ -1,22 +1,20 @@
 package com.extendedae_plus.content.matrix;
 
 import appeng.api.inventories.InternalInventory;
-import appeng.api.networking.security.IActionSource;
 import appeng.util.inv.CombinedInternalInventory;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCluster;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixPart;
 import com.extendedae_plus.mixin.extendedae.accessor.TileAssemblerMatrixCrafterAccessor;
-import com.extendedae_plus.mixin.minecraft.accessor.BlockEntityAccessor;
 import com.glodblock.github.extendedae.common.blocks.matrix.BlockAssemblerMatrixBase;
 import com.glodblock.github.extendedae.common.me.CraftingMatrixThread;
 import com.glodblock.github.extendedae.common.me.CraftingThread;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixCrafter;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -32,16 +30,13 @@ public class CrafterCorePlusBlockEntity extends TileAssemblerMatrixCrafter imple
     private @Nullable SuperAssemblerMatrixCluster superMatrixCluster;
 
     public CrafterCorePlusBlockEntity(BlockPos pos, BlockState blockState) {
-        super(pos, blockState);
-
-        ((BlockEntityAccessor) (Object) this)
-                .extendedae_plus$setType(ModBlockEntities.ASSEMBLER_MATRIX_CRAFTER_PLUS_BE.get());
+        super(ModBlockEntities.ASSEMBLER_MATRIX_CRAFTER_PLUS_BE.get(), pos, blockState);
 
         var threads = new CraftingThread[MAX_THREAD];
         var inventories = new InternalInventory[MAX_THREAD];
         for (int x = 0; x < MAX_THREAD; x++) {
             final int index = x;
-            threads[index] = new CraftingMatrixThread(this, this::getSrc, signal -> this.changeState(index, signal));
+            threads[index] = new CraftingMatrixThread(this, signal -> this.changeState(index, signal));
             inventories[index] = threads[index].getInternalInventory();
         }
 
@@ -51,24 +46,22 @@ public class CrafterCorePlusBlockEntity extends TileAssemblerMatrixCrafter imple
     }
 
     @Override
-    public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
+    public void saveAdditional(ValueOutput data) {
+        super.saveAdditional(data);
 
         var threads = ((TileAssemblerMatrixCrafterAccessor) (Object) this).extendedae_plus$getThreads();
         for (int x = TileAssemblerMatrixCrafter.MAX_THREAD; x < MAX_THREAD; x++) {
-            tag.put("#ct" + x, threads[x].writeNBT(registries));
+            threads[x].writeNBT(data.child("#ct" + x));
         }
     }
 
     @Override
-    public void loadTag(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadTag(tag, registries);
+    public void loadTag(ValueInput data) {
+        super.loadTag(data);
 
         var threads = ((TileAssemblerMatrixCrafterAccessor) (Object) this).extendedae_plus$getThreads();
         for (int x = TileAssemblerMatrixCrafter.MAX_THREAD; x < MAX_THREAD; x++) {
-            if (tag.contains("#ct" + x)) {
-                threads[x].readNBT(tag.getCompound("#ct" + x), registries);
-            }
+            data.child("#ct" + x).ifPresent(threads[x]::readNBT);
         }
     }
 
@@ -87,10 +80,6 @@ public class CrafterCorePlusBlockEntity extends TileAssemblerMatrixCrafter imple
     public void setRemoved() {
         this.eap$destroySuperMatrixClusterQuietly();
         super.setRemoved();
-    }
-
-    private IActionSource getSrc() {
-        return this.cluster == null ? null : this.cluster.getSrc();
     }
 
     private void changeState(int index, boolean state) {

@@ -16,8 +16,7 @@ import appeng.util.ConfigManager;
 import com.extendedae_plus.api.config.EAPSettings;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -107,13 +106,12 @@ public class PatternProviderLogicAdvancedMixin {
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void eap$readSmartDoublingFromNbt(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$readSmartDoublingFromNbt(ValueInput tag, CallbackInfo ci) {
         // TODO
         // 适配旧版本中的数据，后续版本删除
-        if (tag.contains("epp_advanced_blocking")) {
+        if (tag.keySet().contains("epp_advanced_blocking")) {
             this.configManager.putSetting(EAPSettings.ADVANCED_BLOCKING,
-                    tag.getBoolean("epp_advanced_blocking") ? YesNo.YES : YesNo.NO);
-            tag.remove("epp_advanced_blocking");
+                    tag.getBooleanOr("epp_advanced_blocking", false) ? YesNo.YES : YesNo.NO);
         }
     }
 }

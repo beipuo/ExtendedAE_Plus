@@ -9,11 +9,11 @@ import dev.emi.emi.bom.MaterialNode;
 import dev.emi.emi.screen.BoMScreen;
 import com.extendedae_plus.mixin.emi.BoMScreenNodeAccessor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraft.resources.Identifier;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -85,7 +85,7 @@ public final class BoMMappingOverlay {
 	/**
 	 * 在 BoMScreen 的缩放矩阵内绘制，传入的坐标即树坐标（与 EMI 自身节点绘制同一坐标系）。
 	 */
-	public static void render(GuiGraphics graphics, List<?> nodes, int treeMouseX, int treeMouseY) {
+	public static void render(GuiGraphicsExtractor graphics, List<?> nodes, int treeMouseX, int treeMouseY) {
 		MARKERS.clear();
 		hoveredMarker = null;
 		if (nodes == null || nodes.isEmpty()) {
@@ -127,7 +127,7 @@ public final class BoMMappingOverlay {
 			} else {
 				color = COLOR_UNENCODABLE;
 			}
-			graphics.drawString(font, "!", glyphX, glyphY, color, true);
+			graphics.text(font, "!", glyphX, glyphY, color, true);
 		}
 	}
 
@@ -141,7 +141,7 @@ public final class BoMMappingOverlay {
 			return null;
 		}
 		if (marker.status() == BoMMappingStatus.Status.NO_PROVIDER_MAPPING) {
-			ResourceLocation typeId = BoMMappingStatus.mappingKeyOf(marker.recipe());
+			Identifier typeId = BoMMappingStatus.mappingKeyOf(marker.recipe());
 			return List.of(
 				Component.translatable("tooltip.extendedae_plus.bom_marker.no_mapping"),
 				Component.translatable("tooltip.extendedae_plus.bom_marker.no_mapping.type",
@@ -163,16 +163,16 @@ public final class BoMMappingOverlay {
 			}
 			Minecraft mc = Minecraft.getInstance();
 			if (marker.status() == BoMMappingStatus.Status.NO_PROVIDER_MAPPING) {
-				ResourceLocation typeId = BoMMappingStatus.mappingKeyOf(marker.recipe());
+				Identifier typeId = BoMMappingStatus.mappingKeyOf(marker.recipe());
 				if (typeId == null) {
 					// 类型都认不出来时只能手填，退回完整的映射管理界面。
 					mc.setScreen(new RecipeTypeMappingScreen(bomScreen, ""));
 				} else {
-					PacketDistributor.sendToServer(new RequestMappingProvidersC2SPacket(typeId.toString()));
+					ClientPacketDistributor.sendToServer(new RequestMappingProvidersC2SPacket(typeId.toString()));
 				}
 			} else if (mc.player != null) {
-				mc.player.displayClientMessage(
-					Component.translatable("message.extendedae_plus.bom_encode.unencodable_node"), true);
+				mc.player.sendSystemMessage(
+					Component.translatable("message.extendedae_plus.bom_encode.unencodable_node"));
 			}
 			return true;
 		}

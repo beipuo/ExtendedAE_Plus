@@ -8,8 +8,7 @@ import appeng.helpers.InterfaceLogicHost;
 import com.extendedae_plus.ae.wireless.endpoint.InterfaceNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.util.wireless.ChannelCardConnectionController;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -39,7 +38,7 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"), remap = false)
-    private void eap$onLoaded(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$onLoaded(ValueInput tag, CallbackInfo ci) {
         this.eap$getChannelCardController().onLoaded();
     }
 
@@ -68,7 +67,7 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
     @Unique
     private boolean eap$isClientSide() {
         var blockEntity = this.host.getBlockEntity();
-        return blockEntity != null && blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide;
+        return blockEntity != null && blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide();
     }
 
     @Unique

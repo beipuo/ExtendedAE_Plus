@@ -22,9 +22,8 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.mixin.appflux.accessor.PatternProviderLogicAppfluxAccessor;
 import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.util.wireless.ChannelCardConnectionController;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import appeng.util.inv.AppEngInternalInventory;
@@ -156,22 +155,22 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     }
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
-    private void eap$compatWrite(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$compatWrite(ValueOutput output, CallbackInfo ci) {
         try {
             if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
-                this.eap$compatUpgrades.writeToNBT(tag, "compat_upgrades", registries);
+                this.eap$compatUpgrades.writeToNBT(output, "compat_upgrades");
             }
-            this.eap$writeLegacyPatternMigration(tag, registries);
+            this.eap$writeLegacyPatternMigration(output);
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 保存兼容升级失败", t);
         }
     }
 
     @Inject(method = "readFromNBT", at = @At("HEAD"))
-    private void eap$readLegacyPatternMigration(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$readLegacyPatternMigration(ValueInput input, CallbackInfo ci) {
         try {
             if (this.eap$isExtendedPatternProviderHost()) {
-                this.eap$readLegacyPatternMigrationData(tag, registries);
+                this.eap$readLegacyPatternMigrationData(input);
             }
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 迁移旧倍率页样板失败", t);
@@ -179,10 +178,10 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void eap$compatRead(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$compatRead(ValueInput input, CallbackInfo ci) {
         try {
             if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
-                this.eap$compatUpgrades.readFromNBT(tag, "compat_upgrades", registries);
+                this.eap$compatUpgrades.readFromNBT(input, "compat_upgrades");
             }
             // NBT 加载后由统一控制器恢复连接
             this.eap$getChannelCardController().onLoaded();
@@ -271,7 +270,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     public boolean eap$shouldKeepTicking() {
         try {
             // 仅在服务端保持tick
-            if (this.host.getBlockEntity() == null || this.host.getBlockEntity().getLevel() == null || this.host.getBlockEntity().getLevel().isClientSide) {
+            if (this.host.getBlockEntity() == null || this.host.getBlockEntity().getLevel() == null || this.host.getBlockEntity().getLevel().isClientSide()) {
                 return false;
             }
             return this.eap$getChannelCardController().shouldKeepTicking();
@@ -301,7 +300,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                     () -> this.mainNode.ifPresent((grid, node) -> grid.getTickManager().wakeDevice(node)),
                     () -> {
                         var blockEntity = this.host.getBlockEntity();
-                        return blockEntity != null && blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide;
+                        return blockEntity != null && blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide();
                     });
             if (this.host.getBlockEntity() != null) {
                 ChannelCardConnectionController.register(this.host.getBlockEntity(), this.eap$channelController);
@@ -400,24 +399,23 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     }
 
     @Unique
-    private void eap$readLegacyPatternMigrationData(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+    private void eap$readLegacyPatternMigrationData(ValueInput input) {
         this.eap$legacyPatternOverflow.clear();
         this.eap$legacyUnlockedPatternSlots = 0;
         this.eap$legacyPatternMigrationComplete = false;
 
-        if (tag.contains(EAP$LEGACY_PATTERN_MIGRATION_TAG, Tag.TAG_COMPOUND)) {
-            CompoundTag migrationTag = tag.getCompound(EAP$LEGACY_PATTERN_MIGRATION_TAG);
+        if (input.keySet().contains(EAP$LEGACY_PATTERN_MIGRATION_TAG)) {
+            ValueInput migrationInput = input.childOrEmpty(EAP$LEGACY_PATTERN_MIGRATION_TAG);
             this.eap$legacyPatternMigrationComplete = true;
             this.eap$legacyUnlockedPatternSlots = Math.min(
                     UpgradeSlotCompat.getExtendedPatternProviderPatternCapacity(),
-                    Math.max(0, migrationTag.getInt(EAP$LEGACY_PATTERN_UNLOCKED_SLOTS_TAG)));
+                    Math.max(0, migrationInput.getIntOr(EAP$LEGACY_PATTERN_UNLOCKED_SLOTS_TAG, 0)));
 
-            for (Tag entry : migrationTag.getList(EAP$LEGACY_PATTERN_OVERFLOW_TAG, Tag.TAG_COMPOUND)) {
-                CompoundTag patternTag = (CompoundTag) entry;
-                ItemStack stack = ItemStack.parseOptional(registries, patternTag);
+            for (ValueInput patternInput : migrationInput.childrenListOrEmpty(EAP$LEGACY_PATTERN_OVERFLOW_TAG)) {
+                ItemStack stack = patternInput.read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY);
                 if (!stack.isEmpty()) {
                     this.eap$legacyPatternOverflow.add(new LegacyPatternStack(
-                            patternTag.getInt(EAP$LEGACY_PATTERN_ORIGINAL_SLOT_TAG), stack));
+                            patternInput.getIntOr(EAP$LEGACY_PATTERN_ORIGINAL_SLOT_TAG, 0), stack));
                 }
             }
             return;
@@ -425,14 +423,13 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
 
         int maxLegacySlot = -1;
         int maxSupportedSlot = UpgradeSlotCompat.getExtendedPatternProviderPatternCapacity() - 1;
-        for (Tag entry : tag.getList(PatternProviderLogic.NBT_MEMORY_CARD_PATTERNS, Tag.TAG_COMPOUND)) {
-            CompoundTag patternTag = (CompoundTag) entry;
-            int slot = patternTag.getInt("Slot");
+        for (ValueInput patternInput : input.childrenListOrEmpty(PatternProviderLogic.NBT_MEMORY_CARD_PATTERNS)) {
+            int slot = patternInput.getIntOr("Slot", 0);
             if (slot >= EAP$SLOTS_PER_PAGE) {
                 maxLegacySlot = Math.max(maxLegacySlot, slot);
             }
             if (slot > maxSupportedSlot) {
-                ItemStack stack = ItemStack.parseOptional(registries, patternTag);
+                ItemStack stack = patternInput.read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY);
                 if (!stack.isEmpty()) {
                     this.eap$legacyPatternOverflow.add(new LegacyPatternStack(slot, stack));
                 }
@@ -449,24 +446,22 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     }
 
     @Unique
-    private void eap$writeLegacyPatternMigration(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+    private void eap$writeLegacyPatternMigration(ValueOutput output) {
         if (!this.eap$legacyPatternMigrationComplete) {
             return;
         }
 
-        CompoundTag migrationTag = new CompoundTag();
-        migrationTag.putInt(EAP$LEGACY_PATTERN_UNLOCKED_SLOTS_TAG, this.eap$legacyUnlockedPatternSlots);
-        ListTag overflowTag = new ListTag();
+        ValueOutput migrationOutput = output.child(EAP$LEGACY_PATTERN_MIGRATION_TAG);
+        migrationOutput.putInt(EAP$LEGACY_PATTERN_UNLOCKED_SLOTS_TAG, this.eap$legacyUnlockedPatternSlots);
+        var overflowOutput = migrationOutput.childrenList(EAP$LEGACY_PATTERN_OVERFLOW_TAG);
         for (var legacyPattern : this.eap$legacyPatternOverflow) {
             if (legacyPattern.stack().isEmpty()) {
                 continue;
             }
-            CompoundTag patternTag = (CompoundTag) legacyPattern.stack().save(registries, new CompoundTag());
-            patternTag.putInt(EAP$LEGACY_PATTERN_ORIGINAL_SLOT_TAG, legacyPattern.originalSlot());
-            overflowTag.add(patternTag);
+            ValueOutput patternOutput = overflowOutput.addChild();
+            patternOutput.store(ItemStack.MAP_CODEC, legacyPattern.stack());
+            patternOutput.putInt(EAP$LEGACY_PATTERN_ORIGINAL_SLOT_TAG, legacyPattern.originalSlot());
         }
-        migrationTag.put(EAP$LEGACY_PATTERN_OVERFLOW_TAG, overflowTag);
-        tag.put(EAP$LEGACY_PATTERN_MIGRATION_TAG, migrationTag);
     }
 
     @Unique

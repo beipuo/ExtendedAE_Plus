@@ -4,7 +4,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
@@ -55,7 +54,7 @@ public class LabeledWirelessTransceiverBlock extends Block implements EntityBloc
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        if (level.isClientSide) return null;
+        if (level.isClientSide()) return null;
         return type == ModBlockEntities.LABELED_WIRELESS_TRANSCEIVER_BE.get()
                 ? (lvl, pos, st, be) -> LabeledWirelessTransceiverBlockEntity.serverTick(lvl, pos, st, (LabeledWirelessTransceiverBlockEntity) be)
                 : null;
@@ -64,7 +63,7 @@ public class LabeledWirelessTransceiverBlock extends Block implements EntityBloc
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
-        if (!level.isClientSide && placer instanceof Player player) {
+        if (!level.isClientSide() && placer instanceof Player player) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof LabeledWirelessTransceiverBlockEntity te) {
                 te.setPlacerId(player.getUUID(), player.getName().getString());
@@ -74,7 +73,7 @@ public class LabeledWirelessTransceiverBlock extends Block implements EntityBloc
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             return InteractionResult.SUCCESS;
         }
         BlockEntity be = level.getBlockEntity(pos);
@@ -82,26 +81,16 @@ public class LabeledWirelessTransceiverBlock extends Block implements EntityBloc
             return InteractionResult.PASS;
         }
         if (player instanceof ServerPlayer sp) {
-            sp.openMenu(te, pos);
+            sp.openMenu(te);
         }
         return InteractionResult.CONSUME;
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack heldItem, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+    protected InteractionResult useItemOn(ItemStack heldItem, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         // 委托空手交互逻辑（统一入口）
         InteractionResult r = this.useWithoutItem(state, level, pos, player, hit);
-        return r.consumesAction() ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        return r.consumesAction() ? InteractionResult.SUCCESS : InteractionResult.PASS;
     }
 
-    @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!state.is(newState.getBlock())) {
-            BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof LabeledWirelessTransceiverBlockEntity te) {
-                te.onRemoved();
-            }
-        }
-        super.onRemove(state, level, pos, newState, isMoving);
-    }
 }

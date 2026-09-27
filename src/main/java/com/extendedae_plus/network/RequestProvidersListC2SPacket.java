@@ -7,9 +7,10 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -21,7 +22,7 @@ import java.util.List;
  */
 public class RequestProvidersListC2SPacket implements CustomPacketPayload {
     public static final Type<RequestProvidersListC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "request_providers_list"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "request_providers_list"));
 
     public static final RequestProvidersListC2SPacket INSTANCE = new RequestProvidersListC2SPacket();
 
@@ -29,6 +30,23 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
             StreamCodec.unit(INSTANCE);
 
     private RequestProvidersListC2SPacket() {}
+
+    public static void sendProvidersList(ServerPlayer player) {
+        List<PatternContainer> containers = CtrlQPendingUploadUtil.listAvailableProvidersFromPlayerNetwork(player);
+        List<Long> ids = new ArrayList<>();
+        List<Component> names = new ArrayList<>();
+        List<Integer> slots = new ArrayList<>();
+        for (int i = 0; i < containers.size(); i++) {
+            PatternContainer container = containers.get(i);
+            int empty = ExtendedAEPatternUploadUtil.getAvailableSlots(container);
+            if (empty > 0) {
+                ids.add(-1L - i);
+                names.add(ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(container));
+                slots.add(empty);
+            }
+        }
+        player.connection.send(new ProvidersListS2CPacket(ids, names, slots));
+    }
 
     public static void handle(final RequestProvidersListC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
@@ -38,7 +56,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
             if (CtrlQPendingUploadUtil.hasPendingCtrlQPattern(player)) {
                 List<PatternContainer> containers = CtrlQPendingUploadUtil.listAvailableProvidersFromPlayerNetwork(player);
                 List<Long> idxIds = new ArrayList<>();
-                List<net.minecraft.network.chat.Component> names = new ArrayList<>();
+                List<Component> names = new ArrayList<>();
                 List<Integer> slots = new ArrayList<>();
                 for (int i = 0; i < containers.size(); i++) {
                     var c = containers.get(i);
@@ -61,7 +79,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
             if (accessMenu != null) {
                 List<Long> ids = ExtendedAEPatternUploadUtil.getAllProviderIds(accessMenu);
                 List<Long> filteredIds = new ArrayList<>();
-                List<net.minecraft.network.chat.Component> names = new ArrayList<>();
+                List<Component> names = new ArrayList<>();
                 List<Integer> slots = new ArrayList<>();
 
                 for (Long id : ids) {
@@ -81,7 +99,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
             // 回退：基于编码终端所在网络枚举供应器，用“负数ID编码索引”：encodedId = -1 - index
             List<PatternContainer> containers = ExtendedAEPatternUploadUtil.listAvailableProvidersFromGrid(encMenu);
             List<Long> idxIds = new ArrayList<>();
-            List<net.minecraft.network.chat.Component> names = new ArrayList<>();
+            List<Component> names = new ArrayList<>();
             List<Integer> slots = new ArrayList<>();
             for (int i = 0; i < containers.size(); i++) {
                 var c = containers.get(i);

@@ -20,7 +20,7 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.runtime.IJeiRuntime;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -137,7 +137,7 @@ public final class RecipeFinderUtil {
 
 	private static RecipeInfo extractRecipeInfo(Object recipeObj, IRecipeLayoutDrawable<Object> layout, boolean isCrafting) {
 		try {
-			ResourceLocation recipeId = extractRecipeId(recipeObj);
+			Identifier recipeId = extractRecipeId(recipeObj);
 			if (recipeId == null) {
 				return null;
 			}
@@ -178,17 +178,17 @@ public final class RecipeFinderUtil {
 		}
 	}
 
-	private static ResourceLocation extractRecipeId(Object recipeObj) {
+	private static Identifier extractRecipeId(Object recipeObj) {
 		if (recipeObj == null) {
 			return null;
 		}
 		if (recipeObj instanceof RecipeHolder<?> holder) {
-			return holder.id();
+			return holder.id().identifier();
 		}
 		try {
 			var m = recipeObj.getClass().getMethod("getId");
 			Object id = m.invoke(recipeObj);
-			if (id instanceof ResourceLocation rl) {
+			if (id instanceof Identifier rl) {
 				return rl;
 			}
 		} catch (Throwable ignored) {
@@ -196,7 +196,7 @@ public final class RecipeFinderUtil {
 		try {
 			var m = recipeObj.getClass().getMethod("getRecipeUid");
 			Object id = m.invoke(recipeObj);
-			if (id instanceof ResourceLocation rl) {
+			if (id instanceof Identifier rl) {
 				return rl;
 			}
 		} catch (Throwable ignored) {

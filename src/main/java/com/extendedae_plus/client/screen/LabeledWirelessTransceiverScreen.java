@@ -5,25 +5,28 @@ import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import com.extendedae_plus.network.LabelNetworkActionC2SPacket;
 import com.extendedae_plus.network.LabelNetworkListC2SPacket;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<LabeledWirelessTransceiverMenu> {
-    private static final ResourceLocation TEX = ExtendedAEPlus.id("textures/gui/lable_wireless_transceiver_gui.png");
+    private static final Identifier TEX = ExtendedAEPlus.id("textures/gui/lable_wireless_transceiver_gui.png");
     private static final int BTN_U = 2;
     private static final int BTN_V = 159;
     private static final int BTN_W = 28;
@@ -62,9 +65,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     private int maxChannels = 0;
 
     public LabeledWirelessTransceiverScreen(LabeledWirelessTransceiverMenu menu, Inventory inv, Component title) {
-        super(menu, inv, title);
-        this.imageWidth = 256;
-        this.imageHeight = 156;
+        super(menu, inv, title, 256, 156);
         this.inventoryLabelY = this.imageHeight; // 不显示玩家物品栏标签
         this.bePos = menu.getBlockEntityPos();
     }
@@ -110,37 +111,32 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     }
 
     @Override
-    public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(gfx, mouseX, mouseY, partialTicks);
-        super.render(gfx, mouseX, mouseY, partialTicks);
+    public void extractRenderState(GuiGraphicsExtractor gfx, int mouseX, int mouseY, float partialTicks) {
+        super.extractRenderState(gfx, mouseX, mouseY, partialTicks);
         drawAllButtonText(gfx);
-        this.renderTooltip(gfx, mouseX, mouseY);
-        if (this.searchBox != null) {
-            this.searchBox.render(gfx, mouseX, mouseY, partialTicks);
-        }
     }
 
     @Override
-    protected void renderLabels(GuiGraphics gfx, int mouseX, int mouseY) {
+    protected void extractLabels(GuiGraphicsExtractor gfx, int mouseX, int mouseY) {
         float titleScale = getTitleScale();
         var pose = gfx.pose();
-        pose.pushPose();
-        pose.translate(8, 8, 0);
-        pose.scale(titleScale, titleScale, 1.0f);
-        gfx.drawString(this.font, this.title, 0, 0, 0x404040, false);
-        pose.popPose();
+        pose.pushMatrix();
+        pose.translate(8, 8);
+        pose.scale(titleScale, titleScale);
+        gfx.text(this.font, this.title, 0, 0, 0x404040, false);
+        pose.popMatrix();
 
-        pose.pushPose();
-        pose.translate(134, 8, 0);
-        pose.scale(titleScale, titleScale, 1.0f);
-        gfx.drawString(this.font, Component.translatable("gui.extendedae_plus.labeled_wireless.info"), 0, 0, 0x404040, false);
-        pose.popPose();
+        pose.pushMatrix();
+        pose.translate(134, 8);
+        pose.scale(titleScale, titleScale);
+        gfx.text(this.font, Component.translatable("gui.extendedae_plus.labeled_wireless.info"), 0, 0, 0x404040, false);
+        pose.popMatrix();
     }
 
     @Override
-    protected void renderBg(GuiGraphics gfx, float partialTicks, int mouseX, int mouseY) {
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        gfx.blit(TEX, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
+    public void extractBackground(GuiGraphicsExtractor gfx, int mouseX, int mouseY, float partialTicks) {
+        gfx.blit(TEX, this.leftPos, this.topPos, this.imageWidth, this.imageHeight,
+                0.0f, 0.0f, 1.0f, 1.0f);
 
         // 占位绘制：列表和信息区内的内容框线
         // 标签列表区域
@@ -155,8 +151,11 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.searchBox != null && this.searchBox.mouseClicked(mouseX, mouseY, button)) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (this.searchBox != null && this.searchBox.mouseClicked(event, doubleClick)) {
             setFocused(this.searchBox);
             return true;
         }
@@ -174,27 +173,27 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
             updateScrollByMouse((int) mouseY);
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         if (this.searchBox != null && this.searchBox.isFocused()
-                && Minecraft.getInstance().options.keyInventory.matches(keyCode, scanCode)) {
+                && Minecraft.getInstance().options.keyInventory.matches(event)) {
             return true;
         }
-        if (this.searchBox != null && this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
+        if (this.searchBox != null && this.searchBox.keyPressed(event)) {
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
-    public boolean charTyped(char codePoint, int modifiers) {
-        if (this.searchBox != null && this.searchBox.charTyped(codePoint, modifiers)) {
+    public boolean charTyped(CharacterEvent event) {
+        if (this.searchBox != null && this.searchBox.charTyped(event)) {
             return true;
         }
-        return super.charTyped(codePoint, modifiers);
+        return super.charTyped(event);
     }
 
     @Override
@@ -207,7 +206,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         return super.mouseScrolled(mouseX, mouseY, scrollDelta, scrollDeltaY);
     }
 
-    private void renderList(GuiGraphics gfx) {
+    private void renderList(GuiGraphicsExtractor gfx) {
         int baseX = this.leftPos + LIST_X;
         int baseY = this.topPos + LIST_Y;
         for (int row = 0; row < VISIBLE_ROWS; row++) {
@@ -220,7 +219,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
             LabelEntry e = filtered.get(idx);
             String text = this.font.plainSubstrByWidth(e.label(), LIST_W - 2);
             int ty = y + (ROW_H - this.font.lineHeight) / 2;
-            gfx.drawString(this.font, text, baseX + 2, ty, 0x404040, false);
+            gfx.text(this.font, text, baseX + 2, ty, 0x404040, false);
         }
 
         // 信息显示
@@ -239,7 +238,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         drawInfoLine(gfx, channelComp.getString(), infoX, infoY + 36, infoScale);
     }
 
-    private void renderScrollBar(GuiGraphics gfx) {
+    private void renderScrollBar(GuiGraphicsExtractor gfx) {
         int total = filtered.size();
         if (total <= VISIBLE_ROWS) {
             // 画静态条
@@ -305,12 +304,12 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     }
 
     private void requestList() {
-        PacketDistributor.sendToServer(new LabelNetworkListC2SPacket(bePos));
+        ClientPacketDistributor.sendToServer(new LabelNetworkListC2SPacket(bePos));
     }
 
     private void sendSet(String label) {
         if (label == null) label = "";
-        PacketDistributor.sendToServer(new LabelNetworkActionC2SPacket(bePos, label, LabelNetworkActionC2SPacket.Action.SET));
+        ClientPacketDistributor.sendToServer(new LabelNetworkActionC2SPacket(bePos, label, LabelNetworkActionC2SPacket.Action.SET));
         this.lastSelectedLabel = label;
         this.searchBox.setValue("");
         requestList();
@@ -322,13 +321,13 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
             label = searchBox.getValue();
         }
         if (label == null) label = "";
-        PacketDistributor.sendToServer(new LabelNetworkActionC2SPacket(bePos, label, LabelNetworkActionC2SPacket.Action.DELETE));
+        ClientPacketDistributor.sendToServer(new LabelNetworkActionC2SPacket(bePos, label, LabelNetworkActionC2SPacket.Action.DELETE));
         this.lastSelectedLabel = "";
         requestList();
     }
 
     private void sendDisconnect() {
-        PacketDistributor.sendToServer(new LabelNetworkActionC2SPacket(bePos, "", LabelNetworkActionC2SPacket.Action.DISCONNECT));
+        ClientPacketDistributor.sendToServer(new LabelNetworkActionC2SPacket(bePos, "", LabelNetworkActionC2SPacket.Action.DISCONNECT));
         this.lastSelectedLabel = "";
         requestList();
     }
@@ -368,7 +367,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
 
     private record LabelEntry(String label, long channel) {}
 
-    private void drawAllButtonText(GuiGraphics gfx) {
+    private void drawAllButtonText(GuiGraphicsExtractor gfx) {
         int startX = this.leftPos + 145;
         int startY = this.topPos + 101;
         int hGap = 30;
@@ -382,11 +381,11 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         drawButtonText(gfx, Component.translatable("gui.extendedae_plus.labeled_wireless.button.refresh"), secondColX, secondRowY);
     }
 
-    private void drawButtonText(GuiGraphics gfx, Component text, int x, int y) {
+    private void drawButtonText(GuiGraphicsExtractor gfx, Component text, int x, int y) {
         String s = this.font.plainSubstrByWidth(text.getString(), BTN_W - 4);
         int tx = x + (BTN_W - this.font.width(s)) / 2;
         int ty = y + (BTN_H - this.font.lineHeight) / 2 + 1;
-        gfx.drawString(this.font, s, tx, ty, 0xFFFFFF, false);
+        gfx.text(this.font, s, tx, ty, 0xFFFFFF, false);
     }
 
     private void ensureSelectionVisible() {
@@ -406,14 +405,14 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         return this.font.plainSubstrByWidth(text, maxWidth);
     }
 
-    private void drawInfoLine(GuiGraphics gfx, String text, int x, int y, float scale) {
+    private void drawInfoLine(GuiGraphicsExtractor gfx, String text, int x, int y, float scale) {
         String trimmed = trimInfo(text, scale);
         var pose = gfx.pose();
-        pose.pushPose();
-        pose.translate(x, y, 0);
-        pose.scale(scale, scale, 1.0f);
-        gfx.drawString(this.font, trimmed, 0, 0, 0x404040, false);
-        pose.popPose();
+        pose.pushMatrix();
+        pose.translate(x, y);
+        pose.scale(scale, scale);
+        gfx.text(this.font, trimmed, 0, 0, 0x404040, false);
+        pose.popMatrix();
     }
 
     private boolean isEnglish() {
@@ -431,7 +430,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     }
 
     private static class StateButton extends AbstractWidget {
-        private final ResourceLocation tex;
+        private final Identifier tex;
         private final int texW;
         private final int texH;
         private final int baseU;
@@ -444,7 +443,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         private boolean pressedVisual = false;
 
         public StateButton(int x, int y, int w, int h, int baseU, int baseV, int hoverU, int hoverV, int pressU, int pressV,
-                           ResourceLocation tex, int texW, int texH, Consumer<StateButton> onPress, Component tooltip) {
+                           Identifier tex, int texW, int texH, Consumer<StateButton> onPress, Component tooltip) {
             super(x, y, w, h, tooltip);
             this.tex = tex;
             this.texW = texW;
@@ -460,7 +459,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         }
 
         @Override
-        protected void renderWidget(GuiGraphics gfx, int mouseX, int mouseY, float partialTicks) {
+        protected void extractWidgetRenderState(GuiGraphicsExtractor gfx, int mouseX, int mouseY, float partialTicks) {
             boolean hovered = this.isHoveredOrFocused();
             boolean pressed = pressedVisual;
             int u = baseU;
@@ -476,19 +475,19 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         }
 
         @Override
-        public void onClick(double mouseX, double mouseY) {
+        public void onClick(MouseButtonEvent event, boolean doubleClick) {
             this.pressedVisual = true;
             this.onPress.accept(this);
             this.playDownSound(Minecraft.getInstance().getSoundManager());
         }
 
         @Override
-        public void onRelease(double mouseX, double mouseY) {
+        public void onRelease(MouseButtonEvent event) {
             this.pressedVisual = false;
         }
 
         @Override
-        protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput narration) {
+        protected void updateWidgetNarration(NarrationElementOutput narration) {
             defaultButtonNarrationText(narration);
         }
     }

@@ -1,11 +1,14 @@
 package com.extendedae_plus.util.storage;
 
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
@@ -16,7 +19,11 @@ import java.util.*;
  * Original copyright (c) Technici4n<p>
  */
 public class InfinityStorageManager extends SavedData {
-    private static final Factory<InfinityStorageManager> FACTORY = new Factory<>(InfinityStorageManager::new, InfinityStorageManager::readNbt);
+    private static final SavedDataType<InfinityStorageManager> TYPE = new SavedDataType<>(
+            Identifier.parse(InfinityConstants.SAVE_FILE_NAME),
+            InfinityStorageManager::new,
+            CompoundTag.CODEC.xmap(tag -> readNbt(tag, null), data -> data.save(new CompoundTag(), null)),
+            null);
     // 存储所有磁盘的Map，键为UUID，值为DataStorage对象
     private final Map<UUID, InfinityDataStorage> cells;
     @Nullable
@@ -43,20 +50,20 @@ public class InfinityStorageManager extends SavedData {
     public static InfinityStorageManager readNbt(CompoundTag nbt, HolderLookup.Provider registries) {
         // 读取格式版本，缺省视为 1（兼容旧档）
         int version = nbt.contains(InfinityConstants.FORMAT_VERSION_FIELD) ?
-                nbt.getInt(InfinityConstants.FORMAT_VERSION_FIELD) :
+                nbt.getInt(InfinityConstants.FORMAT_VERSION_FIELD).orElse(1) :
                 1;
 
         Map<UUID, InfinityDataStorage> cells = new HashMap<>();
         // 从 NBT 中获取磁盘数据列表，指定类型为 CompoundTag（TAG_COMPOUND）
-        ListTag cellList = nbt.getList(InfinityConstants.INFINITY_CELL_LIST, CompoundTag.TAG_COMPOUND);
+        ListTag cellList = nbt.getList(InfinityConstants.INFINITY_CELL_LIST).orElse(new ListTag());
         // 遍历 cellList 中的每个 CompoundTag
         for (int i = 0; i < cellList.size(); i++) {
             // 获取当前索引的 CompoundTag，表示单个磁盘的数据
-            CompoundTag cell = cellList.getCompound(i);
+            CompoundTag cell = cellList.getCompound(i).orElseThrow();
             // 从 CompoundTag 中读取 UUID 和 DataStorage 数据，并存入 cells 映射
             cells.put(
-                    cell.getUUID(InfinityConstants.INFINITY_CELL_UUID),
-                    InfinityDataStorage.loadFromNBT(cell.getCompound(InfinityConstants.INFINITY_CELL_DATA), registries)
+                    cell.read(InfinityConstants.INFINITY_CELL_UUID, UUIDUtil.CODEC).orElseThrow(),
+                    InfinityDataStorage.loadFromNBT(cell.getCompound(InfinityConstants.INFINITY_CELL_DATA).orElseThrow(), registries)
             );
         }
         // 使用加载的 cells 数据创建新的 StorageManager 实例
@@ -64,13 +71,12 @@ public class InfinityStorageManager extends SavedData {
     }
 
 
-    @Override
     public CompoundTag save(CompoundTag nbt, HolderLookup.Provider provider) {
         // 将内存中的所有 cell 序列化为一个 ListTag
         ListTag cellList = new ListTag();
         for (Map.Entry<UUID, InfinityDataStorage> entry : cells.entrySet()) {
             CompoundTag cell = new CompoundTag();
-            cell.putUUID(InfinityConstants.INFINITY_CELL_UUID, entry.getKey());
+            cell.store(InfinityConstants.INFINITY_CELL_UUID, UUIDUtil.CODEC, entry.getKey());
             cell.put(InfinityConstants.INFINITY_CELL_DATA, entry.getValue().serializeNBT(provider));
             cellList.add(cell);
         }
@@ -118,7 +124,7 @@ public class InfinityStorageManager extends SavedData {
 
     public static InfinityStorageManager getInstance(MinecraftServer server) {
         ServerLevel world = server.getLevel(ServerLevel.OVERWORLD);
-        var manager = world.getDataStorage().computeIfAbsent(FACTORY, InfinityConstants.SAVE_FILE_NAME);
+        var manager = world.getDataStorage().computeIfAbsent(TYPE);
         manager.registries = new WeakReference<>(server.registryAccess());
         return manager;
     }

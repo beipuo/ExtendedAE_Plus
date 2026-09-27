@@ -10,7 +10,7 @@ import appeng.client.gui.widgets.ServerSettingToggleButton;
 import appeng.core.localization.Tooltips;
 import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
 import com.extendedae_plus.menu.SuperCrystalAssemblerMenu;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
@@ -41,17 +41,17 @@ public class SuperCrystalAssemblerScreen extends UpgradeableScreen<SuperCrystalA
     }
 
     @Override
-    protected void renderTooltip(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
+    protected void extractTooltip(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         if (menu.getCarried().isEmpty() && isTankSlot(hoveredSlot)) {
             var tooltip = new ArrayList<>(getTooltipFromContainerItem(hoveredSlot.getItem()));
             var stack = GenericStack.fromItemStack(hoveredSlot.getItem());
             long amount = stack == null ? 0 : stack.amount();
             tooltip.add(Component.translatable("gui.extendedae_plus.crystal_assembler_plus.amount", amount,
                     SuperCrystalAssemblerBlockEntity.TANK_CAP).withStyle(Tooltips.NORMAL_TOOLTIP_TEXT));
-            drawTooltip(graphics, mouseX, mouseY, tooltip);
+            graphics.setComponentTooltipForNextFrame(this.font, tooltip, mouseX, mouseY);
             return;
         }
-        super.renderTooltip(graphics, mouseX, mouseY);
+        super.extractTooltip(graphics, mouseX, mouseY);
     }
 
     private boolean isTankSlot(Slot slot) {

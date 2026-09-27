@@ -11,6 +11,14 @@ import com.extendedae_plus.network.GlobalToggleProviderModesC2SPacket;
 import com.extendedae_plus.network.InterfaceAdjustConfigAmountC2SPacket;
 import com.extendedae_plus.network.MappingProvidersS2CPacket;
 import com.extendedae_plus.network.OpenProviderUiC2SPacket;
+import com.extendedae_plus.network.OpenCraftFromJeiC2SPacket;
+import com.extendedae_plus.network.PickFromWirelessC2SPacket;
+import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
+import com.extendedae_plus.network.ChannelCardBindPacket;
+import com.extendedae_plus.network.SetWirelessFrequencyC2SPacket;
+import com.extendedae_plus.network.LabelNetworkListC2SPacket;
+import com.extendedae_plus.network.LabelNetworkActionC2SPacket;
+import com.extendedae_plus.network.LabelNetworkListS2CPacket;
 import com.extendedae_plus.network.ProvidersListS2CPacket;
 import com.extendedae_plus.network.RequestMappingProvidersC2SPacket;
 import com.extendedae_plus.network.RequestProvidersListC2SPacket;
@@ -61,34 +69,34 @@ public class ModNetwork {
         registrar.playToServer(CancelPendingPatternC2SPacket.TYPE,CancelPendingPatternC2SPacket.STREAM_CODEC,CancelPendingPatternC2SPacket::handle);
         registrar.playToServer(EncodeWithShiftFlagC2SPacket.TYPE, EncodeWithShiftFlagC2SPacket.STREAM_CODEC, EncodeWithShiftFlagC2SPacket::handle);
         // 新增：JEI 中键打开合成界面 & 无线终端拾取方块物品
-        registrar.playToServer(com.extendedae_plus.network.OpenCraftFromJeiC2SPacket.TYPE,
-                com.extendedae_plus.network.OpenCraftFromJeiC2SPacket.STREAM_CODEC,
-                com.extendedae_plus.network.OpenCraftFromJeiC2SPacket::handle);
-        registrar.playToServer(com.extendedae_plus.network.PickFromWirelessC2SPacket.TYPE,
-                com.extendedae_plus.network.PickFromWirelessC2SPacket.STREAM_CODEC,
-                com.extendedae_plus.network.PickFromWirelessC2SPacket::handle);
-        registrar.playToServer(com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket.TYPE,
-                com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket.STREAM_CODEC,
-                com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket::handle);
+        registrar.playToServer(OpenCraftFromJeiC2SPacket.TYPE,
+                OpenCraftFromJeiC2SPacket.STREAM_CODEC,
+                OpenCraftFromJeiC2SPacket::handle);
+        registrar.playToServer(PickFromWirelessC2SPacket.TYPE,
+                PickFromWirelessC2SPacket.STREAM_CODEC,
+                PickFromWirelessC2SPacket::handle);
+        registrar.playToServer(PullFromJeiOrCraftC2SPacket.TYPE,
+                PullFromJeiOrCraftC2SPacket.STREAM_CODEC,
+                PullFromJeiOrCraftC2SPacket::handle);
         // 频道卡绑定
-        registrar.playToServer(com.extendedae_plus.network.ChannelCardBindPacket.TYPE,
-                com.extendedae_plus.network.ChannelCardBindPacket.STREAM_CODEC,
-                com.extendedae_plus.network.ChannelCardBindPacket::handle);
+        registrar.playToServer(ChannelCardBindPacket.TYPE,
+                ChannelCardBindPacket.STREAM_CODEC,
+                ChannelCardBindPacket::handle);
         // 无线收发器频率设置
-        registrar.playToServer(com.extendedae_plus.network.SetWirelessFrequencyC2SPacket.TYPE,
-                com.extendedae_plus.network.SetWirelessFrequencyC2SPacket.STREAM_CODEC,
-                com.extendedae_plus.network.SetWirelessFrequencyC2SPacket::handle);
+        registrar.playToServer(SetWirelessFrequencyC2SPacket.TYPE,
+                SetWirelessFrequencyC2SPacket.STREAM_CODEC,
+                SetWirelessFrequencyC2SPacket::handle);
 
         // 标签无线收发器：请求列表 / 操作 / 列表下发
-        registrar.playToServer(com.extendedae_plus.network.LabelNetworkListC2SPacket.TYPE,
-                com.extendedae_plus.network.LabelNetworkListC2SPacket.STREAM_CODEC,
-                com.extendedae_plus.network.LabelNetworkListC2SPacket::handle);
-        registrar.playToServer(com.extendedae_plus.network.LabelNetworkActionC2SPacket.TYPE,
-                com.extendedae_plus.network.LabelNetworkActionC2SPacket.STREAM_CODEC,
-                com.extendedae_plus.network.LabelNetworkActionC2SPacket::handle);
-        registrar.playToClient(com.extendedae_plus.network.LabelNetworkListS2CPacket.TYPE,
-                com.extendedae_plus.network.LabelNetworkListS2CPacket.STREAM_CODEC,
-                com.extendedae_plus.network.LabelNetworkListS2CPacket::handle);
+        registrar.playToServer(LabelNetworkListC2SPacket.TYPE,
+                LabelNetworkListC2SPacket.STREAM_CODEC,
+                LabelNetworkListC2SPacket::handle);
+        registrar.playToServer(LabelNetworkActionC2SPacket.TYPE,
+                LabelNetworkActionC2SPacket.STREAM_CODEC,
+                LabelNetworkActionC2SPacket::handle);
+        registrar.playToClient(LabelNetworkListS2CPacket.TYPE,
+                LabelNetworkListS2CPacket.STREAM_CODEC,
+                LabelNetworkListS2CPacket::handle);
         registrar.playToServer(ForceCraftStartFlagC2SPacket.TYPE,
                 ForceCraftStartFlagC2SPacket.STREAM_CODEC,
                 ForceCraftStartFlagC2SPacket::handle);

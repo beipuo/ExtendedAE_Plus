@@ -1,19 +1,21 @@
 package com.extendedae_plus.integration.jei;
 
+import com.extendedae_plus.client.InputEvents;
+import com.extendedae_plus.client.event.CtrlQPatternKeyHandler;
+import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.common.NeoForge;
+
 public final class JeiClientBootstrap {
 	private JeiClientBootstrap() {}
 
 	public static void register() {
-		net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(com.extendedae_plus.client.InputEvents::onMouseButtonPre);
-		net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(com.extendedae_plus.client.InputEvents::onMouseButtonReleasedPre);
-		net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(com.extendedae_plus.client.InputEvents::onKeyPressedPre);
+		NeoForge.EVENT_BUS.addListener(InputEvents::onMouseButtonPre);
+		// EMI 26.1.2 发布后恢复松开事件监听。
+		NeoForge.EVENT_BUS.addListener(InputEvents::onKeyPressedPre);
 		// Ctrl+Q 配方书签直接引用 JEI 类，仅在 JEI 在场时注册；lambda 体条件执行，类加载随之延迟。
-		if (net.neoforged.fml.ModList.get().isLoaded("jei")) {
-			net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(com.extendedae_plus.client.event.CtrlQPatternKeyHandler::onScreenKeyPressed);
+		if (ModList.get().isLoaded("jei")) {
+			NeoForge.EVENT_BUS.addListener(CtrlQPatternKeyHandler::onScreenKeyPressed);
 		}
-		// Ctrl+Q 快速创建样板的 EMI 分支：仅引用 dev.emi 惰性解析类，EMI 在场时注册。
-		if (net.neoforged.fml.ModList.get().isLoaded("emi")) {
-			net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(com.extendedae_plus.client.event.EmiCtrlQHandler::onScreenKeyPressed);
-		}
+		// EMI 26.1.2 发布后恢复 EMI Ctrl+Q 注册入口。
 	}
 } 

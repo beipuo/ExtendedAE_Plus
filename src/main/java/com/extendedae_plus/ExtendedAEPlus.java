@@ -3,6 +3,12 @@ package com.extendedae_plus;
 import appeng.api.storage.StorageCells;
 import appeng.block.AEBaseEntityBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
+import appeng.menu.locator.MenuLocators;
+import com.extendedae_plus.menu.locator.CuriosItemLocator;
+import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity;
+import net.minecraft.server.level.ServerLevel;
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
 import com.extendedae_plus.ae.wireless.WirelessMasterRegistry;
 import com.extendedae_plus.api.ids.EAPComponents;
@@ -29,7 +35,7 @@ import com.extendedae_plus.server.JeiSyncManager;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.IEventBus;
@@ -87,9 +93,9 @@ public class ExtendedAEPlus {
         modContainer.registerConfig(ModConfig.Type.CLIENT, ModConfigs.CLIENT_SPEC, "extendedae_plus-client.toml");
         modContainer.registerConfig(ModConfig.Type.SERVER, ModConfigs.SERVER_SPEC, "extendedae_plus-server.toml");
     }
-    // 便捷 ResourceLocation 工具
-    public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MODID, path);
+    // 便捷 Identifier 工具
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MODID, path);
     }
 
     private static void onServerStarted(ServerStartedEvent event) {
@@ -113,7 +119,7 @@ public class ExtendedAEPlus {
     }
 
     private static void onLevelTick(LevelTickEvent.Post event) {
-        if (event.getLevel() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+        if (event.getLevel() instanceof ServerLevel serverLevel) {
             SuperAssemblerMatrixCalculator.processScheduledRecalculations(serverLevel);
         }
     }
@@ -153,7 +159,7 @@ public class ExtendedAEPlus {
 
             // 绑定装配矩阵上传核心方块实体类型，避免 blockEntityClass 为 null 的问题
             ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get().setBlockEntity(
-                com.extendedae_plus.content.matrix.UploadCoreBlockEntity.class,
+                UploadCoreBlockEntity.class,
                 ModBlockEntities.UPLOAD_CORE_BE.get(),
                 null,
                 null
@@ -188,14 +194,14 @@ public class ExtendedAEPlus {
             );
 
             ModBlocks.SUPER_ASSEMBLER_MATRIX_FRAME.get().setBlockEntity(
-                    com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity.class,
+                    SuperAssemblerMatrixFrameBlockEntity.class,
                     ModBlockEntities.SUPER_ASSEMBLER_MATRIX_FRAME_BE.get(),
                     null,
                     null
             );
 
             ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get().setBlockEntity(
-                    com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity.class,
+                    SuperAssemblerMatrixWallBlockEntity.class,
                     ModBlockEntities.SUPER_ASSEMBLER_MATRIX_WALL_BE.get(),
                     null,
                     null
@@ -239,10 +245,10 @@ public class ExtendedAEPlus {
 
                 // 注册自定义 AE2 MenuLocator（用于 Curios 槽位打开菜单）
                 try {
-                    appeng.menu.locator.MenuLocators.register(
-                            com.extendedae_plus.menu.locator.CuriosItemLocator.class,
-                            com.extendedae_plus.menu.locator.CuriosItemLocator::writeToPacket,
-                            com.extendedae_plus.menu.locator.CuriosItemLocator::readFromPacket
+                    MenuLocators.register(
+                            CuriosItemLocator.class,
+                            CuriosItemLocator::writeToPacket,
+                            CuriosItemLocator::readFromPacket
                     );
                     LOGGER.info("Registered AE2 MenuLocator: CuriosItemLocator");
                 } catch (Throwable t) {

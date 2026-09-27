@@ -15,7 +15,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +34,7 @@ import java.util.Set;
 public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
 
     public static final Type<GlobalToggleProviderModesC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "global_toggle_provider_modes"));
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "global_toggle_provider_modes"));
 
     public static final StreamCodec<FriendlyByteBuf, GlobalToggleProviderModesC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, packet) -> {
@@ -73,7 +73,7 @@ public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
 
-            var level = player.serverLevel();
+            var level = player.level();
             var blockEntity = level.getBlockEntity(message.controllerBlockPos);
 
             if (!(blockEntity instanceof IInWorldGridNodeHost gridNodeHost)) return;
@@ -87,7 +87,7 @@ public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
             int affectedCount = applyToAllPatternProviders(grid, message);
 
             // 给发起者一个短暂的行动条提示，方便知道本次操作实际影响了多少个供应器
-            player.displayClientMessage(
+            player.sendSystemMessage(
                     Component.translatable("extendedae_plus.message.global_toggle_applied", affectedCount),
                     true);
         });

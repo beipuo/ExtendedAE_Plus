@@ -10,8 +10,8 @@ import com.extendedae_plus.api.config.EAPSettings;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingHolder;
 import com.extendedae_plus.util.smartDoubling.PatternScaler;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogicHost;
 import org.spongepowered.asm.mixin.Final;
@@ -66,24 +66,23 @@ public class AdvPatternProviderLogicDoublingMixin implements ISmartDoublingHolde
     }
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
-    private void eap$writeSmartDoublingToNbt(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$writeSmartDoublingToNbt(ValueOutput tag, CallbackInfo ci) {
         // 保存供应器级别上限
         tag.putInt(EAP_PROVIDER_SCALING_LIMIT, this.eap$providerScalingLimit);
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void eap$readSmartDoublingFromNbt(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$readSmartDoublingFromNbt(ValueInput tag, CallbackInfo ci) {
         // TODO
         // 适配旧版本中的数据，后续版本删除
-        if (tag.contains("eap_smart_doubling")) {
+        if (tag.keySet().contains("eap_smart_doubling")) {
             this.configManager.putSetting(EAPSettings.SMART_DOUBLING,
-                                          tag.getBoolean("eap_smart_doubling") ? YesNo.YES : YesNo.NO
+                                          tag.getBooleanOr("eap_smart_doubling", false) ? YesNo.YES : YesNo.NO
             );
-            tag.remove("eap_smart_doubling");
         }
 
-        if (tag.contains(EAP_PROVIDER_SCALING_LIMIT)) {
-            this.eap$providerScalingLimit = tag.getInt(EAP_PROVIDER_SCALING_LIMIT);
+        if (tag.keySet().contains(EAP_PROVIDER_SCALING_LIMIT)) {
+            this.eap$providerScalingLimit = tag.getIntOr(EAP_PROVIDER_SCALING_LIMIT, 0);
         }
     }
 

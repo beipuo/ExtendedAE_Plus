@@ -11,7 +11,6 @@ import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerM
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -59,17 +58,17 @@ public abstract class BlockAssemblerMatrixBaseMixin {
             return;
         }
         this.eap$openSuperMatrixMenu(level, pos, player);
-        cir.setReturnValue(InteractionResult.sidedSuccess(level.isClientSide));
+        cir.setReturnValue(level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME);
     }
 
     @Inject(method = "check", at = @At("HEAD"), cancellable = true)
     private void eap$openGlassSuperMatrixMenuWithItem(TileAssemblerMatrixBase tile, ItemStack stack, Level level, BlockPos pos,
-            BlockHitResult hit, Player player, CallbackInfoReturnable<ItemInteractionResult> cir) {
+            BlockHitResult hit, Player player, CallbackInfoReturnable<InteractionResult> cir) {
         if (!this.eap$isGlassSuperMatrixPart(level, pos)) {
             return;
         }
         this.eap$openSuperMatrixMenu(level, pos, player);
-        cir.setReturnValue(ItemInteractionResult.sidedSuccess(level.isClientSide));
+        cir.setReturnValue(level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME);
     }
 
     private boolean eap$isGlassSuperMatrixPart(Level level, BlockPos pos) {
@@ -82,7 +81,7 @@ public abstract class BlockAssemblerMatrixBaseMixin {
     }
 
     private void eap$openSuperMatrixMenu(Level level, BlockPos pos, Player player) {
-        if (level.isClientSide || !(level.getBlockEntity(pos) instanceof SuperAssemblerMatrixPart part)) {
+        if (level.isClientSide() || !(level.getBlockEntity(pos) instanceof SuperAssemblerMatrixPart part)) {
             return;
         }
         var cluster = part.eap$getSuperMatrixCluster();

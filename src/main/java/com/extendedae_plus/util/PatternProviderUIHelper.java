@@ -5,6 +5,8 @@ import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.menu.implementations.PatternProviderMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 样板供应器UI辅助工具类
@@ -116,10 +118,10 @@ public class PatternProviderUIHelper {
      * @param scaleFactor 缩放因子
      * @return 预览结果列表，如果当前没有打开样板供应器界面则返回空列表
      */
-    public static java.util.List<PatternProviderDataUtil.PatternScalingPreview> previewCurrentPatternScaling(double scaleFactor) {
+    public static List<PatternProviderDataUtil.PatternScalingPreview> previewCurrentPatternScaling(double scaleFactor) {
         PatternProviderLogic patternProvider = getCurrentPatternProvider();
         if (patternProvider == null) {
-            return new java.util.ArrayList<>();
+            return new ArrayList<>();
         }
         
         return PatternProviderDataUtil.previewPatternScaling(patternProvider, scaleFactor);

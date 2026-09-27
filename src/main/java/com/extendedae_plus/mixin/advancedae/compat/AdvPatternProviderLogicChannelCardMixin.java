@@ -11,9 +11,9 @@ import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.util.wireless.ChannelCardConnectionController;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogicHost;
 import org.jetbrains.annotations.Nullable;
@@ -46,16 +46,16 @@ public abstract class AdvPatternProviderLogicChannelCardMixin
     }
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
-    private void eap$saveChannelCardUpgrades(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$saveChannelCardUpgrades(ValueOutput output, CallbackInfo ci) {
         if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
-            this.eap$channelCardUpgrades.writeToNBT(tag, "eap_channel_card_upgrades", registries);
+            this.eap$channelCardUpgrades.writeToNBT(output, "eap_channel_card_upgrades");
         }
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void eap$loadChannelCardUpgrades(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$loadChannelCardUpgrades(ValueInput input, CallbackInfo ci) {
         if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
-            this.eap$channelCardUpgrades.readFromNBT(tag, "eap_channel_card_upgrades", registries);
+            this.eap$channelCardUpgrades.readFromNBT(input, "eap_channel_card_upgrades");
         }
         this.eap$getChannelCardController().onLoaded();
     }
@@ -129,7 +129,7 @@ public abstract class AdvPatternProviderLogicChannelCardMixin
     @Unique
     private boolean eap$isClientSide() {
         var blockEntity = this.host.getBlockEntity();
-        return blockEntity != null && blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide;
+        return blockEntity != null && blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide();
     }
 
     @Unique

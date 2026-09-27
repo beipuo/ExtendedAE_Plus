@@ -2,7 +2,6 @@ package com.extendedae_plus.client;
 
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.common.MEStorageScreen;
-import com.extendedae_plus.compat.EmiHelper;
 import com.extendedae_plus.compat.JeiRuntimeCompat;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
@@ -12,12 +11,12 @@ import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
@@ -25,50 +24,42 @@ import java.util.Optional;
 public final class InputEvents {
 	private InputEvents() {}
 
-	/** EMI 路径：按下阶段已处理过动作键时，跳过松开阶段的重复发送。 */
-	private static boolean emiActionPressHandled;
+	// EMI 26.1.2 发布后恢复 EMI 输入处理字段。
 
 	@SubscribeEvent
 	public static void onMouseButtonPre(ScreenEvent.MouseButtonPressed.Pre event) {
-		// 按查看器来源分派：对应模组的代码只在已安装该模组时执行，
-		// 避免另一模组的类在缺失时被加载/校验而触发 NoClassDefFoundError。
-		if (EmiHelper.isLoaded()) {
-			onMouseEmi(event);
-		} else {
-			onMouseJei(event);
-		}
+		// EMI 26.1.2 发布后恢复 EMI 分派；当前始终使用 JEI 路径。
+		onMouseJei(event);
 	}
 
 	@SubscribeEvent
 	public static void onKeyPressedPre(ScreenEvent.KeyPressed.Pre event) {
-		if (!ModKeybindings.FILL_SEARCH_KEY.matches(event.getKeyCode(), event.getScanCode())) {
+		if (!ModKeybindings.FILL_SEARCH_KEY.matches(event.getKeyEvent())) {
 			return;
 		}
 		var screen = Minecraft.getInstance().screen;
 		if (!(screen instanceof MEStorageScreen<?> || screen instanceof GuiExPatternTerminal<?>)) {
 			return;
 		}
-		if (EmiHelper.isLoaded()) {
-			onKeyEmi(event, screen);
-		} else {
-			onKeyJei(event, screen);
-		}
+		// EMI 26.1.2 发布后恢复 EMI 分派；当前始终使用 JEI 路径。
+		onKeyJei(event, screen);
 	}
 
-	// ---- EMI 路径（仅在 emi 已加载时调用） ----
+	// EMI 26.1.2 发布后恢复以下输入处理代码。
+	/* ---- EMI 路径（仅在 emi 已加载时调用） ----
 
 	private static void onMouseEmi(ScreenEvent.MouseButtonPressed.Pre event) {
 		// Shift + 左键：拉取或下单。
 		// 不做作弊模式检查：EMI 的给予/合成只作用于它自己的侧边栏栈（那里事件到不了这里）；
 		// 对终端网格等屏幕槽位 EMI 零介入，且默认 cheatMode=CREATIVE 会让创造模式误判跳过。
 		// 使用严格查找（仅 EMI 侧边栏/provider 区域），避免劫持背包等普通槽位的点击。
-		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && Screen.hasShiftDown()) {
+		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && false) {
 			ItemStack hovered = EmiHelper.getSidebarIngredientUnderMouse(event.getMouseX(), event.getMouseY());
 			if (!hovered.isEmpty()) {
 				GenericStack stack = GenericStack.fromItemStack(hovered);
 				if (stack != null) {
 					emiActionPressHandled = true;
-					PacketDistributor.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
+					ClientPacketDistributor.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
 					event.setCanceled(true);
 					return;
 				}
@@ -99,7 +90,7 @@ public final class InputEvents {
 		// 但无绑定的按键会放行"松开"；因此中键下单 / Shift+左键拉取在此补一次处理。
 		// 按下阶段若已发送（非 EMI 区域），由标志位跳过。
 		boolean isMiddle = event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
-		boolean isShiftLeft = event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && Screen.hasShiftDown();
+		boolean isShiftLeft = event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && false;
 		if (!isMiddle && !isShiftLeft) return;
 		if (emiActionPressHandled) {
 			emiActionPressHandled = false;
@@ -114,12 +105,12 @@ public final class InputEvents {
 		event.setCanceled(true);
 	}
 
-	/** 中键=打开下单界面，其余（Shift+左键）=拉取或下单。 */
+	// 中键=打开下单界面，其余（Shift+左键）=拉取或下单。
 	private static void sendViewerAction(boolean openCraft, GenericStack stack) {
 		if (openCraft) {
-			PacketDistributor.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
+			ClientPacketDistributor.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
 		} else {
-			PacketDistributor.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
+			ClientPacketDistributor.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
 		}
 	}
 
@@ -129,10 +120,11 @@ public final class InputEvents {
 		fillSearch(screen, buildSearchText(hovered), event);
 	}
 
+	*/
 	// ---- JEI 路径（仅在 jei 已加载时调用） ----
 
 	private static void onMouseJei(ScreenEvent.MouseButtonPressed.Pre event) {
-		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && Screen.hasShiftDown()) {
+		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && false) {
 			Optional<?> hovered = JeiRuntimeCompat.getIngredientUnderMouse(event.getMouseX(), event.getMouseY());
 			if (hovered.isEmpty()) {
 				hovered = JeiRuntimeCompat.getIngredientUnderMouse();
@@ -143,7 +135,7 @@ public final class InputEvents {
 				}
 				GenericStack stack = toGenericStack(hovered.get());
 				if (stack != null) {
-					PacketDistributor.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
+					ClientPacketDistributor.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
 					event.setCanceled(true);
 					return;
 				}
@@ -159,7 +151,7 @@ public final class InputEvents {
 			if (JeiRuntimeCompat.isCheatModeEnabled()) return;
 			GenericStack stack = toGenericStack(hovered.get());
 			if (stack == null) return;
-			PacketDistributor.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
+			ClientPacketDistributor.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
 			event.setCanceled(true);
 		}
 	}
@@ -185,8 +177,8 @@ public final class InputEvents {
 	 * 普通 F：填充物品显示名。
 	 */
 	private static String buildSearchText(ItemStack stack) {
-		if (Screen.hasAltDown()) {
-			ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+		if (false) {
+			Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
 			return "@" + id.getNamespace();
 		}
 		return stack.getHoverName().getString();
@@ -222,4 +214,5 @@ public final class InputEvents {
 			}
 		}
 	}
+
 }

@@ -8,7 +8,7 @@ import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAccessor;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,7 +26,7 @@ public abstract class AEBaseMenuExtendedPatternProviderCardGuardMixin {
     private static final int EAP$SLOTS_PER_PAGE = 36;
 
     @Inject(method = "clicked", at = @At("HEAD"), cancellable = true)
-    private void eap$preventRemovingRequiredExpansionCard(int slotId, int button, ClickType clickType, Player player, CallbackInfo ci) {
+    private void eap$preventRemovingRequiredExpansionCard(int slotId, int button, ContainerInput clickType, Player player, CallbackInfo ci) {
         AEBaseMenu menu = (AEBaseMenu) (Object) this;
         if (!(menu instanceof ContainerExPatternProvider)
                 || slotId < 0
@@ -58,19 +58,19 @@ public abstract class AEBaseMenuExtendedPatternProviderCardGuardMixin {
         }
 
         if (currentCards - 1 < requiredCards) {
-            player.displayClientMessage(Component.translatable(
-                    "extendedae_plus.message.pattern_provider.expansion_card_locked"), true);
+            player.sendSystemMessage(Component.translatable(
+                    "extendedae_plus.message.pattern_provider.expansion_card_locked"));
             ci.cancel();
         }
     }
 
     @Unique
-    private boolean eap$isExpansionCardRemovalClick(ClickType clickType) {
-        return clickType == ClickType.PICKUP
-                || clickType == ClickType.QUICK_MOVE
-                || clickType == ClickType.SWAP
-                || clickType == ClickType.THROW
-                || clickType == ClickType.PICKUP_ALL;
+    private boolean eap$isExpansionCardRemovalClick(ContainerInput clickType) {
+        return clickType == ContainerInput.PICKUP
+                || clickType == ContainerInput.QUICK_MOVE
+                || clickType == ContainerInput.SWAP
+                || clickType == ContainerInput.THROW
+                || clickType == ContainerInput.PICKUP_ALL;
     }
 
     @Unique

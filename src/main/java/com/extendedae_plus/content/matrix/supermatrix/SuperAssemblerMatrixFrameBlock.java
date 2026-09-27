@@ -4,9 +4,11 @@ import com.extendedae_plus.init.ModBlocks;
 import com.glodblock.github.extendedae.common.blocks.matrix.BlockAssemblerMatrixBase;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -35,15 +37,16 @@ public class SuperAssemblerMatrixFrameBlock extends SuperAssemblerMatrixBlock<Su
     }
 
     @Override
-    public @NotNull BlockState updateShape(@NotNull BlockState state, @NotNull Direction direction,
-            @NotNull BlockState neighborState, LevelAccessor level, @NotNull BlockPos pos,
-            @NotNull BlockPos neighborPos) {
+    public @NotNull BlockState updateShape(@NotNull BlockState state, LevelReader level,
+            @NotNull ScheduledTickAccess scheduledTickAccess, @NotNull BlockPos pos, @NotNull Direction direction,
+            @NotNull BlockPos neighborPos, @NotNull BlockState neighborState, @NotNull RandomSource random) {
         // 动态连接材质依赖邻居数据，即使柱状状态不变也需要刷新模型。
-        var updatedState = super.updateShape(state, direction, neighborState, level, pos, neighborPos);
+        var updatedState = super.updateShape(state, level, scheduledTickAccess, pos, direction, neighborPos,
+                neighborState, random);
         return this.getShapeType(updatedState, level, pos);
     }
 
-    private BlockState getShapeType(BlockState baseState, LevelAccessor level, BlockPos pos) {
+    private BlockState getShapeType(BlockState baseState, LevelReader level, BlockPos pos) {
         var type = Shape.block;
         int x = pos.getX();
         int y = pos.getY();
@@ -65,7 +68,7 @@ public class SuperAssemblerMatrixFrameBlock extends SuperAssemblerMatrixBlock<Su
                 .setValue(BlockAssemblerMatrixBase.POWERED, baseState.getValue(BlockAssemblerMatrixBase.POWERED));
     }
 
-    private static boolean isFrame(LevelAccessor level, int x, int y, int z) {
+    private static boolean isFrame(LevelReader level, int x, int y, int z) {
         return level.getBlockState(new BlockPos(x, y, z)).is(ModBlocks.SUPER_ASSEMBLER_MATRIX_FRAME.get());
     }
 

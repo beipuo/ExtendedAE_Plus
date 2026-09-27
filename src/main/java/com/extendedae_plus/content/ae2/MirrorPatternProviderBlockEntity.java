@@ -22,15 +22,16 @@ import com.extendedae_plus.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
@@ -39,6 +40,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -124,25 +126,22 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
     }
 
     @Override
-    public void saveAdditional(CompoundTag data, HolderLookup.Provider registries) {
-        super.saveAdditional(data, registries);
+    public void saveAdditional(ValueOutput data) {
+        super.saveAdditional(data);
 
         if (this.masterDimension != null && this.masterPos != null) {
-            var masterTag = new CompoundTag();
-            masterTag.putString(TAG_MASTER_DIMENSION, this.masterDimension.location().toString());
+            var masterTag = data.child(TAG_MASTER);
+            masterTag.putString(TAG_MASTER_DIMENSION, this.masterDimension.identifier().toString());
             masterTag.putLong(TAG_MASTER_POS, this.masterPos.asLong());
             if (this.masterSide != null) {
                 masterTag.putString(TAG_MASTER_SIDE, this.masterSide.getSerializedName());
             }
-            data.put(TAG_MASTER, masterTag);
-        } else {
-            data.remove(TAG_MASTER);
         }
     }
 
     @Override
-    public void loadTag(CompoundTag data, HolderLookup.Provider registries) {
-        super.loadTag(data, registries);
+    public void loadTag(ValueInput data) {
+        super.loadTag(data);
 
         this.masterDimension = null;
         this.masterPos = null;
@@ -150,16 +149,18 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         this.scheduleImmediateSync();
         this.invalidatePatternSyncState();
         this.needsUnboundPatternCleanup = true;
-        if (data.contains(TAG_MASTER, Tag.TAG_COMPOUND)) {
-            var masterTag = data.getCompound(TAG_MASTER);
-            if (masterTag.contains(TAG_MASTER_DIMENSION, Tag.TAG_STRING) && masterTag.contains(TAG_MASTER_POS, Tag.TAG_LONG)) {
+        var masterTag = data.child(TAG_MASTER).orElse(null);
+        if (masterTag != null) {
+            var dimension = masterTag.getString(TAG_MASTER_DIMENSION).orElse(null);
+            var position = masterTag.getLong(TAG_MASTER_POS).orElse(null);
+            if (dimension != null && position != null) {
                 this.masterDimension = ResourceKey.create(
                         Registries.DIMENSION,
-                        ResourceLocation.parse(masterTag.getString(TAG_MASTER_DIMENSION)));
-                this.masterPos = BlockPos.of(masterTag.getLong(TAG_MASTER_POS));
-                if (masterTag.contains(TAG_MASTER_SIDE, Tag.TAG_STRING)) {
-                    this.masterSide = Direction.byName(masterTag.getString(TAG_MASTER_SIDE));
-                }
+                        Identifier.parse(dimension));
+                this.masterPos = BlockPos.of(position);
+                this.masterSide = masterTag.getString(TAG_MASTER_SIDE)
+                        .map(Direction::byName)
+                        .orElse(null);
                 this.needsUnboundPatternCleanup = false;
             }
         }
@@ -677,7 +678,7 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         }
 
         @Override
-        public appeng.api.util.IConfigManager eap$getMirrorConfigManager() {
+        public IConfigManager eap$getMirrorConfigManager() {
             return host.getConfigManager();
         }
 
@@ -687,7 +688,7 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         }
 
         @Override
-        public java.util.EnumSet<Direction> eap$getMirrorTargets() {
+        public EnumSet<Direction> eap$getMirrorTargets() {
             return host.getTargets();
         }
 

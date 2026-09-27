@@ -12,9 +12,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.neoforged.fml.loading.FMLPaths;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -217,7 +221,7 @@ public class ProviderSelectScreen extends Screen {
             return;
         }
         long providerId = this.fIds.get(idx);
-        PacketDistributor.sendToServer(new UploadEncodedPatternToProviderC2SPacket(providerId, showStatusMessage, providerName));
+        ClientPacketDistributor.sendToServer(new UploadEncodedPatternToProviderC2SPacket(providerId, showStatusMessage, providerName));
         this.onClose();
     }
 
@@ -236,8 +240,7 @@ public class ProviderSelectScreen extends Screen {
             }
             return;
         }
-        // 映射表版本已递增，合成树上的感叹号会随之消失。
-        com.extendedae_plus.client.emi.BoMMappingStatus.invalidate();
+        // EMI 26.1.2 发布后恢复 BoMMappingStatus.invalidate()。
         if (player != null) {
             player.sendSystemMessage(Component.translatable(
                     "extendedae_plus.message.mapping.add_success", this.mappingKey, value));
@@ -342,18 +345,18 @@ public class ProviderSelectScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.searchBox != null && this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
+    public boolean keyPressed(KeyEvent event) {
+        if (this.searchBox != null && this.searchBox.keyPressed(event)) {
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
     public void onClose() {
         if (this.mappingKey == null) {
             // 挑映射机器模式下没有 pending 样板，不能误发取消请求。
-            PacketDistributor.sendToServer(CancelPendingPatternC2SPacket.INSTANCE);
+            ClientPacketDistributor.sendToServer(CancelPendingPatternC2SPacket.INSTANCE);
         }
         Minecraft.getInstance().setScreen(this.parent);
     }
@@ -490,19 +493,22 @@ public class ProviderSelectScreen extends Screen {
     }
 
     @Override
-    public void render(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        super.render(graphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
         if (this.mappingKey == null) {
             return;
         }
         // 挑映射机器时必须看得见正在给哪个配方类型建映射，否则点错机器无从察觉。
-        graphics.drawCenteredString(this.font,
+        graphics.centeredText(this.font,
                 Component.translatable("extendedae_plus.screen.choose_provider.mapping_key", this.mappingKey),
                 this.width / 2, Math.max(4, this.mappingKeyTextY), 0xFFFFAA00);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         // 右键点击搜索框区域时，清空搜索框内容并刷新
         if (button == 1 && this.searchBox != null) {
             // AETextField 的 getX/getWidth 是内部 EditBox 边界，右键清空需使用完整可视区域。
@@ -542,15 +548,15 @@ public class ProviderSelectScreen extends Screen {
             }
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public boolean charTyped(char codePoint, int modifiers) {
-        if (this.searchBox != null && this.searchBox.charTyped(codePoint, modifiers)) {
+    public boolean charTyped(CharacterEvent event) {
+        if (this.searchBox != null && this.searchBox.charTyped(event)) {
             return true;
         }
-        return super.charTyped(codePoint, modifiers);
+        return super.charTyped(event);
     }
 
     private void addMappingFromUI() {

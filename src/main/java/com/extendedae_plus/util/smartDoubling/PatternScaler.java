@@ -99,13 +99,11 @@ public final class PatternScaler {
         if (key instanceof AEItemKey) return 1L;
         if (key instanceof AEFluidKey) return 1000L;
 
-        // 支持 Mekanism Chemical 等（反射安全）
-        try {
-            if ("me.ramidzkh.mekae2.ae2.MekanismKey".equals(key.getClass().getName())) {
-                return 1000L;
-            }
-        } catch (Exception ignored) {
+        /* Mekanism 与 Applied Mekanistics 发布适配版本后恢复。
+        if ("me.ramidzkh.mekae2.ae2.MekanismKey".equals(key.getClass().getName())) {
+            return 1000L;
         }
+        */
         return 1L;
     }
 }

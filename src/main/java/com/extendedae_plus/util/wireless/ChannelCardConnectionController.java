@@ -4,6 +4,7 @@ import appeng.api.upgrades.IUpgradeInventory;
 import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
 import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
 import java.util.UUID;
+import java.util.WeakHashMap;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -19,7 +20,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
  */
 public final class ChannelCardConnectionController {
     private static final Map<BlockEntity, Set<ChannelCardConnectionController>> REGISTRY =
-            Collections.synchronizedMap(new java.util.WeakHashMap<>());
+            Collections.synchronizedMap(new WeakHashMap<>());
     private final Supplier<IUpgradeInventory> upgrades;
     private final Supplier<UUID> fallbackOwner;
     private final Supplier<IWirelessEndpoint> endpoint;
