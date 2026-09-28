@@ -5,6 +5,8 @@ import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;
 import appeng.parts.encoding.EncodingMode;
 import com.extendedae_plus.api.upload.IPatternEncodingShiftUploadSync;
+import com.extendedae_plus.api.upload.IPatternUploadMenu;
+import net.minecraft.world.inventory.Slot;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import com.glodblock.github.glodium.network.packet.sync.ActionMap;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
@@ -27,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * 注册动作 "upload_to_matrix"：仅上传“合成图样”到 ExtendedAE 装配矩阵。
  */
 @Mixin(PatternEncodingTermMenu.class)
-public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder, IPatternEncodingShiftUploadSync {
+public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder, IPatternEncodingShiftUploadSync, IPatternUploadMenu {
 
     @Unique
     private final ActionMap eap$actions = ActionMap.create();
@@ -40,6 +42,11 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
 
     @Shadow(remap = false)
     private RestrictedInputSlot encodedPatternSlot;
+
+    @Override
+    public Slot getEncodedPatternSlot() {
+        return this.encodedPatternSlot;
+    }
 
     @Unique
     @Override

@@ -13,18 +13,23 @@ import appeng.menu.slot.OutputSlot;
 import appeng.util.ConfigMenuInventory;
 import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
 import com.extendedae_plus.init.ModMenuTypes;
+import com.glodblock.github.glodium.network.packet.sync.ActionMap;
+import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 
 import java.util.List;
 
 /** 超级水晶装配器的库存、液槽、进度与升级卡菜单。 */
-public class SuperCrystalAssemblerMenu extends UpgradeableMenu<SuperCrystalAssemblerBlockEntity> implements IProgressProvider {
+public class SuperCrystalAssemblerMenu extends UpgradeableMenu<SuperCrystalAssemblerBlockEntity> implements IProgressProvider, IActionHolder {
     @GuiSync(3)
     public int processingTime = -1;
     @GuiSync(8)
     public YesNo autoExport = YesNo.NO;
+    private final ActionMap actions = ActionMap.create();
 
     private final AppEngSlot tankSlot;
 
@@ -35,11 +40,22 @@ public class SuperCrystalAssemblerMenu extends UpgradeableMenu<SuperCrystalAssem
         }
         this.addSlot(tankSlot = new AppEngSlot(new ConfigMenuInventory(host.getTank()), 0), SlotSemantics.STORAGE);
         this.addSlot(new OutputSlot(host.getOutput(), 0, null), SlotSemantics.MACHINE_OUTPUT);
+        actions.put("set_side", args -> {
+            Direction side = Direction.byName(args.get(String.class));
+            if (args.get(Boolean.class)) getHost().getOutputSides().add(side);
+            else getHost().getOutputSides().remove(side);
+        });
         tankSlot.setEmptyTooltip(() -> List.of(
                 Component.translatable("gui.extendedae_plus.crystal_assembler_plus.tank_empty"),
                 Component.translatable("gui.extendedae_plus.crystal_assembler_plus.amount", 0,
                         SuperCrystalAssemblerBlockEntity.TANK_CAP).withStyle(Tooltips.NORMAL_TOOLTIP_TEXT)));
     }
+
+    @NotNull
+    @Override
+    public ActionMap getActionMap() { return actions; }
+
+    public List<Direction> getOutputSides() { return List.copyOf(getHost().getOutputSides()); }
 
     public boolean isTank(Slot slot) {
         return slot == tankSlot;

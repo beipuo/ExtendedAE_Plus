@@ -129,7 +129,7 @@ sourceSets.main.java {
     exclude 'com/extendedae_plus/client/event/EmiCtrlQHandler.java'
     exclude 'com/extendedae_plus/client/emi/**'
     exclude 'com/extendedae_plus/mixin/emi/**'
-    // Mekanism 与 Applied Mekanistics 发布适配版本后恢复以下文件。
+    // 26.1.2 尚无 Mekanism 与 Applied Mekanistics 适配版本。
     exclude 'com/extendedae_plus/compat/AppliedMekanisticsCompat.java'
     exclude 'com/extendedae_plus/compat/MekanismChemicalCompat.java'
     exclude 'com/extendedae_plus/compat/MekanismChemicalGate.java'
@@ -152,8 +152,8 @@ dependencies {
 //    compileOnly "dev.emi:emi-neoforge:1.1.23+1.21.1"
 //    compileOnly "curse.maven:mega-cells-622112:6005043"
 //    compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:21.9.812"
-//    compileOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
-//    compileOnly "curse.maven:applied-mekanistics-574300:5978711"
+//    compileOnly "mekanism:Mekanism:1.21.1-10.7.0.55" // 26.1.2 暂无对应版本
+//    compileOnly "curse.maven:applied-mekanistics-574300:5978711" // 26.1.2 暂无对应版本
 //    compileOnly "dev.latvian.mods:kubejs-neoforge:2101.7.1-build.188"
 //    compileOnly "dev.latvian.mods:rhino:2101.2.5-build.54"
 //    compileOnly "curse.maven:framedblocks-441647:6127891"
@@ -170,8 +170,8 @@ dependencies {
     runtimeOnly "curse.maven:applied-energistics-2-wireless-terminals-459929:8544261"
 //    runtimeOnly "curse.maven:mega-cells-622112:6005043"
 
-//    runtimeOnly "curse.maven:mekanism-268560:6895130"
-//    runtimeOnly "curse.maven:applied-mekanistics-574300:5978711"
+//    runtimeOnly "curse.maven:mekanism-268560:6895130" // 26.1.2 暂无对应版本
+//    runtimeOnly "curse.maven:applied-mekanistics-574300:5978711" // 26.1.2 暂无对应版本
 
 
     implementation "curse.maven:jade-324717:7938398"

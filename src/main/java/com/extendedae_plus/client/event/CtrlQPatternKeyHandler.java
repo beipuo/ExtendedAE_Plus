@@ -344,14 +344,14 @@ public final class CtrlQPatternKeyHandler {
 				name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipe);
 			}
 		} else if (recipeBase != null
-			&& "com.gregtechceu.gtceu.api.recipe.GTRecipe".equals(recipeBase.getClass().getName())) {
-			name = ExtendedAEPatternUploadUtil.mapGTCEuRecipeToSearchKey(recipeBase);
+			&& false) {
+			name = null;
 		} else if (recipeBase != null
-			&& "com.gregtechceu.gtceu.integration.jei.recipe.GTRecipeWrapper".equals(recipeBase.getClass().getName())) {
+			&& "".equals(recipeBase.getClass().getName())) {
 			try {
 				var field = recipeBase.getClass().getField("recipe");
 				Object inner = field.get(recipeBase);
-				name = ExtendedAEPatternUploadUtil.mapGTCEuRecipeToSearchKey(inner);
+				name = null;
 			} catch (Throwable ignored) {
 			}
 		}

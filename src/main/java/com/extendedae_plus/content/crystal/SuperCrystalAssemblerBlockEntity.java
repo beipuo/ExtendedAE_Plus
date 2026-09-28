@@ -27,6 +27,7 @@ import appeng.core.definitions.AEItems;
 import appeng.core.settings.TickRates;
 import appeng.helpers.externalstorage.GenericStackInv;
 import appeng.util.ConfigManager;
+import appeng.util.SettingsFrom;
 import appeng.util.inv.AppEngInternalInventory;
 import appeng.util.inv.CombinedInternalInventory;
 import appeng.util.inv.FilteredInternalInventory;
@@ -36,11 +37,19 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipe;
 import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipeManager;
 import com.glodblock.github.extendedae.api.caps.IGenericInvHost;
+import com.glodblock.github.extendedae.common.EAESingletons;
+import com.glodblock.github.extendedae.util.FCUtil;
 import com.glodblock.github.glodium.recipe.stack.IngredientStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -81,6 +90,7 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
     };
     private final IUpgradeInventory upgrades;
     private final ConfigManager configManager;
+    private final Set<Direction> outputSides = EnumSet.noneOf(Direction.class);
     private boolean working;
     private int progress;
 
@@ -107,7 +117,10 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
         return tank;
     }
 
-    @Override
+    public Set<Direction> getOutputSides() {
+        return outputSides;
+    }
+
     public GenericStackInv getGenericInv() {
         // 对齐 EAE 原机，让 AE2 外部存储能力访问流体罐。
         return tank;
@@ -313,18 +326,8 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
                 || this.level == null) {
             return false;
         }
-        for (var direction : Direction.values()) {
-            var target = InternalInventory.wrapExternal(level, this.worldPosition.relative(direction), direction.getOpposite());
-            if (target == null) {
-                continue;
-            }
-            var before = output.getStackInSlot(0).getCount();
-            output.insertItem(0, target.addItems(output.extractItem(0, 64, false)), false);
-            if (before != output.getStackInSlot(0).getCount()) {
-                return true;
-            }
-        }
-        return false;
+        return FCUtil.ejectInv(level, worldPosition, output, outputSides,
+                te -> te instanceof SuperCrystalAssemblerBlockEntity);
     }
 
     private static int speedFor(int cards) {
@@ -372,6 +375,52 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
     private void onChangeTank() {
         this.saveChanges();
         this.getMainNode().ifPresent((grid, node) -> grid.getTickManager().wakeDevice(node));
+    }
+
+    @Override
+    public void saveAdditional(ValueOutput data) {
+        super.saveAdditional(data);
+        var sides = data.childrenList("output_side");
+        for (var side : outputSides) {
+            sides.addChild().putString("side", side.getName());
+        }
+    }
+
+    @Override
+    public void loadTag(ValueInput data) {
+        super.loadTag(data);
+        outputSides.clear();
+        for (var side : data.childrenListOrEmpty("output_side")) {
+            String name = side.getStringOr("side", "");
+            if (!name.isEmpty()) {
+                outputSides.add(Direction.byName(name));
+            }
+        }
+        if (outputSides.isEmpty() && data.childrenListOrEmpty("output_side").isEmpty()) {
+            outputSides.addAll(EnumSet.allOf(Direction.class));
+        }
+    }
+
+    @Override
+    public void importSettings(SettingsFrom mode, DataComponentMap input, @Nullable Player player) {
+        super.importSettings(mode, input, player);
+        var extra = input.get(EAESingletons.EXTRA_SETTING);
+        if (extra != null) {
+            outputSides.clear();
+            for (var side : extra.getList("output_side").orElse(new ListTag())) outputSides.add(Direction.byName(side.asString().orElseThrow()));
+        }
+    }
+
+    @Override
+    public void exportSettings(SettingsFrom mode, DataComponentMap.Builder output, @Nullable Player player) {
+        super.exportSettings(mode, output, player);
+        if (mode == SettingsFrom.MEMORY_CARD) {
+            CompoundTag extra = new CompoundTag();
+            ListTag sides = new ListTag();
+            for (var side : outputSides) sides.add(StringTag.valueOf(side.getName()));
+            extra.put("output_side", sides);
+            output.set(EAESingletons.EXTRA_SETTING, extra);
+        }
     }
 
     @Override

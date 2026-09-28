@@ -12,7 +12,12 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
-import java.util.*;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import java.util.Collections;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * This code is inspired by AE2Things[](https://github.com/Technici4n/AE2Things-Forge), licensed under the MIT License.<p>
@@ -25,20 +30,21 @@ public class InfinityStorageManager extends SavedData {
             CompoundTag.CODEC.xmap(tag -> readNbt(tag, null), data -> data.save(new CompoundTag(), null)),
             null);
     // 存储所有磁盘的Map，键为UUID，值为DataStorage对象
-    private final Map<UUID, InfinityDataStorage> cells;
+    private final Object2ObjectMap<UUID, InfinityDataStorage> cells;
+    private long storageRevision;
     @Nullable
     private WeakReference<HolderLookup.Provider> registries;
 
 
     // 构造方法，初始化磁盘Map
     public InfinityStorageManager() {
-        cells = new HashMap<>();
+        cells = new Object2ObjectOpenHashMap<>();
         // 标记数据为“脏”，确保新创建的实例在下次保存时写入磁盘
         this.setDirty();
     }
 
     // 私有构造方法，用于从已有Map创建StorageManager
-    private InfinityStorageManager(Map<UUID, InfinityDataStorage> cells) {
+    private InfinityStorageManager(Object2ObjectMap<UUID, InfinityDataStorage> cells) {
         // 确保使用已加载的数据
         this.cells = cells;
         // 标记数据为“脏”，确保新创建的实例在下次保存时写入磁盘
@@ -53,9 +59,8 @@ public class InfinityStorageManager extends SavedData {
                 nbt.getInt(InfinityConstants.FORMAT_VERSION_FIELD).orElse(1) :
                 1;
 
-        Map<UUID, InfinityDataStorage> cells = new HashMap<>();
-        // 从 NBT 中获取磁盘数据列表，指定类型为 CompoundTag（TAG_COMPOUND）
         ListTag cellList = nbt.getList(InfinityConstants.INFINITY_CELL_LIST).orElse(new ListTag());
+        Object2ObjectMap<UUID, InfinityDataStorage> cells = new Object2ObjectOpenHashMap<>(Math.max(2, cellList.size()));
         // 遍历 cellList 中的每个 CompoundTag
         for (int i = 0; i < cellList.size(); i++) {
             // 获取当前索引的 CompoundTag，表示单个磁盘的数据
@@ -74,7 +79,7 @@ public class InfinityStorageManager extends SavedData {
     public CompoundTag save(CompoundTag nbt, HolderLookup.Provider provider) {
         // 将内存中的所有 cell 序列化为一个 ListTag
         ListTag cellList = new ListTag();
-        for (Map.Entry<UUID, InfinityDataStorage> entry : cells.entrySet()) {
+        for (var entry : Object2ObjectMaps.fastIterable(cells)) {
             CompoundTag cell = new CompoundTag();
             cell.store(InfinityConstants.INFINITY_CELL_UUID, UUIDUtil.CODEC, entry.getKey());
             cell.put(InfinityConstants.INFINITY_CELL_DATA, entry.getValue().serializeNBT(provider));
@@ -93,16 +98,16 @@ public class InfinityStorageManager extends SavedData {
 
     // 更新或添加某个 UUID 对应的数据并标记为脏（需要保存）
     public void updateCell(UUID uuid, InfinityDataStorage infinityDataStorage) {
-        cells.put(uuid, infinityDataStorage);
-        // 标记数据为“脏”，确保修改后的数据会在下次保存时写入磁盘
+        if (cells.put(uuid, infinityDataStorage) != infinityDataStorage) storageRevision++;
         setDirty();
     }
 
     // 删除某个 UUID 的持久化记录并标记为脏
     public void removeCell(UUID uuid) {
-        cells.remove(uuid);
-        // 标记数据为“脏”，确保移除操作会在下次保存时反映到磁盘
-        setDirty();
+        if (cells.remove(uuid) != null) {
+            storageRevision++;
+            setDirty();
+        }
     }
 
     // 检查指定 UUID 是否存在于 disks 映射中
@@ -113,12 +118,23 @@ public class InfinityStorageManager extends SavedData {
 
     // 获取或创建某个 UUID 对应的数据容器
     public InfinityDataStorage getOrCreateCell(UUID uuid) {
-        // 检查 cells 映射中是否不存在指定 UUID
-        if (!cells.containsKey(uuid)) {
-            updateCell(uuid, new InfinityDataStorage());
+        InfinityDataStorage cell = cells.get(uuid);
+        if (cell == null) {
+            cell = new InfinityDataStorage();
+            cells.put(uuid, cell);
+            storageRevision++;
+            setDirty();
         }
-        // 返回指定 UUID 对应的 DataStorage 对象
+        return cell;
+    }
+
+    @Nullable
+    public InfinityDataStorage getCell(UUID uuid) {
         return cells.get(uuid);
+    }
+
+    public long getStorageRevision() {
+        return storageRevision;
     }
 
 

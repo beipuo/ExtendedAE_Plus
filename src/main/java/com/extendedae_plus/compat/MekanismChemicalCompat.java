@@ -1,7 +1,5 @@
 package com.extendedae_plus.compat;
 
-// Mekanism 与 Applied Mekanistics 适配暂时禁用，待发布适配版本后恢复；build.gradle 已排除本文件。
-
 import appeng.api.stacks.GenericStack;
 import me.ramidzkh.mekae2.ae2.MekanismKey;
 import mekanism.api.chemical.Chemical;

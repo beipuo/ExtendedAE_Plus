@@ -9,11 +9,18 @@ import appeng.client.gui.widgets.ProgressBar;
 import appeng.client.gui.widgets.ServerSettingToggleButton;
 import appeng.core.localization.Tooltips;
 import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
+import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.menu.SuperCrystalAssemblerMenu;
+import com.glodblock.github.extendedae.client.button.ActionEPPButton;
+import com.glodblock.github.extendedae.client.button.EPPIcon;
+import com.glodblock.github.extendedae.client.gui.subgui.OutputSideConfig;
+import com.glodblock.github.extendedae.network.EAENetworkHandler;
+import com.glodblock.github.extendedae.network.packet.CEAEGenericPacket;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -22,6 +29,7 @@ import java.util.ArrayList;
 public class SuperCrystalAssemblerScreen extends UpgradeableScreen<SuperCrystalAssemblerMenu> {
     private final ProgressBar progressBar;
     private final ServerSettingToggleButton<YesNo> autoExportButton;
+    private final ActionEPPButton outputSideButton;
 
     public SuperCrystalAssemblerScreen(SuperCrystalAssemblerMenu menu, Inventory playerInventory, Component title,
             ScreenStyle style) {
@@ -30,6 +38,17 @@ public class SuperCrystalAssemblerScreen extends UpgradeableScreen<SuperCrystalA
         widgets.add("progressBar", progressBar);
         autoExportButton = new ServerSettingToggleButton<>(Settings.AUTO_EXPORT, YesNo.NO);
         this.addToLeftToolbar(autoExportButton);
+        outputSideButton = new ActionEPPButton(button -> openOutputConfig(), EPPIcon.OUTPUT_SIDES);
+        outputSideButton.setMessage(Component.translatable("gui.extendedae.set_output_sides.open"));
+        this.addToLeftToolbar(outputSideButton);
+    }
+
+    private void openOutputConfig() {
+        if (getMenu().getHost() != null) {
+            switchToScreen(new OutputSideConfig<>(this, new ItemStack(ModItems.CRYSTAL_ASSEMBLER_PLUS.get()),
+                    getMenu().getHost(), getMenu().getOutputSides(),
+                    (side, value) -> EAENetworkHandler.INSTANCE.sendToServer(new CEAEGenericPacket("set_side", side.getName(), value))));
+        }
     }
 
     @Override
@@ -38,6 +57,7 @@ public class SuperCrystalAssemblerScreen extends UpgradeableScreen<SuperCrystalA
         int percent = menu.getCurrentProgress() * 100 / menu.getMaxProgress();
         progressBar.setFullMsg(Component.literal(percent + "%"));
         autoExportButton.set(menu.getAutoExport());
+        outputSideButton.setVisibility(menu.getAutoExport() == YesNo.YES);
     }
 
     @Override

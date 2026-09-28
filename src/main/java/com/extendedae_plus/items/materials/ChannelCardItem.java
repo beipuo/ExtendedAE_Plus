@@ -17,6 +17,8 @@ import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
+import static net.minecraft.world.phys.HitResult.Type.BLOCK;
+
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -123,7 +125,11 @@ public class ChannelCardItem extends UpgradeCardItem {
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        
+
+        if (player.pick(player.blockInteractionRange(), 0.0F, false).getType() == BLOCK) {
+            return InteractionResult.PASS;
+        }
+
         if (!level.isClientSide()) {
             long ch = getChannel(stack);
             long next;

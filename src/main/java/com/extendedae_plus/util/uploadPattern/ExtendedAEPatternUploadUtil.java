@@ -12,6 +12,7 @@ import appeng.crafting.pattern.AEStonecuttingPattern;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.helpers.patternprovider.PatternProviderLogic;
+import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import java.util.concurrent.atomic.AtomicInteger;
 import appeng.menu.AEBaseMenu;
@@ -620,39 +621,8 @@ public class ExtendedAEPatternUploadUtil {
         return Identifier.tryParse(type.toString());
     }
 
-    // 注意：GTCEu 的映射方法已在下方提供基于 Object 的反射版本，避免重复定义。
-
-    /**
-     * 仅使用反射的 GTCEu GTRecipe -> 搜索关键字（避免在运行时直接引用 GTCEu 类）。
-     */
-    public static String mapGTCEuRecipeToSearchKey(Object gtRecipeObj) {
-        if (gtRecipeObj == null) return null;
-        try {
-            // 通过反射调用 getType()，其 toString() 应返回 registryName，即 namespace:path
-            java.lang.reflect.Method mGetType = gtRecipeObj.getClass().getMethod("getType");
-            Object typeObj = mGetType.invoke(gtRecipeObj);
-            String idStr = String.valueOf(typeObj);
-            if (idStr == null || idStr.isBlank()) return null;
-            var rl = Identifier.tryParse(idStr);
-            // 1) 别名优先（使用 path 作为最终搜索关键字）
-            String path = rl != null ? rl.getPath() : null;
-            if (path != null) {
-                String alias = CUSTOM_ALIASES.get(path.toLowerCase());
-                if (alias != null && !alias.isBlank()) return alias;
-            }
-            // 2) 再查完整ID映射
-            String custom = rl != null ? CUSTOM_NAMES.get(rl) : null;
-            if (custom != null && !custom.isBlank()) return custom;
-            // 3) 默认返回 path 作为搜索关键字
-            return (path != null && !path.isBlank()) ? path : idStr;
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
     /**
      * 当 JEI 传入的 recipeBase 不是原版 Recipe<?> 时，根据类的包名/类名推导一个尽量可用的搜索关键字。
-     * 例如："moe.gregtech.recipe.SomeAssemblerRecipe" -> "gtceu assembler"
      */
     public static String deriveSearchKeyFromUnknownRecipe(Object recipeBase) {
         if (recipeBase == null) return null;
@@ -676,9 +646,7 @@ public class ExtendedAEPatternUploadUtil {
 
             String ns = null;
             String lower = pkg.toLowerCase();
-            if (lower.contains("gtceu")) ns = "gtceu";
-            else if (lower.contains("gregtech")) ns = "gregtech";
-            else if (lower.contains("projecte")) ns = "projecte";
+            if (lower.contains("projecte")) ns = "projecte";
             else if (lower.contains("create")) ns = "create";
             else if (lower.contains("immersiveengineering")) ns = "immersive";
 
@@ -1691,6 +1659,32 @@ public class ExtendedAEPatternUploadUtil {
         }
     }
 
+    public static IGrid resolveGrid(Object menu) {
+        if (!(menu instanceof AEBaseMenu aeMenu)) {
+            return null;
+        }
+        Object target = aeMenu.getTarget();
+        if (target instanceof IActionHost host && host.getActionableNode() != null) {
+            return host.getActionableNode().getGrid();
+        }
+        return null;
+    }
+
+    public static net.minecraft.world.inventory.Slot getEncodedPatternSlot(Object menu) {
+        if (menu instanceof IPatternUploadMenu uploadMenu) {
+            return uploadMenu.getEncodedPatternSlot();
+        }
+        if (menu instanceof PatternEncodingTermMenu encodingMenu) {
+            return ((PatternEncodingTermMenuAccessor) (Object) encodingMenu).eap$getEncodedPatternSlot();
+        }
+        return null;
+    }
+
+    public static List<PatternContainer> listAvailableProvidersFromGrid(IPatternUploadMenu menu) {
+        IGrid grid = resolveGrid(menu);
+        return grid == null ? Collections.emptyList() : listAvailableProvidersFromGrid(grid);
+    }
+
     /**
      * 从 AE2 的图样编码终端菜单上传当前“已编码图样”至当前网络中任意可用的样板供应器。
      * 策略：
@@ -1700,13 +1694,19 @@ public class ExtendedAEPatternUploadUtil {
      * 4) 只向当前已解锁槽位按 Pattern 过滤规则尝试插入；
      * 5) 成功后清空 encoded 槽位，返回 true；否则返回 false。
      */
-    public static boolean uploadFromEncodingMenuToAnyProvider(ServerPlayer player, PatternEncodingTermMenu menu) {
+    public static boolean uploadFromEncodingMenuToAnyProvider(ServerPlayer player, IPatternUploadMenu menu) {
+        return uploadFromEncodingMenuToAnyProvider(player, (Object) menu);
+    }
+
+    public static boolean uploadFromEncodingMenuToAnyProvider(ServerPlayer player, Object menu) {
         if (player == null || menu == null) {
             return false;
         }
-        // 读取已编码槽位的物品（通过 accessor）
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
-                .eap$getEncodedPatternSlot();
+        // 读取已编码槽位的物品
+        var encodedSlot = getEncodedPatternSlot(menu);
+        if (encodedSlot == null) {
+            return false;
+        }
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;
@@ -1780,12 +1780,18 @@ public class ExtendedAEPatternUploadUtil {
     /**
      * 将图样编码终端的“已编码图样”上传到指定的样板供应器（通过 providerId 定位）。
      */
-    public static boolean uploadFromEncodingMenuToProvider(ServerPlayer player, PatternEncodingTermMenu menu, long providerId) {
+    public static boolean uploadFromEncodingMenuToProvider(ServerPlayer player, IPatternUploadMenu menu, long providerId) {
+        return uploadFromEncodingMenuToProvider(player, (Object) menu, providerId);
+    }
+
+    public static boolean uploadFromEncodingMenuToProvider(ServerPlayer player, Object menu, long providerId) {
         if (player == null || menu == null) {
             return false;
         }
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
-                .eap$getEncodedPatternSlot();
+        var encodedSlot = getEncodedPatternSlot(menu);
+        if (encodedSlot == null) {
+            return false;
+        }
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;
@@ -1862,17 +1868,11 @@ public class ExtendedAEPatternUploadUtil {
      * 基于编码终端菜单的 AE Grid 遍历，列出“可在终端中可见且有空位”的供应器容器。
      * 返回顺序稳定：按 grid 的 machineClasses 顺序，再按 activeMachines 迭代顺序。
      */
-    public static List<PatternContainer> listAvailableProvidersFromGrid(PatternEncodingTermMenu menu) {
+    public static List<PatternContainer> listAvailableProvidersFromGrid(Object menu) {
         List<PatternContainer> list = new ArrayList<>();
         if (menu == null) return list;
         try {
-        IGrid grid = null;
-        if (menu instanceof AEBaseMenu abm) {
-            Object target = abm.getTarget();
-            if (target instanceof IActionHost host && host.getActionableNode() != null) {
-                grid = host.getActionableNode().getGrid();
-            }
-        }
+        IGrid grid = resolveGrid(menu);
         if (grid == null) return list;
             for (var machineClass : grid.getMachineClasses()) {
                 if (PatternContainer.class.isAssignableFrom(machineClass)) {
@@ -2026,15 +2026,19 @@ public class ExtendedAEPatternUploadUtil {
      * 基于“索引”的定向上传：使用 listAvailableProvidersFromGrid(menu) 的顺序，
      * 将编码槽样板插入到第 index 个供应器。
      */
-    public static boolean uploadFromEncodingMenuToProviderByIndex(ServerPlayer player, PatternEncodingTermMenu menu, int index) {
+    public static boolean uploadFromEncodingMenuToProviderByIndex(ServerPlayer player, IPatternUploadMenu menu, int index) {
+        return uploadFromEncodingMenuToProviderByIndex(player, (Object) menu, index);
+    }
+
+    public static boolean uploadFromEncodingMenuToProviderByIndex(ServerPlayer player, Object menu, int index) {
         if (player == null || menu == null || index < 0) return false;
         List<PatternContainer> list = listAvailableProvidersFromGrid(menu);
         if (index >= list.size()) return false;
         var container = list.get(index);
         if (container == null) return false;
 
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
-                .eap$getEncodedPatternSlot();
+        var encodedSlot = getEncodedPatternSlot(menu);
+        if (encodedSlot == null) return false;
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;
