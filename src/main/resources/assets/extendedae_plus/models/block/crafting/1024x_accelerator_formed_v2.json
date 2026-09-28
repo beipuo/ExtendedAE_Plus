@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "extendedae_plus:block/crafting/1024x_accelerator_light"
+  "model": {
+    "type": "extendedae_plus:crafting_cube",
+    "unit_type": "accelerator_1024x"
   }
 }

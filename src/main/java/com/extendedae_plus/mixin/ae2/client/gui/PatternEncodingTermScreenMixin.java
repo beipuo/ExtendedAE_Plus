@@ -3,6 +3,7 @@ package com.extendedae_plus.mixin.ae2.client.gui;
 import appeng.client.gui.AEBaseScreen;
 import appeng.util.Icon;
 import appeng.client.gui.me.items.PatternEncodingTermScreen;
+import appeng.client.gui.style.Blitter;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.WidgetStyle;
 import appeng.client.gui.widgets.ActionButton;
@@ -14,6 +15,7 @@ import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
 import com.extendedae_plus.network.RequestProvidersListC2SPacket;
 import com.extendedae_plus.network.ReturnLastPatternC2SPacket;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
@@ -56,8 +58,29 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
                 protected Icon getIcon() {
                     return Icon.ARROW_UP;
                 }
+
+                @Override
+                public void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY,
+                        float partialTick) {
+                    if (!this.visible) {
+                        return;
+                    }
+                    float scale = 0.75f;
+                    var pose = graphics.pose();
+                    pose.pushMatrix();
+                    pose.translate(getX(), getY());
+                    pose.scale(scale, scale);
+                    Blitter.icon(Icon.TOOLBAR_BUTTON_BACKGROUND).dest(0, 0).blit(graphics);
+                    var icon = Blitter.icon(getIcon());
+                    if (!this.active) {
+                        icon.opacity(0.5f);
+                    }
+                    icon.dest(0, 0).blit(graphics);
+                    pose.popMatrix();
+                }
             };
-            eap$uploadBtn.setHalfSize(true);
+            eap$uploadBtn.setWidth(12);
+            eap$uploadBtn.setHeight(12);
             eap$updateUploadButtonTooltip();
         }
 
