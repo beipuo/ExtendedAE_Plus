@@ -3,22 +3,16 @@
   "category": "misc",
   "key": {
     "B": {
-      "type": "neoforge:components",
+      "neoforge:ingredient_type": "neoforge:components",
       "items": "extendedae_plus:basic_core",
       "components": {
         "extendedae_plus:core_type": "STORAGE",
         "extendedae_plus:core_stage": 1
       }
     },
-    "C": {
-      "item": "ae2:cell_component_64k"
-    },
-    "M": {
-      "tag": "c:gems/certus_quartz"
-    },
-    "O": {
-      "item": "extendedae_plus:oblivion_singularity"
-    }
+    "C": "ae2:cell_component_64k",
+    "M": "#c:gems/certus_quartz",
+    "O": "extendedae_plus:oblivion_singularity"
   },
   "pattern": [
     "MOM",

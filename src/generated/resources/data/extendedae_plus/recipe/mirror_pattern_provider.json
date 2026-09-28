@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "A": {
-      "item": "minecraft:glass"
-    },
-    "B": {
-      "item": "ae2:pattern_provider"
-    }
+    "A": "minecraft:glass",
+    "B": "ae2:pattern_provider"
   },
   "pattern": [
     "AAA",

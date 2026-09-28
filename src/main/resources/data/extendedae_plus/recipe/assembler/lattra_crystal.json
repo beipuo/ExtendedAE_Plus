@@ -1,29 +1,22 @@
 {
   "type": "extendedae:crystal_assembler",
+  "energy": 10000,
   "input_fluid": {
     "amount": 100,
-    "ingredient": {
-      "fluid": "minecraft:water"
-    }
+    "ingredient": "minecraft:water"
   },
   "input_items": [
     {
       "amount": 4,
-      "ingredient": {
-        "item": "extendedae:entro_crystal"
-      }
+      "ingredient": "extendedae:entro_crystal"
     },
     {
       "amount": 4,
-      "ingredient": {
-        "item": "minecraft:redstone"
-      }
+      "ingredient": "minecraft:redstone"
     },
     {
       "amount": 4,
-      "ingredient": {
-        "item": "minecraft:ghast_tear"
-      }
+      "ingredient": "minecraft:ghast_tear"
     }
   ],
   "output": {

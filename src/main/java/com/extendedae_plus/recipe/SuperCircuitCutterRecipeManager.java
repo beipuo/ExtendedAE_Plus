@@ -7,6 +7,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraft.world.item.crafting.RecipeMap;
 import net.minecraft.world.level.Level;
 import net.neoforged.fml.ModList;
 
@@ -18,43 +19,33 @@ import java.util.WeakHashMap;
 /** Combines local cutter recipes with recipes supplied by ExtendedAE at runtime. */
 public final class SuperCircuitCutterRecipeManager {
     private static final String EXTENDED_AE = "extendedae";
-    private static final Map<RecipeManager, CacheEntry> CACHE = new WeakHashMap<>();
+    private static final Map<RecipeMap, List<RecipeHolder<SuperCircuitCutterRecipe>>> CACHE = new WeakHashMap<>();
 
     private SuperCircuitCutterRecipeManager() {
     }
 
-    public static synchronized List<RecipeHolder<SuperCircuitCutterRecipe>> getAllRecipes(Level level) {
-        if (level == null) {
+    public static List<RecipeHolder<SuperCircuitCutterRecipe>> getAllRecipes(Level level) {
+        if (level == null || !(level.recipeAccess() instanceof RecipeManager recipeManager)) {
             return List.of();
         }
-
-        if (!(level.recipeAccess() instanceof RecipeManager recipeManager)) {
-            return List.of();
-        }
-        List<RecipeHolder<SuperCircuitCutterRecipe>> localRecipes =
-                List.copyOf(recipeManager.recipeMap().byType(SuperCircuitCutterRecipe.TYPE));
-        List<RecipeHolder<CircuitCutterRecipe>> extendedAeRecipes = getExtendedAeRecipes(recipeManager);
-
-        CacheEntry cached = CACHE.get(recipeManager);
-        if (cached != null && cached.localRecipes == localRecipes && cached.extendedAeRecipes == extendedAeRecipes) {
-            return cached.combinedRecipes;
-        }
-
-        List<RecipeHolder<SuperCircuitCutterRecipe>> combinedRecipes = new ArrayList<>(localRecipes);
-        for (RecipeHolder<CircuitCutterRecipe> holder : extendedAeRecipes) {
-            combinedRecipes.add(convert(holder));
-        }
-
-        List<RecipeHolder<SuperCircuitCutterRecipe>> result = List.copyOf(combinedRecipes);
-        CACHE.put(recipeManager, new CacheEntry(localRecipes, extendedAeRecipes, result));
-        return result;
+        return getAllRecipes(recipeManager.recipeMap());
     }
 
-    private static List<RecipeHolder<CircuitCutterRecipe>> getExtendedAeRecipes(RecipeManager recipeManager) {
-        if (!ModList.get().isLoaded(EXTENDED_AE)) {
-            return List.of();
+    public static synchronized List<RecipeHolder<SuperCircuitCutterRecipe>> getAllRecipes(RecipeMap recipeMap) {
+        var cached = CACHE.get(recipeMap);
+        if (cached != null) {
+            return cached;
         }
-        return List.copyOf(recipeManager.recipeMap().byType(CircuitCutterRecipe.TYPE));
+        List<RecipeHolder<SuperCircuitCutterRecipe>> combinedRecipes =
+                new ArrayList<>(recipeMap.byType(SuperCircuitCutterRecipe.TYPE));
+        if (ModList.get().isLoaded(EXTENDED_AE)) {
+            for (RecipeHolder<CircuitCutterRecipe> holder : recipeMap.byType(CircuitCutterRecipe.TYPE)) {
+                combinedRecipes.add(convert(holder));
+            }
+        }
+        var result = List.copyOf(combinedRecipes);
+        CACHE.put(recipeMap, result);
+        return result;
     }
 
     private static RecipeHolder<SuperCircuitCutterRecipe> convert(RecipeHolder<CircuitCutterRecipe> holder) {
@@ -63,11 +54,5 @@ public final class SuperCircuitCutterRecipeManager {
                 ExtendedAEPlus.MODID,
                 "compat/extendedae/" + holder.id().identifier().getPath());
         return new RecipeHolder<>(ResourceKey.create(Registries.RECIPE, id), new SuperCircuitCutterRecipe(recipe.output.create(), recipe.getInput()));
-    }
-
-    private record CacheEntry(
-            List<RecipeHolder<SuperCircuitCutterRecipe>> localRecipes,
-            List<RecipeHolder<CircuitCutterRecipe>> extendedAeRecipes,
-            List<RecipeHolder<SuperCircuitCutterRecipe>> combinedRecipes) {
     }
 }

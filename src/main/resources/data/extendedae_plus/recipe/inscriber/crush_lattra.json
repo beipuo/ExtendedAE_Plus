@@ -1,9 +1,7 @@
 {
   "type": "ae2:inscriber",
   "ingredients": {
-    "middle": {
-      "tag": "c:gems/lattra"
-    }
+    "middle": "#c:gems/lattra"
   },
   "mode": "inscribe",
   "result": {

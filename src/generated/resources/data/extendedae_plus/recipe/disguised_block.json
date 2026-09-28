@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "A": {
-      "tag": "c:stones"
-    },
-    "B": {
-      "item": "extendedae_plus:lattra_crystal"
-    }
+    "A": "#c:stones",
+    "B": "extendedae_plus:lattra_crystal"
   },
   "pattern": [
     "AAA",

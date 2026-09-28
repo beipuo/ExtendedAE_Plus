@@ -2,24 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "A": {
-      "item": "minecraft:netherite_block"
-    },
-    "B": {
-      "item": "minecraft:nether_star"
-    },
-    "C": {
-      "item": "ae2:logic_processor"
-    },
-    "D": {
-      "item": "ae2:fluix_pearl"
-    },
-    "E": {
-      "item": "ae2:engineering_processor"
-    },
-    "F": {
-      "item": "ae2:calculation_processor"
-    }
+    "A": "minecraft:netherite_block",
+    "B": "minecraft:nether_star",
+    "C": "ae2:logic_processor",
+    "D": "ae2:fluix_pearl",
+    "E": "ae2:engineering_processor",
+    "F": "ae2:calculation_processor"
   },
   "pattern": [
     "ABA",

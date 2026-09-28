@@ -9,22 +9,16 @@
   "category": "misc",
   "key": {
     "B": {
-      "type": "neoforge:components",
+      "neoforge:ingredient_type": "neoforge:components",
       "items": "extendedae_plus:basic_core",
       "components": {
         "extendedae_plus:core_type": "ENERGY",
         "extendedae_plus:core_stage": 2
       }
     },
-    "C": {
-      "item": "appflux:core_256k"
-    },
-    "M": {
-      "item": "appflux:harden_insulating_resin"
-    },
-    "O": {
-      "item": "extendedae_plus:oblivion_singularity"
-    }
+    "C": "appflux:core_256k",
+    "M": "appflux:harden_insulating_resin",
+    "O": "extendedae_plus:oblivion_singularity"
   },
   "pattern": [
     "MOM",

@@ -2,21 +2,11 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
-      "item": "minecraft:netherite_block"
-    },
-    "G": {
-      "item": "ae2:quartz_vibrant_glass"
-    },
-    "I": {
-      "item": "extendedae_plus:infinity_core"
-    },
-    "N": {
-      "item": "minecraft:nether_star"
-    },
-    "O": {
-      "item": "extendedae_plus:oblivion_singularity"
-    }
+    "B": "minecraft:netherite_block",
+    "G": "ae2:quartz_vibrant_glass",
+    "I": "extendedae_plus:infinity_core",
+    "N": "minecraft:nether_star",
+    "O": "extendedae_plus:oblivion_singularity"
   },
   "pattern": [
     "GOG",

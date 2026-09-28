@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "extendedae:ex_pattern_provider"
-    },
-    {
-      "item": "ae2:basic_card"
-    }
+    "extendedae:ex_pattern_provider",
+    "ae2:basic_card"
   ],
   "result": {
     "count": 1,

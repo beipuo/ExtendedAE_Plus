@@ -8,18 +8,10 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
-      "item": "extendedae_plus:basic_core"
-    },
-    "C": {
-      "item": "appflux:core_16k"
-    },
-    "E": {
-      "item": "appflux:energy_processor"
-    },
-    "M": {
-      "item": "appflux:redstone_crystal"
-    }
+    "B": "extendedae_plus:basic_core",
+    "C": "appflux:core_16k",
+    "E": "appflux:energy_processor",
+    "M": "appflux:redstone_crystal"
   },
   "pattern": [
     "MCM",

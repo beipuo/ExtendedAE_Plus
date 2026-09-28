@@ -7,8 +7,8 @@
     "RRR"
   ],
   "key": {
-    "R": { "item": "ae2:quantum_ring" },
-    "L": { "item": "ae2:quantum_link" }
+    "R": "ae2:quantum_ring",
+    "L": "ae2:quantum_link"
   },
   "result": {
     "id": "extendedae_plus:wireless_transceiver",

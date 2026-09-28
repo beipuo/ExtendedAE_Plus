@@ -7,18 +7,17 @@
   ],
   "key": {
     "S": {
-      "type": "neoforge:components",
+      "neoforge:ingredient_type": "neoforge:components",
       "items": "extendedae_plus:entity_speed_card",
       "components": {
         "minecraft:custom_data": {
           "EAS:mult": 2
         }
-      },
-      "strict": true
+      }
     },
-    "B": { "item": "extendedae_plus:256x_crafting_accelerator" },
-    "Q": { "item": "ae2:spatial_cell_component_2" },
-    "X": { "item": "ae2:dense_energy_cell" }
+    "B": "extendedae_plus:256x_crafting_accelerator",
+    "Q": "ae2:spatial_cell_component_2",
+    "X": "ae2:dense_energy_cell"
   },
   "result": {
     "id": "extendedae_plus:entity_speed_card",

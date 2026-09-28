@@ -1,26 +1,19 @@
 {
   "type": "extendedae:crystal_assembler",
+  "energy": 10000,
   "input_fluid": {
     "amount": 100,
-    "ingredient": {
-      "fluid": "minecraft:lava"
-    }
+    "ingredient": "minecraft:lava"
   },
   "input_items": [
     {
-      "ingredient": {
-        "item": "extendedae:entro_budding_mostly"
-      }
+      "ingredient": "extendedae:entro_budding_mostly"
     },
     {
-      "ingredient": {
-        "item": "extendedae_plus:lattra_crystal_block"
-      }
+      "ingredient": "extendedae_plus:lattra_crystal_block"
     },
     {
-      "ingredient": {
-        "item": "minecraft:redstone_block"
-      }
+      "ingredient": "minecraft:redstone_block"
     }
   ],
   "output": {

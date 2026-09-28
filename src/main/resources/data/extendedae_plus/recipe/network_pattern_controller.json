@@ -1,9 +1,9 @@
 {
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
-    { "item": "ae2:semi_dark_monitor" },
-    { "item": "ae2:pattern_provider" },
-    { "item": "ae2:network_tool" }
+    "ae2:semi_dark_monitor",
+    "ae2:pattern_provider",
+    "ae2:network_tool"
   ],
   "result": {
     "id": "extendedae_plus:network_pattern_controller",

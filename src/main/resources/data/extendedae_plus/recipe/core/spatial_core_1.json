@@ -2,24 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
-      "item": "extendedae_plus:basic_core"
-    },
-    "C": {
-      "item": "ae2:spatial_cell_component_2"
-    },
-    "E": {
-      "item": "ae2:engineering_processor"
-    },
-    "L": {
-      "item": "ae2:logic_processor"
-    },
-    "M": {
-      "tag": "c:dusts/fluix"
-    },
-    "P": {
-      "item": "ae2:calculation_processor"
-    }
+    "B": "extendedae_plus:basic_core",
+    "C": "ae2:spatial_cell_component_2",
+    "E": "ae2:engineering_processor",
+    "L": "ae2:logic_processor",
+    "M": "#c:dusts/fluix",
+    "P": "ae2:calculation_processor"
   },
   "pattern": [
     "MCM",

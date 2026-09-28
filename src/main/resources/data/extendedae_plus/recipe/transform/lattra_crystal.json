@@ -1,15 +1,9 @@
 {
   "type": "ae2:transform",
   "ingredients": [
-    {
-      "item": "extendedae:entro_crystal"
-    },
-    {
-      "item": "minecraft:redstone"
-    },
-    {
-      "item": "minecraft:ghast_tear"
-    }
+    "extendedae:entro_crystal",
+    "minecraft:redstone",
+    "minecraft:ghast_tear"
   ],
   "result": {
     "count": 2,

@@ -8,18 +8,10 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
-      "item": "extendedae_plus:basic_core"
-    },
-    "C": {
-      "item": "advanced_ae:quantum_storage_component"
-    },
-    "E": {
-      "item": "advanced_ae:quantum_processor"
-    },
-    "M": {
-      "item": "advanced_ae:quantum_alloy"
-    }
+    "B": "extendedae_plus:basic_core",
+    "C": "advanced_ae:quantum_storage_component",
+    "E": "advanced_ae:quantum_processor",
+    "M": "advanced_ae:quantum_alloy"
   },
   "pattern": [
     "MCM",

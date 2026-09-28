@@ -24,9 +24,12 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.ISubtypeRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
-import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeMap;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.RecipesReceivedEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -35,6 +38,34 @@ import java.util.List;
 @JeiPlugin
 public class ExtendedAEJeiPlugin implements IModPlugin {
     private static final Identifier UID = Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "jei_plugin");
+    private static RecipeMap clientRecipes = RecipeMap.EMPTY;
+    private static List<RecipeHolder<SuperCircuitCutterRecipe>> cutterRecipes = List.of();
+    private static List<RecipeHolder<SuperCrystalAssemblerRecipe>> assemblerRecipes = List.of();
+    private static IJeiRuntime runtime;
+
+    public static void onRecipesReceived(RecipesReceivedEvent event) {
+        clientRecipes = event.getRecipeMap();
+        if (runtime != null) {
+            var recipeManager = runtime.getRecipeManager();
+            recipeManager.hideRecipes(SuperCircuitCutterCategory.TYPE, cutterRecipes);
+            recipeManager.hideRecipes(SuperCrystalAssemblerCategory.TYPE, assemblerRecipes);
+            cutterRecipes = SuperCircuitCutterRecipeManager.getAllRecipes(clientRecipes);
+            assemblerRecipes = SuperCrystalAssemblerRecipeManager.getAllRecipes(clientRecipes);
+            recipeManager.addRecipes(SuperCircuitCutterCategory.TYPE, cutterRecipes);
+            recipeManager.addRecipes(SuperCrystalAssemblerCategory.TYPE, assemblerRecipes);
+        }
+    }
+
+    public static void onLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+        clientRecipes = RecipeMap.EMPTY;
+        if (runtime != null) {
+            var recipeManager = runtime.getRecipeManager();
+            recipeManager.hideRecipes(SuperCircuitCutterCategory.TYPE, cutterRecipes);
+            recipeManager.hideRecipes(SuperCrystalAssemblerCategory.TYPE, assemblerRecipes);
+        }
+        cutterRecipes = List.of();
+        assemblerRecipes = List.of();
+    }
 
     @Override
     public @NotNull Identifier getPluginUid() {
@@ -43,7 +74,16 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
 
     @Override
     public void onRuntimeAvailable(@NotNull IJeiRuntime jeiRuntime) {
+        runtime = jeiRuntime;
         JeiRuntimeCompat.setRuntime(jeiRuntime);
+    }
+
+    @Override
+    public void onRuntimeUnavailable() {
+        runtime = null;
+        cutterRecipes = List.of();
+        assemblerRecipes = List.of();
+        JeiRuntimeCompat.setRuntime(null);
     }
 
     @Override
@@ -92,13 +132,10 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
 
     @Override
     public void registerRecipes(@NotNull IRecipeRegistration registration) {
-        var level = Minecraft.getInstance().level;
-        if (level != null) {
-            registration.addRecipes(SuperCrystalAssemblerCategory.TYPE,
-                    SuperCrystalAssemblerRecipeManager.getAllRecipes(level));
-            registration.addRecipes(SuperCircuitCutterCategory.TYPE,
-                    SuperCircuitCutterRecipeManager.getAllRecipes(level));
-        }
+        cutterRecipes = SuperCircuitCutterRecipeManager.getAllRecipes(clientRecipes);
+        assemblerRecipes = SuperCrystalAssemblerRecipeManager.getAllRecipes(clientRecipes);
+        registration.addRecipes(SuperCircuitCutterCategory.TYPE, cutterRecipes);
+        registration.addRecipes(SuperCrystalAssemblerCategory.TYPE, assemblerRecipes);
     }
 
     @Override

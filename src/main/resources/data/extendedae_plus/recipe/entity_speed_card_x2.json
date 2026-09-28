@@ -6,18 +6,10 @@
     "SBS"
   ],
   "key": {
-    "S": {
-      "item": "ae2:speed_card"
-    },
-    "B": {
-      "item": "extendedae_plus:64x_crafting_accelerator"
-    },
-    "Q": {
-      "item": "ae2:spatial_cell_component_2"
-    },
-    "X": {
-      "item": "ae2:cell_component_256k"
-    }
+    "S": "ae2:speed_card",
+    "B": "extendedae_plus:64x_crafting_accelerator",
+    "Q": "ae2:spatial_cell_component_2",
+    "X": "ae2:cell_component_256k"
   },
   "result": {
     "id": "extendedae_plus:entity_speed_card",

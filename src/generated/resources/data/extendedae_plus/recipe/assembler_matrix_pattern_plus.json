@@ -2,15 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
-      "item": "extendedae:assembler_matrix_wall"
-    },
-    "L": {
-      "item": "minecraft:nether_star"
-    },
-    "R": {
-      "item": "extendedae:assembler_matrix_pattern"
-    }
+    "B": "extendedae:assembler_matrix_wall",
+    "L": "minecraft:nether_star",
+    "R": "extendedae:assembler_matrix_pattern"
   },
   "pattern": [
     "BRB",

@@ -4,15 +4,9 @@
     "type": "explosion"
   },
   "ingredients": [
-    {
-      "item": "ae2:singularity"
-    },
-    {
-      "item": "minecraft:nether_star"
-    },
-    {
-      "item": "minecraft:netherite_block"
-    }
+    "ae2:singularity",
+    "minecraft:nether_star",
+    "minecraft:netherite_block"
   ],
   "result": {
     "count": 1,

@@ -32,6 +32,10 @@ import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.init.ModRecipeSerializers;
 import com.extendedae_plus.init.UpgradeCards;
 import com.extendedae_plus.server.JeiSyncManager;
+import com.extendedae_plus.recipe.SuperCircuitCutterRecipe;
+import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipe;
+import com.glodblock.github.extendedae.recipe.CircuitCutterRecipe;
+import com.glodblock.github.extendedae.recipe.CrystalAssemblerRecipe;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -45,6 +49,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
@@ -80,6 +85,7 @@ public class ExtendedAEPlus {
         ModCreativeTabs.TABS.register(modEventBus);
         ModMenuTypes.MENUS.register(modEventBus);
         ModRecipeSerializers.SERIALIZERS.register(modEventBus);
+        ModRecipeSerializers.TYPES.register(modEventBus);
 
         EAPComponents.DR.register(modEventBus);
         NeoForge.EVENT_BUS.register(this);
@@ -88,6 +94,9 @@ public class ExtendedAEPlus {
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopping);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopped);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onLevelTick);
+        NeoForge.EVENT_BUS.addListener((OnDatapackSyncEvent event) -> event.sendRecipes(
+                SuperCircuitCutterRecipe.TYPE, SuperCrystalAssemblerRecipe.TYPE,
+                CircuitCutterRecipe.TYPE, CrystalAssemblerRecipe.TYPE));
         // 注册配置：接入自定义的 ModConfigs
         modContainer.registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC, "extendedae_plus-common.toml");
         modContainer.registerConfig(ModConfig.Type.CLIENT, ModConfigs.CLIENT_SPEC, "extendedae_plus-client.toml");
