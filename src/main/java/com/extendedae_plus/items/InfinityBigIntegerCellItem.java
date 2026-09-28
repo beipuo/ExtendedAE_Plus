@@ -25,8 +25,8 @@ import java.util.List;
 
 public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchItem {
 
-    public InfinityBigIntegerCellItem() {
-        super(new Properties().stacksTo(1).fireResistant());
+    public InfinityBigIntegerCellItem(Properties properties) {
+        super(properties.stacksTo(1).fireResistant());
     }
 
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {

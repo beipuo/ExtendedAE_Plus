@@ -16,6 +16,7 @@ import com.extendedae_plus.network.OpenProviderUiC2SPacket;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -92,8 +93,8 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
      * 注意：某些整合包的 ExtendedAE 版本不在该类中覆写 mouseClicked，此处设置 require=0 以防止注入失败导致崩溃。
      */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, require = 0)
-    private void eap$onMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
-        if (button != 0 || !minecraft.hasShiftDown() || minecraft.player == null) {
+    private void eap$onMouseClicked(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
+        if (event.button() != 0 || !minecraft.hasShiftDown() || minecraft.player == null) {
             return;
         }
 

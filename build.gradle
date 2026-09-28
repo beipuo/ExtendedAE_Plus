@@ -143,12 +143,12 @@ configurations {
 
 dependencies {
     // --- Added dependencies for target mods ---
-    implementation "io.github.glodblock:Glodium:26.1-1.2-neoforge"
+    implementation "curse.maven:glodium-957920:8196173"
     implementation "org.appliedenergistics:appliedenergistics2:26.1.10-beta"
     implementation "org.appliedenergistics:guideme:26.1.10-alpha"
     implementation "curse.maven:curios-309927:8463519"
 
-    compileOnly "curse.maven:applied-flux-965012:8970797"
+    compileOnly "curse.maven:applied-flux-965012:8512902"
 //    compileOnly "dev.emi:emi-neoforge:1.1.23+1.21.1"
 //    compileOnly "curse.maven:mega-cells-622112:6005043"
 //    compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:21.9.812"
@@ -165,7 +165,7 @@ dependencies {
     runtimeOnly "curse.maven:ae2-jei-integration-1074338:7727898"
 
     // runtime test
-    runtimeOnly "curse.maven:applied-flux-965012:8970797"
+    runtimeOnly "curse.maven:applied-flux-965012:8512902"
     compileOnly "de.mari_023:ae2wtlib_api:26.1.0-beta"
     runtimeOnly "curse.maven:applied-energistics-2-wireless-terminals-459929:8544261"
 //    runtimeOnly "curse.maven:mega-cells-622112:6005043"
@@ -181,10 +181,10 @@ dependencies {
 
     //aea
 
-    implementation "curse.maven:advancedae-1084104:6932981"
+    implementation "curse.maven:advancedae-1084104:8603081"
 
     //geckolib
-    runtimeOnly "curse.maven:geckolib-388172:7009924"
+    runtimeOnly "curse.maven:geckolib-388172:8327201"
 
     // eco
 //    runtimeOnly "curse.maven:ldlib-626676:8133369"

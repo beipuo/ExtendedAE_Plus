@@ -193,7 +193,8 @@ public class SuperAssemblerMatrixScreen extends AEBaseScreen<SuperAssemblerMatri
     }
 
     private void blit(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, Rect2i srcRect) {
-        guiGraphics.blit(BG, offsetX, offsetY, srcRect.getWidth(), srcRect.getHeight(),
+        guiGraphics.blit(BG, offsetX, offsetY,
+                offsetX + srcRect.getWidth(), offsetY + srcRect.getHeight(),
                 srcRect.getX() / 256.0f, srcRect.getY() / 256.0f,
                 (srcRect.getX() + srcRect.getWidth()) / 256.0f,
                 (srcRect.getY() + srcRect.getHeight()) / 256.0f);

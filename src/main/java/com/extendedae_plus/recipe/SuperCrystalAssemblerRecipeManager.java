@@ -29,7 +29,9 @@ public final class SuperCrystalAssemblerRecipeManager {
             return List.of();
         }
 
-        RecipeManager recipeManager = (RecipeManager) level.recipeAccess();
+        if (!(level.recipeAccess() instanceof RecipeManager recipeManager)) {
+            return List.of();
+        }
         List<RecipeHolder<SuperCrystalAssemblerRecipe>> localRecipes =
                 List.copyOf(recipeManager.recipeMap().byType(SuperCrystalAssemblerRecipe.TYPE));
         List<RecipeHolder<CrystalAssemblerRecipe>> extendedAeRecipes = getExtendedAeRecipes(recipeManager);

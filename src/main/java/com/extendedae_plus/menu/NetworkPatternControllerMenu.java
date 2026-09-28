@@ -1,9 +1,9 @@
 package com.extendedae_plus.menu;
 
+import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
 import com.extendedae_plus.init.ModMenuTypes;
 import net.minecraft.core.BlockPos;
-import org.jetbrains.annotations.Nullable;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -17,14 +17,20 @@ public class NetworkPatternControllerMenu extends AbstractContainerMenu {
         this.bePos = bePos;
     }
 
-    public NetworkPatternControllerMenu(int id, Inventory inv, @Nullable FriendlyByteBuf buf) {
-        this(id, inv, buf != null ? buf.readBlockPos() : BlockPos.ZERO);
+    public NetworkPatternControllerMenu(int id, Inventory inv, RegistryFriendlyByteBuf buf) {
+        this(id, inv, buf.readBlockPos());
     }
 
     public BlockPos getBlockEntityPos() { return bePos; }
 
     @Override
-    public boolean stillValid(Player player) { return true; }
+    public boolean stillValid(Player player) {
+        return player.level().getBlockEntity(this.bePos) instanceof NetworkPatternControllerBlockEntity
+                && player.distanceToSqr(
+                        this.bePos.getX() + 0.5,
+                        this.bePos.getY() + 0.5,
+                        this.bePos.getZ() + 0.5) <= 64.0;
+    }
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {

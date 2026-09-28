@@ -7,8 +7,6 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record SuperAssemblerMatrixStatsS2CPacket(long concurrentExecutions) implements CustomPacketPayload {
@@ -30,7 +28,6 @@ public record SuperAssemblerMatrixStatsS2CPacket(long concurrentExecutions) impl
         context.enqueueWork(() -> handleClient(packet));
     }
 
-    @OnlyIn(Dist.CLIENT)
     private static void handleClient(SuperAssemblerMatrixStatsS2CPacket packet) {
         if (Minecraft.getInstance().screen instanceof SuperAssemblerMatrixScreen screen) {
             screen.setConcurrentExecutions(packet.concurrentExecutions);

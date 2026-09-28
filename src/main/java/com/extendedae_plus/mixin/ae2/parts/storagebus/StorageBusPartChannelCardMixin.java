@@ -11,8 +11,7 @@ import appeng.parts.storagebus.StorageBusPart;
 import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.util.wireless.ChannelCardConnectionController;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
 import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.UUID;
@@ -40,7 +39,7 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void eap$onLoaded(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$onLoaded(ValueInput input, CallbackInfo ci) {
         this.eap$getChannelCardController().onLoaded();
     }
 

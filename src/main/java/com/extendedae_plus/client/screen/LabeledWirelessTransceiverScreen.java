@@ -11,6 +11,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.components.Button;
@@ -65,7 +66,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     private int maxChannels = 0;
 
     public LabeledWirelessTransceiverScreen(LabeledWirelessTransceiverMenu menu, Inventory inv, Component title) {
-        super(menu, inv, title, 256, 156);
+        super(menu, inv, title, TEX_W, 156);
         this.inventoryLabelY = this.imageHeight; // 不显示玩家物品栏标签
         this.bePos = menu.getBlockEntityPos();
     }
@@ -123,28 +124,21 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         pose.pushMatrix();
         pose.translate(8, 8);
         pose.scale(titleScale, titleScale);
-        gfx.text(this.font, this.title, 0, 0, 0x404040, false);
+        gfx.text(this.font, this.title, 0, 0, 0xFF404040, false);
         pose.popMatrix();
 
         pose.pushMatrix();
         pose.translate(134, 8);
         pose.scale(titleScale, titleScale);
-        gfx.text(this.font, Component.translatable("gui.extendedae_plus.labeled_wireless.info"), 0, 0, 0x404040, false);
+        gfx.text(this.font, Component.translatable("gui.extendedae_plus.labeled_wireless.info"), 0, 0, 0xFF404040, false);
         pose.popMatrix();
     }
 
     @Override
     public void extractBackground(GuiGraphicsExtractor gfx, int mouseX, int mouseY, float partialTicks) {
-        gfx.blit(TEX, this.leftPos, this.topPos, this.imageWidth, this.imageHeight,
-                0.0f, 0.0f, 1.0f, 1.0f);
-
-        // 占位绘制：列表和信息区内的内容框线
-        // 标签列表区域
-        gfx.fill(this.leftPos + 9, this.topPos + 27, this.leftPos + 118 + 1, this.topPos + 140 + 1, 0x20FFFFFF);
-        // 滚动条区域
-        gfx.fill(this.leftPos + 123, this.topPos + 21, this.leftPos + 128 + 1, this.topPos + 141 + 1, 0x20000000);
-        // 当前收发器信息区域
-        gfx.fill(this.leftPos + 134, this.topPos + 41, this.leftPos + 249 + 1, this.topPos + 92 + 1, 0x10FFFFFF);
+        gfx.blit(RenderPipelines.GUI_TEXTURED, TEX,
+                this.leftPos, this.topPos, 0, 0,
+                this.imageWidth, this.imageHeight, TEX_W, TEX_H);
 
         renderList(gfx);
         renderScrollBar(gfx);
@@ -219,7 +213,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
             LabelEntry e = filtered.get(idx);
             String text = this.font.plainSubstrByWidth(e.label(), LIST_W - 2);
             int ty = y + (ROW_H - this.font.lineHeight) / 2;
-            gfx.text(this.font, text, baseX + 2, ty, 0x404040, false);
+            gfx.text(this.font, text, baseX + 2, ty, 0xFF404040, false);
         }
 
         // 信息显示
@@ -385,7 +379,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         String s = this.font.plainSubstrByWidth(text.getString(), BTN_W - 4);
         int tx = x + (BTN_W - this.font.width(s)) / 2;
         int ty = y + (BTN_H - this.font.lineHeight) / 2 + 1;
-        gfx.text(this.font, s, tx, ty, 0xFFFFFF, false);
+        gfx.text(this.font, s, tx, ty, 0xFFFFFFFF, false);
     }
 
     private void ensureSelectionVisible() {
@@ -411,7 +405,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         pose.pushMatrix();
         pose.translate(x, y);
         pose.scale(scale, scale);
-        gfx.text(this.font, trimmed, 0, 0, 0x404040, false);
+        gfx.text(this.font, trimmed, 0, 0, 0xFF404040, false);
         pose.popMatrix();
     }
 
@@ -471,7 +465,9 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
                 u = hoverU;
                 v = hoverV;
             }
-            gfx.blit(tex, this.getX(), this.getY(), u, v, this.getWidth(), this.getHeight(), texW, texH);
+            gfx.blit(RenderPipelines.GUI_TEXTURED, tex,
+                    this.getX(), this.getY(), u, v,
+                    this.getWidth(), this.getHeight(), texW, texH);
         }
 
         @Override

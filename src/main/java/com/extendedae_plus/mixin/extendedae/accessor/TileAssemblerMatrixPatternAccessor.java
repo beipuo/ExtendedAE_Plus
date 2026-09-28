@@ -1,6 +1,6 @@
 package com.extendedae_plus.mixin.extendedae.accessor;
 
-import appeng.util.inv.AppEngInternalInventory;
+import com.glodblock.github.extendedae.common.inventory.FastInternalInventory;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -11,5 +11,5 @@ public interface TileAssemblerMatrixPatternAccessor {
 
     @Accessor("patternInventory")
     @Mutable
-    void extendedae_plus$setPatternInventory(AppEngInternalInventory inventory);
+    void extendedae_plus$setPatternInventory(FastInternalInventory inventory);
 }

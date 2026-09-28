@@ -28,7 +28,9 @@ public final class SuperCircuitCutterRecipeManager {
             return List.of();
         }
 
-        RecipeManager recipeManager = (RecipeManager) level.recipeAccess();
+        if (!(level.recipeAccess() instanceof RecipeManager recipeManager)) {
+            return List.of();
+        }
         List<RecipeHolder<SuperCircuitCutterRecipe>> localRecipes =
                 List.copyOf(recipeManager.recipeMap().byType(SuperCircuitCutterRecipe.TYPE));
         List<RecipeHolder<CircuitCutterRecipe>> extendedAeRecipes = getExtendedAeRecipes(recipeManager);

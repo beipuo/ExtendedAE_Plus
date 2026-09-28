@@ -4,7 +4,8 @@
 	"render_type": "cutout",
 	"textures": {
 		"1": "extendedae_plus:block/iava_user",
-		"2": "extendedae_plus:block/infinity_biginteger_cell"
+		"2": "extendedae_plus:block/infinity_biginteger_cell",
+		"particle": "extendedae_plus:block/iava_user"
 	},
 	"elements": [
 		{

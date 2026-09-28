@@ -17,8 +17,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class MirrorPatternProviderBlock extends PatternProviderBlock {
 
-    public MirrorPatternProviderBlock() {
-        super(BlockBehaviour.Properties.of());
+    public MirrorPatternProviderBlock(BlockBehaviour.Properties properties) {
+        super(properties);
     }
 
     @Override

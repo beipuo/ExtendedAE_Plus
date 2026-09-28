@@ -1,13 +1,13 @@
 package com.extendedae_plus.menu;
 
+import com.extendedae_plus.content.ae2.TagInventoryMEInterfaceBlockEntity;
 import com.extendedae_plus.init.ModMenuTypes;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.Nullable;
 
 public class TagInventoryMEInterfaceMenu extends AbstractContainerMenu {
 
@@ -23,13 +23,13 @@ public class TagInventoryMEInterfaceMenu extends AbstractContainerMenu {
         this.blackListExpression = blackListExpression;
     }
 
-    public TagInventoryMEInterfaceMenu(int id, Inventory inventory, @Nullable FriendlyByteBuf buf) {
+    public TagInventoryMEInterfaceMenu(int id, Inventory inventory, RegistryFriendlyByteBuf buf) {
         this(
                 id,
                 inventory,
-                buf != null ? buf.readBlockPos() : BlockPos.ZERO,
-                buf != null ? buf.readUtf() : "",
-                buf != null ? buf.readUtf() : "");
+                buf.readBlockPos(),
+                buf.readUtf(),
+                buf.readUtf());
     }
 
     public BlockPos getBlockEntityPos() {
@@ -46,10 +46,11 @@ public class TagInventoryMEInterfaceMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return player.distanceToSqr(
-                this.blockEntityPos.getX() + 0.5,
-                this.blockEntityPos.getY() + 0.5,
-                this.blockEntityPos.getZ() + 0.5) <= 64.0;
+        return player.level().getBlockEntity(this.blockEntityPos) instanceof TagInventoryMEInterfaceBlockEntity
+                && player.distanceToSqr(
+                        this.blockEntityPos.getX() + 0.5,
+                        this.blockEntityPos.getY() + 0.5,
+                        this.blockEntityPos.getZ() + 0.5) <= 64.0;
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.extendedae_plus.menu.TagInventoryMEInterfaceMenu;
 import com.extendedae_plus.network.TagInventoryFilterC2SPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.input.KeyEvent;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.minecraft.client.gui.components.Button;
@@ -75,22 +76,23 @@ public class TagInventoryMEInterfaceScreen extends AbstractContainerScreen<TagIn
 
     @Override
     public void extractBackground(GuiGraphicsExtractor gfx, int mouseX, int mouseY, float partialTicks) {
-        gfx.blit(BACKGROUND, this.leftPos, this.topPos, this.imageWidth, this.imageHeight,
-                0.0f, 0.0f, 1.0f, 1.0f);
+        gfx.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND,
+                this.leftPos, this.topPos, 0, 0,
+                this.imageWidth, this.imageHeight, 256, 256);
     }
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor gfx, int mouseX, int mouseY) {
-        gfx.text(this.font, this.title, 8, 6, 0x404040, false);
+        gfx.text(this.font, this.title, 8, 6, 0xFF404040, false);
         gfx.text(this.font,
                 Component.translatable("gui.extendedae_plus.tag_inventory_me_interface.whitelist"),
-                12, 22, 0x404040, false);
+                12, 22, 0xFF404040, false);
         gfx.text(this.font,
                 Component.translatable("gui.extendedae_plus.tag_inventory_me_interface.blacklist"),
-                12, 58, 0x404040, false);
+                12, 58, 0xFF404040, false);
         gfx.text(this.font,
                 Component.translatable("gui.extendedae_plus.tag_inventory_me_interface.hint"),
-                12, 104, 0x606060, false);
+                12, 104, 0xFF606060, false);
     }
 
     @Override

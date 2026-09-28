@@ -3,13 +3,17 @@ package com.extendedae_plus.client.render.crafting;
 import appeng.client.render.crafting.AbstractCraftingUnitModelProvider;
 import appeng.client.render.crafting.LightBakedModel;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.mojang.serialization.MapCodec;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
+import net.minecraft.client.resources.model.ModelBaker;
 import net.minecraft.client.resources.model.ModelDebugName;
 import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.client.resources.model.sprite.MaterialBaker;
+import net.neoforged.neoforge.client.model.block.CustomUnbakedBlockStateModel;
 
-public final class EPlusCraftingCubeModelProvider extends AbstractCraftingUnitModelProvider<EPlusCraftingUnitType> {
+public final class EPlusCraftingCubeModelProvider extends AbstractCraftingUnitModelProvider<EPlusCraftingUnitType>
+        implements CustomUnbakedBlockStateModel {
     private static final Material RING_CORNER = texture("ring_corner");
     private static final Material RING_SIDE_HOR = texture("ring_side_hor");
     private static final Material RING_SIDE_VER = texture("ring_side_ver");
@@ -33,6 +37,20 @@ public final class EPlusCraftingCubeModelProvider extends AbstractCraftingUnitMo
                 baker.get(RING_SIDE_VER, name),
                 baker.get(LIGHT_BASE, name),
                 baker.get(lightMaterial(), name));
+    }
+
+    @Override
+    public BlockStateModel bake(ModelBaker baker) {
+        return bake(baker.materials());
+    }
+
+    @Override
+    public void resolveDependencies(Resolver resolver) {
+    }
+
+    @Override
+    public MapCodec<EPlusCraftingCubeModelProvider> codec() {
+        return MapCodec.unit(() -> this);
     }
 
     private Material lightMaterial() {

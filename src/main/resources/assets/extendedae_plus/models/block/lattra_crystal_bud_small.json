@@ -2,6 +2,6 @@
   "parent": "minecraft:block/cross",
   "render_type": "cutout",
   "textures": {
-    "cross": "extendedae_plus:item/small_quartz_bud"
+    "cross": "extendedae_plus:block/lattra_crystal/small_quartz_bud"
   }
 }

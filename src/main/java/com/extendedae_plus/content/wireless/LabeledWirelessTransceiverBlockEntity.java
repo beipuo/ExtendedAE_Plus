@@ -19,6 +19,7 @@ import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -99,6 +100,11 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
     @Override
     public @Nullable AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
         return new LabeledWirelessTransceiverMenu(id, inv, this.worldPosition);
+    }
+
+    @Override
+    public void writeClientSideData(AbstractContainerMenu menu, RegistryFriendlyByteBuf buf) {
+        buf.writeBlockPos(this.worldPosition);
     }
 
     public void setPlacerId(@Nullable UUID placerId, @Nullable String placerName) {

@@ -8,8 +8,6 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.LinkedHashMap;
@@ -51,7 +49,6 @@ public class ManualCraftingStatusS2CPacket implements CustomPacketPayload {
         ctx.enqueueWork(() -> handleClient(msg));
     }
 
-    @OnlyIn(Dist.CLIENT)
     private static void handleClient(ManualCraftingStatusS2CPacket msg) {
         var mc = Minecraft.getInstance();
         if (mc == null || mc.player == null || mc.player.containerMenu == null) {

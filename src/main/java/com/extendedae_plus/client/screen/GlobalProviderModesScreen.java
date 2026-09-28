@@ -6,6 +6,7 @@ import com.extendedae_plus.network.GlobalToggleProviderModesC2SPacket;
 import com.extendedae_plus.network.SetGlobalScalingLimitC2SPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -39,8 +40,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
     private static final int BTN_BORDER_DARK = 0xFF555555;
 
     public GlobalProviderModesScreen(NetworkPatternControllerMenu menu, Inventory inv, Component title) {
-        super(menu, inv, title);
-
+        super(menu, inv, title, IMAGE_WIDTH, IMAGE_HEIGHT);
     }
 
     @Override
@@ -137,7 +137,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
         input.setMaxLength(6);
         input.setBordered(true);
         input.setValue("0");
-        input.setTextColor(0xFFFFFF);
+        input.setTextColor(0xFFFFFFFF);
         // 添加数据校验响应器
         input.setResponder(s -> {
             try {
@@ -156,8 +156,9 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
 
     @Override
     public void extractBackground(GuiGraphicsExtractor gfx, int mouseX, int mouseY, float partialTicks) {
-        gfx.blit(BACKGROUND, this.leftPos, this.topPos, this.imageWidth, this.imageHeight,
-                0.0f, 0.0f, 1.0f, 1.0f);
+        gfx.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND,
+                this.leftPos, this.topPos, 0, 0,
+                this.imageWidth, this.imageHeight, 256, 256);
     }
 
     @Override
@@ -165,7 +166,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
         super.extractRenderState(gfx, mouseX, mouseY, partialTicks);
 
         // 绘制标题
-        gfx.text(this.font, CUSTOM_TITLE, this.leftPos + 8, this.topPos + 6, 0x404040, false);
+        gfx.text(this.font, CUSTOM_TITLE, this.leftPos + 8, this.topPos + 6, 0xFF404040, false);
 
         int centerX = this.leftPos + this.imageWidth / 2;
         int row1Y = this.topPos + START_Y;
@@ -178,7 +179,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
         int totalWidth = labelWidth + 8 + INPUT_WIDTH + 6 + 18;
         int startX = centerX - totalWidth / 2;
         int labelX = startX;
-        gfx.text(this.font, Component.translatable("gui.extendedae_plus.global.supplier_doubling_limit"), labelX, inputRowY + 4, 0x000000, false);
+        gfx.text(this.font, Component.translatable("gui.extendedae_plus.global.supplier_doubling_limit"), labelX, inputRowY + 4, 0xFF000000, false);
     }
 
     @Override
@@ -188,7 +189,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
 
     // AE2 风格按钮
     private static class AEStyleButton extends Button {
-        private static final int TEXT_COLOR = 0xFFFFFF;
+        private static final int TEXT_COLOR = 0xFFFFFFFF;
 
         public AEStyleButton(int x, int y, int width, int height, Component message, OnPress onPress) {
             super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
@@ -229,7 +230,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
                 guiGraphics.fill(getX(), getY(), getX() + width, getY() + height,
                         isHovered() ? BTN_BG_HOVER : BTN_BG);
                 guiGraphics.centeredText(Minecraft.getInstance().font, Component.literal("✓"),
-                        getX() + width / 2, getY() + 5, 0xFFFFFF);
+                        getX() + width / 2, getY() + 5, 0xFFFFFFFF);
 
                 if (isHovered()) {
                     guiGraphics.setTooltipForNextFrame(Minecraft.getInstance().font, tooltip, mouseX, mouseY);

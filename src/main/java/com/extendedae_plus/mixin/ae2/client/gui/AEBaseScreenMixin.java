@@ -26,6 +26,7 @@ import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.Rect2i;
@@ -128,18 +129,18 @@ public abstract class AEBaseScreenMixin {
      * 读取鼠标下的 AEKey 并发送 CraftingMonitorJumpC2SPacket。
      */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false)
-    private void eap$craftingCpuShiftLeftClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+    private void eap$craftingCpuShiftLeftClick(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
         // 仅处理 CraftingCPUScreen 实例
         Object self = this;
         if (!(self instanceof CraftingCPUScreen<?> screen)) {
             return;
         }
         // 仅在 Shift + 左键 时触发
-        if (button != 0 || !Minecraft.getInstance().hasShiftDown()) {
+        if (event.button() != 0 || !Minecraft.getInstance().hasShiftDown()) {
             return;
         }
         try {
-            StackWithBounds hovered = screen.getStackUnderMouse(mouseX, mouseY);
+            StackWithBounds hovered = screen.getStackUnderMouse(event.x(), event.y());
             if (hovered == null || hovered.stack() == null) {
                 return;
             }
@@ -158,18 +159,18 @@ public abstract class AEBaseScreenMixin {
      * 读取鼠标下的 AEKey 并发送 CraftingMonitorOpenProviderC2SPacket（打开样板供应器UI）。
      */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false)
-    private void eap$craftingCpuShiftRightClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+    private void eap$craftingCpuShiftRightClick(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
         // 仅处理 CraftingCPUScreen 实例
         Object self = this;
         if (!(self instanceof CraftingCPUScreen<?> screen)) {
             return;
         }
         // 仅在 Shift + 右键 时触发
-        if (button != 1 || !Minecraft.getInstance().hasShiftDown()) {
+        if (event.button() != 1 || !Minecraft.getInstance().hasShiftDown()) {
             return;
         }
         try {
-            StackWithBounds hovered = screen.getStackUnderMouse(mouseX, mouseY);
+            StackWithBounds hovered = screen.getStackUnderMouse(event.x(), event.y());
             if (hovered == null || hovered.stack() == null) {
                 return;
             }
@@ -186,8 +187,8 @@ public abstract class AEBaseScreenMixin {
     /**
      * 重写renderSlot方法，为所有可见的样板槽位添加数量显示
      */
-    @Inject(method = "renderSlot", at = @At("TAIL"), remap = false)
-    private void eap$renderSlotAmounts(GuiGraphicsExtractor guiGraphics, Slot s, CallbackInfo ci) {
+    @Inject(method = "extractSlot", at = @At("TAIL"), remap = false)
+    private void eap$renderSlotAmounts(GuiGraphicsExtractor guiGraphics, Slot s, int mouseX, int mouseY, CallbackInfo ci) {
         Object self = this;
 
         // 只处理AppEngSlot类型的槽位

@@ -17,6 +17,7 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.mixin.extendedae.accessor.TileAssemblerMatrixPatternAccessor;
 import com.extendedae_plus.mixin.minecraft.accessor.BlockEntityAccessor;
 import com.glodblock.github.extendedae.common.blocks.matrix.BlockAssemblerMatrixBase;
+import com.glodblock.github.extendedae.common.inventory.FastInternalInventory;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -46,7 +47,7 @@ public class PatternCorePlusBlockEntity extends TileAssemblerMatrixPattern imple
         ((BlockEntityAccessor) (Object) this)
                 .extendedae_plus$setType(ModBlockEntities.ASSEMBLER_MATRIX_PATTERN_PLUS_BE.get());
 
-        var inventory = new AppEngInternalInventory(this, INV_SIZE, 1);
+        var inventory = new FastInternalInventory(this, INV_SIZE, 1);
         inventory.setFilter(new Filter(this::getLevel));
         ((TileAssemblerMatrixPatternAccessor) (Object) this).extendedae_plus$setPatternInventory(inventory);
     }
