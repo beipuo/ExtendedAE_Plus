@@ -81,8 +81,46 @@ public class UltimateSuperAssemblerMatrixBuilderItem extends Item {
             return InteractionResult.SUCCESS;
         }
 
-        var placementOrigin = origin.pos();
-        var obstruction = UltimateSuperAssemblerMatrixStructure.findFirstObstruction(serverLevel, placementOrigin);
+        return placeSelectedStructure(serverLevel, player, stack, origin.pos());
+    }
+
+    @Override
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
+        var stack = player.getItemInHand(hand);
+        var origin = getSelectedOrigin(stack);
+        if (level.isClientSide()) {
+            return InteractionResult.SUCCESS;
+        }
+        if (player.isShiftKeyDown()) {
+            if (origin != null) {
+                clearSelectedOrigin(stack);
+                player.sendOverlayMessage(Component.translatable(
+                        "item.extendedae_plus.ultimate_super_assembler_matrix_builder.selection_cleared"));
+            }
+            return InteractionResult.SUCCESS_SERVER;
+        }
+        if (origin == null || !origin.dimension().equals(level.dimension())) {
+            var selected = getAirOrigin(player);
+            setSelectedOrigin(stack, GlobalPos.of(level.dimension(), selected));
+            player.sendOverlayMessage(Component.translatable(
+                    "item.extendedae_plus.ultimate_super_assembler_matrix_builder.selected",
+                    selected.getX(), selected.getY(), selected.getZ()));
+            return InteractionResult.SUCCESS_SERVER;
+        }
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return InteractionResult.FAIL;
+        }
+        return placeSelectedStructure(serverLevel, player, stack, origin.pos());
+    }
+
+    public static BlockPos getAirOrigin(Player player) {
+        return BlockPos.containing(player.getEyePosition().add(
+                player.getLookAngle().scale(player.blockInteractionRange())));
+    }
+
+    private static InteractionResult placeSelectedStructure(ServerLevel level, Player player, ItemStack stack,
+            BlockPos placementOrigin) {
+        var obstruction = UltimateSuperAssemblerMatrixStructure.findFirstObstruction(level, placementOrigin);
         if (obstruction != null) {
             player.sendOverlayMessage(Component.translatable(
                     "item.extendedae_plus.ultimate_super_assembler_matrix_builder.blocked_at",
@@ -90,10 +128,10 @@ public class UltimateSuperAssemblerMatrixBuilderItem extends Item {
             return InteractionResult.FAIL;
         }
 
-        var requirements = UltimateSuperAssemblerMatrixStructure.getRequiredItems(serverLevel);
+        var requirements = UltimateSuperAssemblerMatrixStructure.getRequiredItems(level);
         IGrid grid = null;
         if (!player.getAbilities().instabuild) {
-            grid = getBoundInterfaceGrid(serverLevel, stack);
+            grid = getBoundInterfaceGrid(level, stack);
             if (grid == null) {
                 player.sendSystemMessage(Component.translatable(
                         "item.extendedae_plus.ultimate_super_assembler_matrix_builder.interface_unavailable"));
@@ -111,7 +149,7 @@ public class UltimateSuperAssemblerMatrixBuilderItem extends Item {
             }
         }
 
-        if (!UltimateSuperAssemblerMatrixStructure.placeIfClear(serverLevel, placementOrigin)) {
+        if (!UltimateSuperAssemblerMatrixStructure.placeIfClear(level, placementOrigin)) {
             if (grid != null) {
                 refundMaterials(grid.getStorageService().getInventory(), requirements, player);
             }
@@ -122,23 +160,7 @@ public class UltimateSuperAssemblerMatrixBuilderItem extends Item {
         clearSelectedOrigin(stack);
         player.sendOverlayMessage(Component.translatable(
                 "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed"));
-        return InteractionResult.SUCCESS;
-    }
-
-    @Override
-    public InteractionResult use(Level level, Player player, InteractionHand hand) {
-        var stack = player.getItemInHand(hand);
-        if (!player.isShiftKeyDown()) {
-            return InteractionResult.PASS;
-        }
-
-        if (!level.isClientSide() && getSelectedOrigin(stack) != null) {
-            // 潜行右键空气仅取消已锁定的起点，不触发搭建。
-            clearSelectedOrigin(stack);
-            player.sendOverlayMessage(Component.translatable(
-                    "item.extendedae_plus.ultimate_super_assembler_matrix_builder.selection_cleared"));
-        }
-        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
+        return InteractionResult.SUCCESS_SERVER;
     }
 
     @Override
